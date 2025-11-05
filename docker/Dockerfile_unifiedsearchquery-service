@@ -1,0 +1,18 @@
+ARG baseImageTag
+ARG baseImageUri
+FROM ${baseImageUri}:${baseImageTag}
+
+ARG version
+ARG mavenArtifactBaseUrl
+ARG wildfly_home=/opt/jboss/wildfly
+ARG wildfly_user=jboss
+ARG context_group_name=unifiedsearch/query
+ARG context_name=unifiedsearchquery
+
+# service war file
+ADD ${mavenArtifactBaseUrl}/uk/gov/moj/cpp/${context_group_name}/${context_name}-service/${version}/${context_name}-service-${version}.war ${wildfly_home}/standalone/deployments/
+USER root
+RUN chown ${wildfly_user}:${wildfly_user} ${wildfly_home}/standalone/deployments/${context_name}-service-${version}.war
+
+USER ${wildfly_user}
+LABEL base_image ${baseImageTag}

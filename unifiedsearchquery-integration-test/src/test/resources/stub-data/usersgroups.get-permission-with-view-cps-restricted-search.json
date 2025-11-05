@@ -1,0 +1,8 @@
+{
+  "permissions": [
+    {
+      "object": "CPS Search Restricted",
+      "action": "View"
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+package rules;
+
+import uk.gov.moj.cpp.accesscontrol.drools.Outcome;
+import uk.gov.moj.cpp.accesscontrol.drools.Action;
+import uk.gov.moj.cpp.unifiedsearch.query.api.accesscontrol.RuleConstants;
+import uk.gov.moj.cpp.unifiedsearch.query.api.accesscontrol.PermissionConstants;
+
+global uk.gov.moj.cpp.accesscontrol.common.providers.UserAndGroupProvider userAndGroupProvider;
+
+rule "Query - Rule for Case Search "
+  when
+    $outcome: Outcome();
+    $action: Action(name == "unifiedsearch.query.cases");
+    eval(userAndGroupProvider.isMemberOfAnyOfTheSuppliedGroups($action, RuleConstants.getUnifiedSearchGroups()));
+  then
+    $outcome.setSuccess(true);
+end
+
+rule "Query - Rule for LAA Case Search "
+  when
+    $outcome: Outcome();
+    $action: Action(name == "unifiedsearch.query.laa.cases");
+    eval(userAndGroupProvider.isMemberOfAnyOfTheSuppliedGroups($action, RuleConstants.getUnifiedSearchGroupsForLAA()));
+  then
+    $outcome.setSuccess(true);
+end
+
+rule "Query - Rule for Prabation Defendant Details Search "
+  when
+    $outcome: Outcome();
+    $action: Action(name == "unifiedsearch.query.probation.defendant.details");
+    eval(userAndGroupProvider.isMemberOfAnyOfTheSuppliedGroups($action, RuleConstants.getUnifiedSearchGroupsForProbationDefendantDetails()));
+  then
+    $outcome.setSuccess(true);
+end
+
+rule "Query - Rule for Defendant Case Search "
+  when
+    $outcome: Outcome();
+    $action: Action(name == "unifiedsearch.query.defendant.cases");
+    eval(userAndGroupProvider.isMemberOfAnyOfTheSuppliedGroups($action, RuleConstants.getUnifiedSearchGroupsForDefendantSearch()));
+  then
+    $outcome.setSuccess(true);
+end
+
+rule "Query - Rule for CPS Case Search "
+  when
+    $outcome: Outcome();
+    $action: Action(name == "unifiedsearch.query.cps.cases");
+    eval(userAndGroupProvider.hasPermission($action, PermissionConstants.getPermissionsForViewCPSSearch()));
+  then
+    $outcome.setSuccess(true);
+end
+
+rule "Query - Rule for WCU Case Search "
+  when
+    $outcome: Outcome();
+    $action: Action(name == "unifiedsearch.query.cps-wcu.cases");
+    eval(userAndGroupProvider.hasPermission($action, PermissionConstants.getPermissionsForViewCPSSearchRestricted()));
+  then
+    $outcome.setSuccess(true);
+end

@@ -1,0 +1,101 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "http://justice.gov.uk/json/schemas/domains/unifiedsearchquery/unifiedsearchquery.matched-defendants.json",
+  "type": "object",
+  "properties": {
+    "totalResults": {
+      "type": "integer"
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "minItems": 1,
+        "properties": {
+          "prosecutionCaseId": {
+            "type": "string"
+          },
+          "caseReference": {
+            "type": "string"
+          },
+          "defendants": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "properties": {
+                "defendantId": {
+                  "type": "string"
+                },
+                "masterDefendantId": {
+                  "type": "string"
+                },
+                "courtProceedingsInitiated": {
+                  "description": "Timestamp when case/defendant received. This is the defendant courtProceedingsInitiated field.",
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "firstName": {
+                  "type": "string"
+                },
+                "middleName": {
+                  "type": "string"
+                },
+                "lastName": {
+                  "type": "string"
+                },
+                "dateOfBirth": {
+                  "type": "string"
+                },
+                "pncId": {
+                  "type": "string"
+                },
+                "croNumber": {
+                  "type": "string"
+                },
+                "address": {
+                  "type": "object",
+                  "properties": {
+                    "address1": {
+                      "type": "string"
+                    },
+                    "address2": {
+                      "type": "string"
+                    },
+                    "address3": {
+                      "type": "string"
+                    },
+                    "address4": {
+                      "type": "string"
+                    },
+                    "address5": {
+                      "type": "string"
+                    },
+                    "postcode": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "addressLine1"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "defendantId",
+                "courtProceedingsInitiated",
+                "lastName"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "prosecutionCaseId",
+          "caseReference"
+        ],
+        "additionalProperties": false
+      }
+    }
+  }
+}

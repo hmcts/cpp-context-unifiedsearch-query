@@ -1,0 +1,182 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "http://justice.gov.uk/json/schemas/domains/unifiedsearchquery/unifiedsearchquery.cps.wcu.cases.json",
+  "type": "object",
+  "properties": {
+    "totalResults": {
+      "type": "integer"
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "caseId": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+          },
+          "urn": {
+            "type": "string"
+          },
+          "externalUniqueId": {
+            "type": "string"
+          },
+          "cpsUnit": {
+            "type": "string"
+          },
+          "cjsArea": {
+            "type": "string"
+          },
+          "caseStatus": {
+            "enum": [
+              "ACTIVE",
+              "INACTIVE"
+            ]
+          },
+          "caseType": {
+            "enum": [
+              "APPLICATION",
+              "PROSECUTION"
+            ]
+          },
+          "operationName": {
+            "type": "string"
+          },
+          "paralegalOfficer": {
+            "type": "string"
+          },
+          "crownAdvocate": {
+            "type": "string"
+          },
+          "prosecutor": {
+            "type": "string"
+          },
+          "witnessCareUnit": {
+            "type": "string"
+          },
+          "witnessCareOfficer": {
+            "type": "string"
+          },
+          "parties": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "partyId": {
+                  "type": "string"
+                },
+                "partyType": {
+                  "enum": [
+                    "DEFENDANT",
+                    "SUSPECT",
+                    "VICTIM",
+                    "WITNESS"
+                  ]
+                },
+                "firstName": {
+                  "type": "string"
+                },
+                "lastName": {
+                  "type": "string"
+                },
+                "alias": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "firstName": {
+                        "type": "string"
+                      },
+                      "lastName": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "dateOfBirth": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "asn": {
+                  "type": "string"
+                },
+                "pncId": {
+                  "type": "string"
+                },
+                "isAnOrganisation": {
+                  "type": "boolean"
+                },
+                "oicShoulderNumber": {
+                  "type": "string"
+                },
+                "operation": {
+                  "type": "string"
+                },
+                "offences": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "offenceId": {
+                        "type": "string"
+                      },
+                      "offenceCode": {
+                        "type": "string"
+                      },
+                      "custodyTimeLimit": {
+                        "type": "string",
+                        "format": "date"
+                      }
+                    }
+                  }
+                }
+              },
+              "required": [
+                "partyType"
+              ]
+            }
+          },
+            "hearings": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "hearingId": {
+                    "type": "string"
+                  },
+                  "hearingDateTime": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "courtHouse": {
+                    "type": "string"
+                  },
+                  "courtRoom": {
+                    "type": "string"
+                  },
+                  "hearingType": {
+                    "type": "string"
+                  },
+                  "jurisdictionType": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "hearingId"
+                ]
+              }
+            }
+          },
+          "required": [
+            "caseId",
+            "caseType",
+            "parties"
+          ]
+        }
+      }
+    },
+    "required": [
+    "totalResults",
+    "cases"
+  ]
+}

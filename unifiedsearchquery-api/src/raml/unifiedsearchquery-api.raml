@@ -1,0 +1,555 @@
+#%RAML 0.8
+title: UnifiedSearch Query API
+version: v0.1
+protocols: [ HTTP, HTTPS ]
+
+baseUri: http://localhost:8080/unifiedsearchquery-query-api/query/api/rest/unifiedsearchquery
+
+/cases:
+  get:
+    description: |
+      Returns Search Result if there is any match found in the index
+      ...
+      (mapping):
+          responseType: application/vnd.unifiedsearch.query.cases+json
+          name: unifiedsearch.query.cases
+      ...
+    queryParameters:
+
+     partyFirstAndOrMiddleName:
+       description: search for first name and or middle name of a party associated to the case
+       type: string
+       required: false
+
+     partyLastNameOrOrganisationName:
+       description: search for party last name or organisation name of a party associated to the case
+       type: string
+       required: false
+
+     pageSize:
+      description: For pagination only. The number of items to return per page, default is 10
+      type: integer
+      required: false
+
+     startFrom:
+      description: For pagination only. The index of the first result to return, defaults to 0
+      type: integer
+      required: false
+
+     caseReference:
+      description: reference of a case or application
+      type: string
+      required: false
+
+     partyName:
+      description: full name of a party associated to the case
+      type: string
+      required: false
+
+     partyTypes:
+      description: type of parties associated to the case. comma separated DEFENDANT,RESPONDENT,APPLICANT
+      type: string
+      required: false
+
+     partyDateOfBirth:
+      description: date of birth of a party associated to the case in the format YYYY-MM-DD
+      type: string
+      required: false
+
+     partyAddress:
+      description: Party address of a party associated to the case
+      type: string
+      required: false
+
+     partyAddressLine1:
+      description: Party address address line 1 in English
+      type: string
+      example: 123, croydon Rd
+      required: false
+
+     partyPostcode:
+      description: Postcode of a party associated to the case. The search supports full (CR0 2PR) and partial postcode search (CR0).
+      type: string
+      required: false
+
+     partyArrestSummonsNumber:
+      description: Arrest summons number (asn) of a party associated to the case
+      type: string
+      required: false
+
+     prosecutingAuthority:
+      description: prosecutor code i.e TFL or TVL or CPS or DVLA --enum
+      type: string
+      required: false
+
+     hearingDateFrom:
+      description: hearing date or due date begining interval in the format YYYY-MM-DD
+      type: string
+      required: false
+
+     hearingDateTo:
+      description: hearing date or due date end interval in the format YYYY-MM-DD
+      type: string
+      required: false
+
+     hearingTypeId:
+      description: UUID for required hearing type
+      type: string
+      required: false
+
+     sjp:
+      description: is SJP or not
+      type: boolean
+      required: false
+
+     magistrateCourt:
+      description: is Magistrate's court or not
+      type: boolean
+      required: false
+
+     crownCourt:
+      description: is Crown court or not
+      type: boolean
+      required: false
+
+     sortBySjpNoticeServed:
+      description: one of asc,desc
+      type: string
+      required: false
+
+     sortByAppointmentDate:
+      description: one of asc,desc
+      type: string
+      required: false
+
+     courtId:
+      description: UUID of the court ref data
+      type: string
+      required: false
+
+     applicationType:
+      description: The application type (description)
+      type: string
+      required: false
+
+     boxWorkHearing:
+      description: is Box Work hearing or not
+      type: boolean
+      required: false
+
+     boxWorkVirtualHearing:
+      description: is Virtual Box Work hearing or not
+      type: boolean
+      required: false
+
+     jurisdictionType:
+      description: Jurisdiction type of the hearing
+      type: string
+      required: false
+
+     excludeCompletedApplications:
+      description: exclude cases with listed or resulted applications
+      type: boolean
+      required: false
+
+     caseStatus:
+      description: status of a case
+      type: string
+      required: false
+
+    responses:
+      200:
+        description: OK
+        body:
+          application/vnd.unifiedsearch.query.cases+json:
+            schema: !include json/schema/unifiedsearchquery.cases.json
+            example: !include json/unifiedsearchquery.cases.json
+
+/laa-cases:
+  get:
+    description: |
+      Search Result if there is any match found in the index
+      ...
+      (mapping):
+          responseType: application/vnd.unifiedsearch.query.laa.cases+json
+          name: unifiedsearch.query.laa.cases
+      ...
+    queryParameters:
+
+     prosecutionCaseReference:
+      description: Prosecution Case Reference of the required case
+      type: string
+      required: false
+
+     defendantASN:
+      description: The Arrest Summons Number of a defendant associated to the case
+      type: string
+      required: false
+
+     defendantName:
+      description: The full name of a defendant associated to the case
+      type: string
+      required: false
+
+     defendantNINO:
+      description: The National Insurance Number of a Defendant associated to the case
+      type: string
+      required: false
+
+     defendantDOB:
+      description: date of birth of a defendant associated to the case in the format YYYY-MM-DD
+      type: string
+      required: false
+
+     dateOfNextHearing:
+      description: next hearing date in the format YYYY-MM-DD
+      type: string
+      required: false
+
+     hearingId:
+      description: UUID of hearing id
+      type: string
+      required: false
+      
+    responses:
+      200:
+        description: OK
+        body:
+          application/vnd.unifiedsearch.query.laa.cases+json:
+            schema: !include json/schema/unifiedsearchquery.laa.cases.json
+            example: !include json/unifiedsearchquery.laa.cases.json
+
+/probation-defendant-details:
+  get:
+    description: |
+      Search Result if there is any match found in the index
+      ...
+      (mapping):
+          responseType: application/vnd.unifiedsearch.query.probation.defendant.details+json
+          name: unifiedsearch.query.probation.defendant.details
+      ...
+    queryParameters:
+
+     prosecutionCaseReference:
+      description: Prosecution Case Reference of the required case
+      type: string
+      required: false
+
+     defendantASN:
+      description: The Arrest Summons Number of a defendant associated to the case
+      type: string
+      required: false
+
+     defendantName:
+      description: The full name of a defendant associated to the case
+      type: string
+      required: false
+
+     defendantNINO:
+      description: The National Insurance Number of a Defendant associated to the case
+      type: string
+      required: false
+
+     defendantDOB:
+      description: date of birth of a defendant associated to the case in the format YYYY-MM-DD
+      type: string
+      required: false
+
+     dateOfNextHearing:
+      description: next hearing date in the format YYYY-MM-DD
+      type: string
+      required: false
+
+    responses:
+      200:
+        description: OK
+        body:
+          application/vnd.unifiedsearch.query.probation.defendant.details+json:
+            schema: !include json/schema/unifiedsearchquery.probation.defendant.details.json
+            example: !include json/unifiedsearch.query.probation.defendant.details.json
+
+
+/defendant-cases:
+  get:
+    description: |
+      Returns EXACT matches for provided criteria of defendant matches found in the index
+      ...
+      (mapping):
+          responseType: application/vnd.unifiedsearch.query.defendant.cases+json
+          name: unifiedsearch.query.defendant.cases
+      ...
+    queryParameters:
+
+     pageSize:
+      description: For pagination only. The number of items to return per page, default is 10
+      type: integer
+      example: 25
+      required: false
+
+     startFrom:
+      description: For pagination only. The index of the first result to return, defaults to 0
+      type: integer
+      example: 1
+      required: false
+
+     proceedingsConcluded:
+      description:  if the proceedings against defendants is concluded
+      type: boolean
+      required: true
+
+     crownOrMagistrates:
+      description:  if the case is crown or magistrates related
+      type: boolean
+      required: true
+
+     pncId:
+      description: Police National Computer id of defendant
+      type: string
+      example: 2099/1234567
+      required: false
+
+     croNumber:
+      description: National Identification Service (formerly Criminal Records Office) Number (fingerprint number)
+      type: string
+      example: 123456/20L
+      required: false
+
+     lastName:
+      description: Defendant's last name
+      type: string
+      example: SMITH
+      required: false
+
+     firstName:
+      description: Defendant's first name
+      type: string
+      example: JOHN
+      required: false
+
+     dateOfBirth:
+      description: Defendant's date of birth in format 'YYYY-MM-DD'
+      type: string
+      example: 2000-01-01
+      required: false
+
+     addressLine1:
+      description: Defendant's address line 1 in English
+      type: string
+      example: 123, croydon Rd
+      required: false
+
+     courtOrderValidityDate:
+      description: Date of validity of a court order in the format 'YYYY-MM-DD'. When passed, the result set will be extanded to include defandants with courtOrderValidityDate between courtOrder.startDate and courtOrder.endDate even though proceedingsConcluded=true
+      type: string
+      example: 2000-01-01
+      required: false
+
+    responses:
+      200:
+        description: OK
+        body:
+          application/vnd.unifiedsearch.query.defendant.cases+json:
+            schema: !include json/schema/unifiedsearchquery.defendant.cases.json
+            example: !include json/unifiedsearchquery.defendant.cases.json
+
+/cps-cases:
+  get:
+    description: |
+      Returns Search Result if there is any match found in the index
+      ...
+      (mapping):
+          responseType: application/vnd.unifiedsearch.query.cps.cases+json
+          name: unifiedsearch.query.cps.cases
+      (mapping):
+          responseType: application/vnd.unifiedsearch.query.cps-wcu.cases+json
+          name: unifiedsearch.query.cps-wcu.cases
+      ...
+    queryParameters:
+
+     firstName:
+       description: search for first name of a party associated to the case
+       type: string
+       required: false
+
+     lastName:
+       description: search for last name of a party associated to the case
+       type: string
+       required: false
+
+     organisation:
+       description: search for organisation name of a party associated to the case
+       type: string
+       required: false
+
+     pageSize:
+      description: For pagination only. The number of items to return per page, default is 10
+      type: integer
+      required: false
+
+     startFrom:
+      description: For pagination only. The index of the first result to return, defaults to 0
+      type: integer
+      required: false
+
+     urn:
+      description: reference of a case or application
+      type: string
+      required: false
+
+     operationName:
+      description: Police operation resulting in charges.
+      type: string
+      required: false
+
+     partyTypes:
+      description: type of parties associated to the case. comma separated DEFENDANT,SUSPECT,WITNESS,VICTIM,Prosecution Advocate,Officer In Charge
+      type: string
+      required: false
+
+     dateOfBirth:
+      description: date of birth of a party associated to the case in the format YYYY-MM-DD
+      type: string
+      required: false
+
+     hearingDateFrom:
+      description: hearing date or due date begining interval in the format YYYY-MM-DD
+      type: string
+      required: false
+
+     hearingDateTo:
+      description: hearing date or due date end interval in the format YYYY-MM-DD
+      type: string
+      required: false
+
+     jurisdictionTypes:
+      description: Jurisdiction type of the hearing. comma separated values of MAGISTRATES,CROWN,COURT_OF_APPEAL
+      type: string
+      required: false
+
+     cjsAreaCode:
+      description: CJS Area of the case
+      type: string
+      required: false
+
+     cpsUnitCode:
+      description: CPS Unit associated to the CPS Area
+      type: string
+      required: false
+
+     cpsAreaCode:
+      description: CPS Area associated to the case
+      type: string
+      required: false
+
+     witnessCareUnitCode:
+      description: witness care unit associated to the case
+      type: string
+      required: false
+
+     witnessCareOfficer:
+      description: witness care officer associated to the case
+      type: string
+      required: false
+
+     caseStatusCode:
+      description: caseStatus associated to the case
+      type: string
+      required: false
+
+     caseType:
+       description: caseType associated to the case
+       type: string
+       required: false
+
+     unitGroup:
+       description: Unit group associated to the case
+       type: string
+       required: false
+
+     hearingType:
+       description: hearing type of the case
+       type: string
+       required: false
+
+     offence:
+       description: offence code associated to the case
+       type: string
+       required: false
+
+     offenceDateFrom:
+       description: offence date or due date begining interval in the format YYYY-MM-DD
+       type: string
+       required: false
+
+     offenceDateTo:
+       description: offence date or due date end interval in the format YYYY-MM-DD
+       type: string
+       required: false
+
+     courtHouse:
+       description: Court house where the case is held
+       type: string
+       required: false
+
+     courtRoom:
+       description: Court room of the court house where the case is held
+       type: string
+       required: false
+
+     prosecutor:
+       description: Prosecutor associated to the case
+       type: string
+       required: false
+
+     paralegalOfficer:
+       description: Officer associated to the case
+       type: string
+       required: false
+
+     crownAdvocate:
+       description: crown advocate associated to the case
+       type: string
+       required: false
+
+     custodyTimeLimit:
+       description: custody time limit
+       type: boolean
+       required: false
+
+     pncId:
+       description: the police national computer number for the defendant
+       type: string
+       required: false
+
+     oicShoulderNumber:
+       description: Police Officer on CaseId.
+       type: integer
+       required: false
+
+     orderBy:
+       description: valid values are urn, status, dateOfBirth, hearingDate, hearingType, courtHouse, courtRoom, prosecutor, paralegalOfficer, crownAdvocate, offence
+       type: string
+       required: false
+
+     order:
+       description: the order option which you indicated in orderBy. would be one of either asc, desc. default asc.
+       default: asc
+       type: string
+       required: false
+
+     excludeAutomaticallyLinkedCasesTo:
+       description: exclude automatically Linked cases to UUID provided
+       type: string
+       required: false
+
+    responses:
+      200:
+        description: OK
+        body:
+          application/vnd.unifiedsearch.query.cps.cases+json:
+            schema: !include json/schema/unifiedsearchquery.cps.cases.json
+            example: !include json/unifiedsearchquery.cps.cases.json
+          application/vnd.unifiedsearch.query.cps-wcu.cases+json:
+            schema: !include json/schema/unifiedsearchquery.wcu.cases.json
+            example: !include json/unifiedsearchquery.wcu.cases.json
+

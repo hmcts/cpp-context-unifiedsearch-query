@@ -1,0 +1,40 @@
+{
+  "groups": [
+    {
+      "groupId": "1e2f843e-d639-40b3-8611-8015f3a18958",
+      "groupName": "Legal Advisers"
+    },
+    {
+      "groupId": "5b6f843e-d639-40b3-8611-8015f3a34758",
+      "groupName": "Court Administrators"
+    },
+    {
+      "groupId": "2b6f843e-d639-40b3-8611-8015f3a34758",
+      "groupName": "Court Clerks"
+    },
+    {
+      "groupId": "78e7f119-5778-43ff-8f99-97164b17700e",
+      "groupName": "Crown Court Admin"
+    },
+    {
+      "groupId": "5g9f843e-d639-40b3-8611-8015f3a38293",
+      "groupName": "Listing Officers"
+    },
+    {
+      "groupId": "2a2d7e9e-0c60-11e6-a148-3e1d05defe78",
+      "groupName": "System Users"
+    },
+    {
+      "groupId": "3a2d7e9e-0c60-11e6-a148-4f5d05defe78",
+      "groupName": "Prosecutor"
+    },
+    {
+      "groupId": "8f2d7e6x-0c60-11e6-a148-4f5d05defe78",
+      "groupName": "Witness Care Manager"
+    },
+    {
+      "groupId": "7g2d7e6x-0j80-11e6-a148-4f5d05defe78",
+      "groupName": "Witness Care Officer"
+    }
+  ]
+}

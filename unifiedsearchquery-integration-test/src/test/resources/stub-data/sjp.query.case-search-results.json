@@ -1,0 +1,24 @@
+{
+  "foundCasesWithOutdatedDefendantsName":false,
+  "results":[
+    {
+      "caseId":"CASE_ID",
+      "urn":"CASE_REFERENCE",
+      "assigned":false,
+      "completed":true,
+      "enterpriseId":"7M9PT48W56TJ",
+      "prosecutingAuthority":"TFL",
+      "postingDate":"2019-07-04",
+      "withdrawalRequestedDate":"2019-08-01",
+      "defendant":{
+        "firstName":"Naitik",
+        "lastName":"Smith",
+        "dateOfBirth":"1974-08-12",
+        "outdated":false
+      },
+      "status":"CASE_STATUS",
+      "listedInCriminalCourts":true
+    }
+  ]
+}
+

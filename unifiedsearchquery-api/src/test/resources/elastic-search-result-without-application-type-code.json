@@ -1,0 +1,105 @@
+{
+  "totalResults": 1,
+  "cases": [
+    {
+      "caseId": "29deccfd-ef49-49f0-af59-24eb1e01cff8",
+      "prosecutingAuthority": "DVSA",
+      "caseReference": "CWDNDR17U7",
+      "parties": [
+        {
+          "partyId": "241319f6-b0a7-4df5-b440-af1c24196081",
+          "firstName": "Allen",
+          "lastName": "Brown",
+          "dateOfBirth": "1990-12-12",
+          "addressLines": "Address1",
+          "postCode": "N7 0LD",
+          "offences": [
+            {
+              "offenceId": "b5940301-f46e-4545-9cee-f4d572727485",
+              "offenceCode": "HY35012",
+              "offenceTitle": "Driving/pushing a handcart or barrow on a footpath",
+              "offenceLegislation": "Contrary to Section 72 of the Highway Act 1835.",
+              "proceedingsConcluded": true,
+              "arrestDate": "2024-11-07",
+              "startDate": "2024-09-08",
+              "chargeDate": "2024-11-07",
+              "modeOfTrial": "Summary",
+              "orderIndex": 1,
+              "wording": "Before 08 Sep 2024 at asdas  in the county of Bucks wilfully drove a rgrey upon a footpath or causeway by the side of a road, namely terte, made or set apart for the use or accommodation of foot passengers."
+            }
+          ],
+          "partyType": "DEFENDANT"
+        },
+        {
+          "partyId": "3bebe482-b1cd-4213-9aae-8082286693e8",
+          "firstName": "Allen",
+          "lastName": "Brown",
+          "dateOfBirth": "1990-12-12",
+          "addressLines": "Address1",
+          "postCode": "N7 0LD",
+          "partyType": "APPLICANT"
+        }
+      ],
+      "hearings": [
+        {
+          "hearingId": "f4ff6e79-3dfb-4c00-a65d-dd3fc54045d6",
+          "courtId": "a25848d6-d96e-4a52-8c54-de55b6542afc",
+          "courtCentreName": "Willesden Magistrates' Court",
+          "hearingTypeId": "4a0e892d-c0c5-3c51-95b8-704d8c781776",
+          "hearingTypeLabel": "First hearing",
+          "hearingDates": [
+            "2024-11-10"
+          ],
+          "jurisdictionType": "MAGISTRATES",
+          "judiciaryTypes": [],
+          "isBoxHearing": false,
+          "hearingDays": [
+            {
+              "sittingDay": "2024-11-10T12:00:00.000Z",
+              "listingSequence": 0,
+              "listedDurationMinutes": 20,
+              "hasSharedResults": true
+            }
+          ],
+          "isVirtualBoxHearing": false
+        },
+        {
+          "hearingId": "e20454ab-ee9f-4eb9-b6f1-7116a8e53816",
+          "courtId": "7e967376-eacf-4fca-9b30-21b0c5aad427",
+          "courtCentreName": "Bexley Magistrates' Court",
+          "hearingTypeId": "3449743b-95d6-4836-8941-57f588b52068",
+          "hearingTypeLabel": "Application",
+          "hearingDates": [
+            "2024-11-09"
+          ],
+          "jurisdictionType": "MAGISTRATES",
+          "judiciaryTypes": [],
+          "isBoxHearing": true,
+          "hearingDays": [
+            {
+              "sittingDay": "2024-11-09T00:00:00.000Z",
+              "listingSequence": 0,
+              "listedDurationMinutes": 10,
+              "hasSharedResults": true
+            }
+          ],
+          "isVirtualBoxHearing": false
+        }
+      ],
+      "applications": [
+        {
+          "applicationId": "0c3dc509-46ab-4d29-9070-8c7ff01eec1c",
+          "applicationReference": "CWDNDR17U7",
+          "applicationType": "Application to revoke a community order and re-sentence",
+          "applicationStatus": "FINALISED",
+          "receivedDate": "2024-11-08"
+        }
+      ],
+      "caseStatus": "INACTIVE",
+      "sjp": false,
+      "magistrateCourt": true,
+      "crownCourt": false,
+      "caseType": "PROSECUTION"
+    }
+  ]
+}

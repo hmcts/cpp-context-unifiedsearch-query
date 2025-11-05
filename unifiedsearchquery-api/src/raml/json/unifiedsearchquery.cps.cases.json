@@ -1,0 +1,43 @@
+{
+  "totalResults": 1,
+  "cases": [
+    {
+      "caseId": "ab746921-d839-4867-bcf9-b41db8ebc852",
+      "urn": "TFL479961",
+      "caseStatus": "LIV",
+      "caseType": "PROSECUTION",
+      "parties": [
+        {
+          "firstName": "Joe",
+          "lastName": "Peter",
+          "partyType": "APPLICANT",
+          "dateOfBirth": "1860-01-01"
+        },
+        {
+          "firstName": "Thomas",
+          "lastName": "Joseph",
+          "partyType": "DEFENDANT",
+          "dateOfBirth": "1860-01-01"
+        }
+      ],
+      "hearings": [
+        {
+          "hearingId": "70baba30-f45c-4c1e-971e-4581fc2ec30b",
+          "courtRoom": "Courtroom 01",
+          "courtHouse": "Liverpool Magistrates Court",
+          "hearingType": "HEARING TYPE LABEL 1",
+          "hearingDates": "2019-04-19",
+          "jurisdiction": "4e2bddef-9797-424b-980c-95c467b84e86"
+        },
+        {
+          "hearingId": "a707f9ab-74f0-4ac2-b728-8206083cb912",
+          "courtRoom": "Courtroom 02",
+          "courtHouse": "Exeter Crown Court",
+          "hearingType": "HEARING TYPE LABEL 2",
+          "hearingDates": "2019-04-24",
+          "jurisdiction": "4e2bddef-9797-424b-980c-95c467b84e86"
+        }
+      ]
+    }
+  ]
+}

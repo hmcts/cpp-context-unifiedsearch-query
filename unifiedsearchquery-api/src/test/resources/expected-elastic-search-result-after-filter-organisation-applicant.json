@@ -1,0 +1,28 @@
+{
+  "totalResults": 1,
+  "cases": [
+    {
+      "parties": [
+        {
+          "organisationName": "British Transport Police",
+          "partyType": "APPLICANT"
+        }
+      ],
+      "hearings": [
+        {
+          "courtCentreName": "Bexley Magistrates' Court",
+          "courtId": "7e967376-eacf-4fca-9b30-21b0c5aad427"
+        }
+      ],
+      "applications": [
+        {
+          "applicationReference": "IZCHPZYTMH",
+          "applicationType": "Application for an extension of warrant for further detention"
+        }
+      ],
+      "magistrateCourt": true,
+      "crownCourt": false,
+      "caseType": "APPLICATION"
+    }
+  ]
+}

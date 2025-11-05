@@ -1,0 +1,98 @@
+{
+  "totalResults": 1,
+  "cases": [
+    {
+      "caseStatus": "ACTIVE",
+      "prosecutionCaseId": "c552f0dd-07aa-416c-9692-61955910e87f",
+      "prosecutionCaseReference": "TVL1234567",
+      "defendantSummary": [
+        {
+          "proceedingsConcluded": false,
+          "defendantId": "15dcce35-1cca-4014-ad8a-dbe86fbfecae",
+          "masterDefendantId": "4c3739b0-8ce6-49b3-86d3-59054deed049",
+          "defendantFirstName": "Mejia",
+          "defendantMiddleName": "Mcdaniel",
+          "defendantLastName": "Wooten",
+          "defendantDOB": "1982-03-19",
+          "defendantNINO": "DJ501471O",
+          "defendantAddress": {
+            "address1": "19, ABC street",
+            "address2": "19th Lane",
+            "address3": "",
+            "address4": "",
+            "address5": "London",
+            "postcode": "HA1 1QF"
+          },
+          "offenceSummary": [
+            {
+              "offenceId": "50553b04-36c9-4e3f-a870-624a4481f101",
+              "offenceCode": "OFFENCE CODE 448",
+              "offenceTitle": "OFFENCE TITLE 845",
+              "offenceLegislation": "OFFENCE LEGISLATION 121",
+              "proceedingsConcluded": false,
+              "arrestDate": "2021-05-10",
+              "dateOfInformation": "2021-06-29",
+              "endDate": "2021-06-17",
+              "startDate": "2021-06-15",
+              "chargeDate": "2021-06-17",
+              "modeOfTrial": "CROWN",
+              "orderIndex": 1,
+              "wording": "OFFENCE WORDING 427"
+            }
+          ]
+        }
+      ],
+      "hearingSummary": [
+        {
+          "hearingId": "ec33aeb2-8dcc-4f37-860b-7777ca5a4b16",
+          "jurisdictionType": "430caa94-40dd-4a2b-bff8-228ee4809ca7",
+          "defendantIds": [
+            "9d0182d6-30b2-4f44-b4c9-7aaf2693b89d",
+            "9f9ca7ab-8073-4d0f-bf76-6a91ae59b801"
+          ],
+          "hearingDays": [
+            {
+              "sittingDay": "2021-08-23T14:00:00",
+              "listingSequence": 1,
+              "listedDurationMinutes": 60,
+              "hasResultsShared": true
+            },
+            {
+              "sittingDay": "2021-08-24T14:00:00",
+              "listingSequence": 2,
+              "listedDurationMinutes": 60,
+              "hasResultsShared": true
+            },
+            {
+              "sittingDay": "2021-08-25T14:00:00",
+              "listingSequence": 3,
+              "listedDurationMinutes": 60,
+              "hasResultsShared": true
+            }
+          ],
+          "courtCentre": {
+            "id": "09b48853-d705-408b-8454-b3bf64ae8ad1",
+            "name": "Exeter Crown Court",
+            "roomId": "3ae45658-44b2-49b0-9987-6f83ceb770d6",
+            "roomName": "Courtroom 5",
+            "welshName": "Courtroom 3",
+            "welshRoomName": "Courtroom 3",
+            "address": {
+              "address1": "129 Remsen Street",
+              "address2": "Oxford",
+              "address3": "North",
+              "address4": "Carolina",
+              "postCode": "SW11 66NW"
+            },
+            "code": "COURT CENTRE CODE  3"
+          },
+          "hearingType": {
+            "id": "775a5b8c-aafe-45d5-b5e7-953b8fb25df8",
+            "code": "HEARING TYPE CODE  3",
+            "description": "Trial"
+          }
+        }
+      ]
+    }
+  ]
+}
