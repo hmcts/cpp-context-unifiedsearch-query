@@ -1,0 +1,313 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "http://justice.gov.uk/json/schemas/domains/unifiedsearchquery/unifiedsearchquery.probation.defendant.details.json",
+  "type": "array",
+  "items": [
+    {
+      "type": "object",
+      "properties": {
+        "prosecutionCaseId": {
+          "type": "string"
+        },
+        "prosecutionCaseReference": {
+          "type": "string"
+        },
+        "caseStatus": {
+          "type": "string"
+        },
+        "defendantSummary": {
+          "type": "array",
+          "items": [
+            {
+              "type": "object",
+              "properties": {
+                "defendantId": {
+                  "type": "string"
+                },
+                "masterDefendantId": {
+                  "type": "string"
+                },
+                "defendantASN": {
+                  "type": "string"
+                },
+                "defendantFirstName": {
+                  "type": "string"
+                },
+                "defendantMiddleName": {
+                  "type": "string"
+                },
+                "defendantLastName": {
+                  "type": "string"
+                },
+                "defendantDOB": {
+                  "type": "string"
+                },
+                "defendantNINO": {
+                  "type": "string"
+                },
+                "dateOfNextHearing": {
+                  "type": "string"
+                },
+                "proceedingsConcluded": {
+                  "type": "boolean"
+                },
+                "address": {
+                  "type": "object",
+                  "properties": {
+                    "address1": {
+                      "type": "string"
+                    },
+                    "address2": {
+                      "type": "string"
+                    },
+                    "address3": {
+                      "type": "string"
+                    },
+                    "address4": {
+                      "type": "string"
+                    },
+                    "address5": {
+                      "type": "string"
+                    },
+                    "postcode": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "addressLine1"
+                  ],
+                  "additionalProperties": false
+                },
+                "offenceSummary": {
+                  "type": "array",
+                  "items": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "offenceId": {
+                          "type": "string"
+                        },
+                        "offenceCode": {
+                          "type": "string"
+                        },
+                        "offenceTitle": {
+                          "type": "string"
+                        },
+                        "offenceLegislation": {
+                          "type": "string"
+                        },
+                        "proceedingsConcluded": {
+                          "type": "boolean"
+                        },
+                        "arrestDate": {
+                          "type": "string"
+                        },
+                        "dateOfInformation": {
+                          "type": "string"
+                        },
+                        "endDate": {
+                          "type": "string"
+                        },
+                        "startDate": {
+                          "type": "string"
+                        },
+                        "chargeDate": {
+                          "type": "string"
+                        },
+                        "modeOfTrial": {
+                          "type": "string"
+                        },
+                        "orderIndex": {
+                          "type": "integer"
+                        },
+                        "wording": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "offenceId",
+                        "offenceCode",
+                        "offenceTitle",
+                        "offenceLegislation",
+                        "proceedingsConcluded",
+                        "arrestDate",
+                        "dateOfInformation",
+                        "endDate",
+                        "startDate",
+                        "chargeDate",
+                        "modeOfTrial",
+                        "orderIndex",
+                        "wording"
+                      ]
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "defendantId",
+                "defendantASN",
+                "defendantFirstName",
+                "defendantLastName",
+                "defendantDOB",
+                "defendantNINO",
+                "dateOfNextHearing",
+                "proceedingsConcluded",
+                "representationOrder",
+                "offenceSummary"
+              ]
+            }
+          ]
+        },
+        "hearingSummary": {
+          "type": "array",
+          "items": [
+            {
+              "type": "object",
+              "properties": {
+                "hearingId": {
+                  "type": "string"
+                },
+                "jurisdictionType": {
+                  "type": "string"
+                },
+                "defendantIds": {
+                  "type": "array",
+                  "items": [
+                    {
+                      "type": "string"
+                    }
+                  ]
+                },
+                "hearingType": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "description",
+                    "code"
+                  ]
+                },
+                "courtCentre": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "roomId": {
+                      "type": "string"
+                    },
+                    "roomName": {
+                      "type": "string"
+                    },
+                    "welshName": {
+                      "type": "string"
+                    },
+                    "welshRoomName": {
+                      "type": "string"
+                    },
+                    "address": {
+                      "type": "object",
+                      "properties": {
+                        "address1": {
+                          "type": "string"
+                        },
+                        "address2": {
+                          "type": "string"
+                        },
+                        "address3": {
+                          "type": "string"
+                        },
+                        "address4": {
+                          "type": "string"
+                        },
+                        "postCode": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "address1",
+                        "address2",
+                        "address3",
+                        "address4",
+                        "postCode"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "code",
+                    "name",
+                    "roomId",
+                    "roomName",
+                    "welshName",
+                    "welshRoomName",
+                    "address"
+                  ]
+                },
+                "hearingDay": {
+                  "type": "array",
+                  "items": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "sittingDay": {
+                          "type": "string"
+                        },
+                        "listingSequence": {
+                          "type": "integer"
+                        },
+                        "listedDurationMinutes": {
+                          "type": "integer"
+                        },
+                        "hasResultsShared": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "sittingDay",
+                        "listingSequence",
+                        "listedDurationMinutes",
+                        "hasResultsShared"
+                      ]
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "hearingId",
+                "jurisdictionType",
+                "defendantIds",
+                "hearingType",
+                "courtCentre",
+                "hearingDay"
+              ]
+            }
+          ]
+        }
+      },
+      "required": [
+        "prosecutionCaseId",
+        "prosecutionCaseReference",
+        "caseStatus",
+        "defendantSummary",
+        "hearingSummary"
+      ]
+    }
+  ]
+}

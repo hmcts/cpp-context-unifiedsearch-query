@@ -1,0 +1,95 @@
+{
+  "totalResults": 1,
+  "cases": [
+    {
+      "caseId": "64f1b230-d755-4157-9eb3-622cef304293",
+      "parties": [
+        {
+          "partyId": "d0edc9bc-d76e-48dc-9d60-9ddfe8d66494",
+          "firstName": "a",
+          "lastName": "aa",
+          "addressLines": "aaa",
+          "postCode": "df4 5tr",
+          "partyType": "APPLICANT"
+        },
+        {
+          "partyId": "d0edc9bc-d76e-48dc-9d60-9ddfe8d66494",
+          "firstName": "b",
+          "lastName": "bb",
+          "addressLines": "bbb",
+          "postCode": "df4 5tr",
+          "partyType": "RESPONDENT"
+        }
+      ],
+      "hearings": [
+        {
+          "hearingId": "d23d21cc-03c5-49a5-8ed0-8a5b0dd9bce9",
+          "courtId": "7e967376-eacf-4fca-9b30-21b0c5aad427",
+          "courtCentreName": "Bexley Magistrates' Court",
+          "hearingTypeId": "394a29f3-7795-40b2-97a9-2d7d9120093c",
+          "hearingTypeLabel": "Deferred Sentence - Prosecution Released",
+          "hearingDates": [
+            "2025-07-03"
+          ],
+          "jurisdictionType": "MAGISTRATES",
+          "judiciaryTypes": [],
+          "isBoxHearing": false,
+          "hearingDays": [
+            {
+              "sittingDay": "2025-07-03T09:00:00.000Z",
+              "listingSequence": 0,
+              "listedDurationMinutes": 1,
+              "hasSharedResults": true
+            }
+          ],
+          "isVirtualBoxHearing": false
+        }
+      ],
+      "applications": [
+        {
+          "applicationId": "64f1b230-d755-4157-9eb3-622cef304293",
+          "applicationReference": "IZCHPZYTMH",
+          "applicationType": "Application for an extension of warrant for further detention",
+          "applicationTypeCode": "appTypeCode1",
+          "applicationStatus": "UN_ALLOCATED",
+          "receivedDate": "2025-06-01"
+        }
+      ],
+      "caseStatus": "ACTIVE",
+      "sjp": false,
+      "magistrateCourt": true,
+      "crownCourt": false,
+      "caseType": "APPLICATION"
+    },
+    {
+      "parties": [
+        {
+          "organisationName": "British Transport Police",
+          "partyType": "APPLICANT"
+        },
+        {
+          "partyType": "RESPONDENT"
+        }
+      ],
+      "hearings": [
+        {
+          "courtCentreName": "Bexley Magistrates' Court",
+          "courtId": "7e967376-eacf-4fca-9b30-21b0c5aad427"
+        }
+      ],
+      "applications": [
+        {
+          "applicationReference": "IZCHPZYTMH",
+          "applicationType": "Application for an extension of warrant for further detention"
+        },
+        {
+          "applicationReference": "BBDJFRIEFS",
+          "applicationType": "Application type"
+        }
+      ],
+      "magistrateCourt": true,
+      "crownCourt": false,
+      "caseType": "APPLICATION"
+    }
+  ]
+}

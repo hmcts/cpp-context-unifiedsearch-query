@@ -1,0 +1,13 @@
+---
+resource_descriptor:
+  spec_version: '1.0.0'
+  version: '${project.version}'
+
+  services:
+    # Unifiedsearch query provides these service mappings
+    - name: 'unifiedsearchquery-service'
+      id: 'unifiedsearchquery_service'
+      target: '/unifiedsearchquery-service'
+      map:
+        - '/unifiedsearchquery-api'
+      matcher: '/unifiedsearchquery-[^/]+'

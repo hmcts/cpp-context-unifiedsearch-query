@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>uk.gov.moj.cpp.common</groupId>
+        <artifactId>service-parent-pom</artifactId>
+        <version>17.101.2</version>
+    </parent>
+
+    <groupId>uk.gov.moj.cpp.unifiedsearch.query</groupId>
+    <artifactId>unifiedsearchquery-parent</artifactId>
+    <version>17.0.29-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>Unifiedsearch Query Context - Parent Module</name>
+
+    <properties>
+        <sonar.jacoco.itReportPath>${project.basedir}/../target/jacoco-it.exec
+        </sonar.jacoco.itReportPath>
+        <sonar.report.export.path>sonar-report.json</sonar.report.export.path>
+        <sonar.scm.provider>git</sonar.scm.provider>
+        <sonar.exclusions>
+            **/uk/gov/moj/cpp/unifiedsearch/query/common/domain/response/Case.java,
+            **/uk/gov/moj/cpp/unifiedsearch/query/api/domain/response/indexdoc2apiresponse/Case.java
+        </sonar.exclusions>
+        <sonar.cpd.exclusions>
+            **/uk/gov/moj/cpp/unifiedsearch/query/common/domain/response/Case.java,
+            **/uk/gov/moj/cpp/unifiedsearch/query/api/domain/response/indexdoc2apiresponse/Case.java
+        </sonar.cpd.exclusions>
+        <mvn.site.url>file://${project.build.directory}/site</mvn.site.url>
+        <usersgroups.version>17.0.37</usersgroups.version>
+        <cpp-platform-data-utils.version>8.0.17</cpp-platform-data-utils.version>
+        <elasticsearch-maven-plugin.version>6.13</elasticsearch-maven-plugin.version>
+        <elasticsearch.embedded.version>7.16.2</elasticsearch.embedded.version>
+        <jgitflow.maven.developBranchName>main</jgitflow.maven.developBranchName>
+    </properties>
+
+    <modules>
+
+        <module>unifiedsearchquery-api</module>
+        <module>unifiedsearchquery-builders</module>
+        <module>unifiedsearchquery-integration-test</module>
+        <module>unifiedsearchquery-service</module>
+        <module>unifiedsearchquery-domain-common</module>
+        <module>unifiedsearchquery-healthchecks</module>
+
+    </modules>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-war-plugin</artifactId>
+                <configuration>
+                    <archiveClasses>true</archiveClasses>
+                    <attachClasses>true</attachClasses>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <distributionManagement>
+        <site>
+            <id>site</id>
+            <url>${mvn.site.url}</url>
+        </site>
+    </distributionManagement>
+</project>

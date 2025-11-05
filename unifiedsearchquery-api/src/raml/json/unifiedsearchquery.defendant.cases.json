@@ -1,0 +1,53 @@
+{
+  "totalResults": 2,
+  "cases": [
+    {
+      "caseReference": "20GB12345666",
+      "prosecutionCaseId": "31af405e-7b60-4dd8-a244-c24c2d3fa595",
+      "defendants": [
+        {
+          "courtProceedingsInitiated": "2020-03-02T10:00:00.000Z",
+          "defendantId": "9e4932f7-97b2-3010-b942-ddd2624e4dd8",
+          "masterDefendantId": "0a5372c5-b60f-4d95-8390-8c6462e2d7af",
+          "firstName": "Teagan",
+          "middleName": "",
+          "lastName": "SMITT",
+          "dateOfBirth": "2019-04-21",
+          "pncId": "2099/1234567L",
+          "croNumber": "",
+          "address": {
+            "address1": "15, somewhere street",
+            "address2": "15th Lane",
+            "address5": "London",
+            "postcode": "HA1 1QF"
+          }
+        }
+      ]
+    },
+    {
+      "caseReference": "45GB12345777",
+      "prosecutionCaseId": "7e967376-eacf-4fca-9b30-21b0c5aad427",
+      "defendants": [
+        {
+          "defendantId": "0a5372c5-b60f-4d95-8390-8c6462e2d7af",
+          "masterDefendantId": "0a5372c5-b60f-4d95-8390-8c6462e2d7af",
+          "caseReceivedDate": "2020-03-03T10:00:00.000Z",
+          "firstName": "Teagan",
+          "middleName": "",
+          "lastName": "SITH",
+          "dateOfBirth": "",
+          "pncId": "2098/1234568L",
+          "croNumber": "123456/20L",
+          "address": {
+            "address1": "19, ABC street",
+            "address2": "19th Lane",
+            "address3": "",
+            "address4": "",
+            "address5": "London",
+            "postcode": "HA1 1QF"
+          }
+        }
+      ]
+    }
+  ]
+}

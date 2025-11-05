@@ -1,0 +1,92 @@
+{
+  "totalResults": 7,
+  "cases": [
+    {
+      "caseId": "ab746921-d839-4867-bcf9-b41db8ebc852",
+      "caseReference": "TFL479961",
+      "sjp": true,
+      "crownCourt": true,
+      "magistrateCourt": true,
+      "sjpNoticeServed": "2019-05-07",
+      "caseStatus": "ACTIVE",
+      "caseType": "PROSECUTION",
+      "parties": [
+        {
+          "firstName": "Joe",
+          "middleName": "Peter",
+          "lastName": "Dalton",
+          "partyType": "APPLICANT",
+          "organisationName": "Some Org Name",
+          "dateOfBirth": "1860-01-01",
+          "addressLines": "118 Moultrie Street Oxford Louisiana",
+          "postCode": "OX7 99PT"
+        },
+        {
+          "firstName": "Thomas",
+          "middleName": "Joseph",
+          "lastName": "Smith",
+          "partyType": "DEFENDANT",
+          "organisationName": "Some Org Name",
+          "dateOfBirth": "1860-01-01",
+          "addressLines": "119 Moultrie Street Oxford Louisiana",
+          "postCode": "OX7 99PT"
+        }
+      ],
+      "hearings": [
+        {
+          "hearingId": "70baba30-f45c-4c1e-971e-4581fc2ec30b",
+          "courtId": "b58bdc19-2fb8-4841-bff3-b99f3442c646",
+          "courtCentreName": "Liverpool Magistrates Court",
+          "hearingTypeId": "79bdc7ce-b00b-4d91-b74c-f41aee572a1c",
+          "hearingTypeLabel": "HEARING TYPE LABEL 1",
+          "hearingDates": [
+            "2019-01-22"
+          ],
+          "isBoxHearing": true,
+          "isVirtualBoxHearing": true,
+          "hearingDay": [
+            {
+              "sittingDay": "2019-01-22T10:00:00Z",
+              "listingSequence": 1,
+              "listedDurationMinutes": 60
+            }
+          ],
+          "jurisdictionType": "4e2bddef-9797-424b-980c-95c467b84e86",
+          "judiciaryTypes": []
+        },
+        {
+          "hearingId": "a707f9ab-74f0-4ac2-b728-8206083cb912",
+          "courtId": "f090a492-8cb9-46af-83b2-40364affa09a",
+          "courtCentreName": "Exeter Crown Court",
+          "hearingTypeId": "4136d639-f21f-4df5-b8fe-3465a7941337",
+          "hearingTypeLabel": "HEARING TYPE LABEL 2",
+          "hearingDates": [
+            "2019-04-24",
+            "2019-04-19"
+          ],
+          "isBoxHearing": true,
+          "jurisdictionType": "4e2bddef-9797-424b-980c-95c467b84e86",
+          "judiciaryTypes": [
+            "44beb451-9970-4b9f-9044-1d29e95e8729"
+          ],
+          "assignedTo": {
+            "firstName": "Joe",
+            "lastName": "Doe"
+          }
+        }
+      ],
+      "applications": [
+        {
+          "applicationId": "ab746921-d839-4867-bcf9-b41db8ebc853",
+          "applicationReference": "CJ03510",
+          "applicationType": "Application within criminal proceedings",
+          "applicationStatus": "LISTED",
+          "applicationExternalCreatorType;": "PROSECUTOR",
+          "receivedDate": "2019-01-01",
+          "decisionDate": "2019-04-07",
+          "dueDate": "2019-04-08"
+        }
+      ]
+    }
+  ]
+}
