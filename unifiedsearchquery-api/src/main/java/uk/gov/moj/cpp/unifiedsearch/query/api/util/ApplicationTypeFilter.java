@@ -1,7 +1,7 @@
 package uk.gov.moj.cpp.unifiedsearch.query.api.util;
 
 import static java.util.Objects.isNull;
-import static javax.json.Json.createObjectBuilder;
+import static uk.gov.justice.services.messaging.JsonObjects.createObjectBuilder;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
-import javax.json.Json;
+import uk.gov.justice.services.messaging.JsonObjects;
 import javax.json.JsonArray;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
@@ -63,7 +63,7 @@ public class ApplicationTypeFilter {
                 .filter(e -> !e.getKey().equalsIgnoreCase(CASES))
                 .forEach(e -> outputBuilder.add(e.getKey(), e.getValue()));
 
-        final JsonArrayBuilder caseArrayBuilder = Json.createArrayBuilder();
+        final JsonArrayBuilder caseArrayBuilder = JsonObjects.createArrayBuilder();
         input.getJsonArray(CASES).stream()
                 .map(JsonObject.class::cast)
                 .forEach(currentCase -> {
@@ -105,9 +105,9 @@ public class ApplicationTypeFilter {
 
     private static JsonArray buildMaskedHearings(final JsonObject currentCase) {
         if(!currentCase.containsKey(HEARINGS)){
-            return Json.createArrayBuilder().build();
+            return JsonObjects.createArrayBuilder().build();
         }
-        final JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
+        final JsonArrayBuilder arrayBuilder = JsonObjects.createArrayBuilder();
 
         currentCase.getJsonArray(HEARINGS).stream()
                 .map(JsonObject.class::cast)
@@ -119,7 +119,7 @@ public class ApplicationTypeFilter {
     }
 
     private static JsonArray buildMaskedApplications(final JsonArray applications) {
-        final JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
+        final JsonArrayBuilder arrayBuilder = JsonObjects.createArrayBuilder();
 
         applications.stream()
                 .map(JsonObject.class::cast)
@@ -139,7 +139,7 @@ public class ApplicationTypeFilter {
     }
 
     private static JsonArray buildMaskedParties(final JsonArray parties) {
-        final JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
+        final JsonArrayBuilder arrayBuilder = JsonObjects.createArrayBuilder();
         parties.stream()
                 .map(JsonObject.class::cast)
                 .map(party -> {

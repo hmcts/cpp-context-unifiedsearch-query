@@ -3,7 +3,7 @@ package uk.gov.moj.cpp.unifiedsearch.query.api.util;
 import java.util.Map;
 import java.util.function.Predicate;
 
-import javax.json.Json;
+import uk.gov.justice.services.messaging.JsonObjects;
 import javax.json.JsonArray;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
@@ -28,16 +28,16 @@ public class LAAResultFilter {
 
     });
     public JsonObject filter(final JsonObject input) {
-        final JsonObjectBuilder outputBuilder = Json.createObjectBuilder();
+        final JsonObjectBuilder outputBuilder = JsonObjects.createObjectBuilder();
         input.entrySet().stream()
                 .filter(e->!e.getKey().equalsIgnoreCase(CASES))
                 .forEach(e -> outputBuilder.add(e.getKey(),e.getValue()));
 
-        final JsonArrayBuilder caseArrayBuilder = Json.createArrayBuilder();
+        final JsonArrayBuilder caseArrayBuilder = JsonObjects.createArrayBuilder();
         input.getJsonArray(CASES).stream()
                 .map(e -> (JsonObject)e)
                 .forEach(e-> {
-                    final JsonObjectBuilder caseBuilder = Json.createObjectBuilder();
+                    final JsonObjectBuilder caseBuilder = JsonObjects.createObjectBuilder();
                     e.entrySet().stream()
                             .forEach(el -> {
                                 if (isDefendantSummary(el)) {
@@ -55,7 +55,7 @@ public class LAAResultFilter {
     private JsonArrayBuilder getValidDefendantSummaryArrayObject(final JsonObject el) {
 
         final JsonArray defendantSummaries = el.getJsonArray(DEFENDANT_SUMMARY);
-        final JsonArrayBuilder defendantSummariesBuilder = Json.createArrayBuilder();
+        final JsonArrayBuilder defendantSummariesBuilder = JsonObjects.createArrayBuilder();
         defendantSummaries.stream()
                 .map(e -> (JsonObject)e)
                 .filter(validDefendantPredicate)
