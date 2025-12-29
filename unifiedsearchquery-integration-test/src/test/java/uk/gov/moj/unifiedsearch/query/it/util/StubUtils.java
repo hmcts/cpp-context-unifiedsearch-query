@@ -23,7 +23,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import javax.json.Json;
+import uk.gov.justice.services.messaging.JsonObjects;
 import javax.ws.rs.core.Response;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
@@ -58,7 +58,7 @@ public class StubUtils {
 
     public static void stubEnableAllCapabilities() {
         final String stubUrl = format("/authorisation-service-server/rest/capabilities/%s", ".*");
-        final String responsePayload = Json.createObjectBuilder().add("enabled", true).build().toString();
+        final String responsePayload = JsonObjects.createObjectBuilder().add("enabled", true).build().toString();
 
         stubPingFor("authorisation-service-server");
 

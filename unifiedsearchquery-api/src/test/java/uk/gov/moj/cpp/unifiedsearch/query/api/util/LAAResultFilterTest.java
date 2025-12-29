@@ -6,7 +6,7 @@ import static org.hamcrest.Matchers.hasSize;
 
 import java.util.UUID;
 
-import javax.json.Json;
+import uk.gov.justice.services.messaging.JsonObjects;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
@@ -42,72 +42,72 @@ public class LAAResultFilterTest  {
         final String ORGANISATION_NAME = "organisationName";
         final String MASTER_DEF_ID = UUID.randomUUID().toString();
 
-        final JsonObject partyValidPersonDefendant = Json.createObjectBuilder()
+        final JsonObject partyValidPersonDefendant = JsonObjects.createObjectBuilder()
                 .add("defendantId", DEFENDANT_ID_PERSON)
                 .add("defendantFirstName", DEFENDANT_FIRST_NAME)
                 .add("defendantLastName", DEFENDANT_LAST_NAME)
                 .build();
-        final JsonObject partyInvalidDefendant = Json.createObjectBuilder()
+        final JsonObject partyInvalidDefendant = JsonObjects.createObjectBuilder()
                 .add("defendantId", UUID.randomUUID().toString())
                 .build();
-        final JsonObject partyValidOrganisationDefendant = Json.createObjectBuilder()
+        final JsonObject partyValidOrganisationDefendant = JsonObjects.createObjectBuilder()
                 .add("defendantId", DEFENDANT_ID_ORGANISATION)
                 .add("organisationName", ORGANISATION_NAME)
                 .add("masterDefendantId", MASTER_DEF_ID)
                 .build();
 
 
-        final JsonArray partiesDefendant = Json.createArrayBuilder()
+        final JsonArray partiesDefendant = JsonObjects.createArrayBuilder()
                 .add(partyValidPersonDefendant)
                 .add(partyInvalidDefendant)
                 .build();
 
-        final JsonArray partiesOrganisation = Json.createArrayBuilder()
+        final JsonArray partiesOrganisation = JsonObjects.createArrayBuilder()
                 .add(partyValidOrganisationDefendant)
                 .add(partyInvalidDefendant)
                 .build();
 
-        final JsonArray partiesAll = Json.createArrayBuilder()
+        final JsonArray partiesAll = JsonObjects.createArrayBuilder()
                 .add(partyValidPersonDefendant)
                 .add(partyInvalidDefendant)
                 .add(partyValidOrganisationDefendant)
                 .add(partyInvalidDefendant)
                 .build();
-        final JsonArray partiesNone = Json.createArrayBuilder()
+        final JsonArray partiesNone = JsonObjects.createArrayBuilder()
                 .build();
 
-        final JsonObject case1 = Json.createObjectBuilder()
+        final JsonObject case1 = JsonObjects.createObjectBuilder()
                 .add("caseStatus", "ACTIVE")
                 .add("prosecutionCaseId", CASE_ID_1)
                 .add("prosecutionCaseReference", CASE_REF_1)
                 .add("defendantSummary", partiesDefendant)
 
                 .build();
-        final JsonObject case2 = Json.createObjectBuilder()
+        final JsonObject case2 = JsonObjects.createObjectBuilder()
                 .add("caseStatus", "INACTIVE")
                 .add("prosecutionCaseId", CASE_ID_2)
                 .add("prosecutionCaseReference", CASE_REF_2)
                 .add("defendantSummary", partiesOrganisation)
                 .build();
-        final JsonObject case3 = Json.createObjectBuilder()
+        final JsonObject case3 = JsonObjects.createObjectBuilder()
                 .add("caseStatus", "INACTIVE")
                 .add("prosecutionCaseId", CASE_ID_3)
                 .add("prosecutionCaseReference", CASE_REF_3)
                 .add("defendantSummary", partiesAll)
                 .build();
-        final JsonObject case4 = Json.createObjectBuilder()
+        final JsonObject case4 = JsonObjects.createObjectBuilder()
                 .add("caseStatus", "INACTIVE")
                 .add("prosecutionCaseId", CASE_ID_4)
                 .add("prosecutionCaseReference", CASE_REF_4)
                 .add("defendantSummary", partiesNone)
                 .build();
-        final JsonArray cases = Json.createArrayBuilder()
+        final JsonArray cases = JsonObjects.createArrayBuilder()
                 .add(case1)
                 .add(case2)
                 .add(case3)
                 .add(case4)
                 .build();
-        JsonObjectBuilder resultsBuilder = Json.createObjectBuilder();
+        JsonObjectBuilder resultsBuilder = JsonObjects.createObjectBuilder();
         resultsBuilder.add("totalResults", "1");
         resultsBuilder.add("cases", cases);
 
