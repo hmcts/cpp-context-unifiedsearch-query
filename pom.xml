@@ -10,7 +10,7 @@
 
     <groupId>uk.gov.moj.cpp.unifiedsearch.query</groupId>
     <artifactId>unifiedsearchquery-parent</artifactId>
-    <version>17.103.0-FW-UPGRADE-SNAPSHOT</version>
+    <version>17.103.1-FW-UPGRADE-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Unifiedsearch Query Context - Parent Module</name>
