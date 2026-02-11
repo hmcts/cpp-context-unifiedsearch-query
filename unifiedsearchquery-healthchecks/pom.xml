@@ -3,7 +3,7 @@
     <parent>
         <artifactId>unifiedsearchquery-parent</artifactId>
         <groupId>uk.gov.moj.cpp.unifiedsearch.query</groupId>
-        <version>17.103.0-SNAPSHOT</version>
+        <version>17.103.1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
