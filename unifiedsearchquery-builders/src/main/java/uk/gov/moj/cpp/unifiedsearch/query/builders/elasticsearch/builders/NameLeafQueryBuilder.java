@@ -134,8 +134,8 @@ public class NameLeafQueryBuilder {
     public Query.Builder nestedPartiesBuilder() {
 
         final BoolQuery.Builder booleanQueryBuilder = new BoolQuery.Builder();
-        booleanQueryBuilder.should(getMustMatchQueryBuilderForParties(false).build());
-        booleanQueryBuilder.should(getMustMatchQueryBuilderForParties(true).build());
+        booleanQueryBuilder.should(getMustMatchQueryBuilderForParties(false, getMustMatchQueryBuilderForPartiesList()).build());
+        booleanQueryBuilder.should(getMustMatchQueryBuilderForParties(true, getMustMatchQueryBuilderForPartiesList()).build());
         if (!allNames.isEmpty()) {
             booleanQueryBuilder.should(wrapWithAdditionalPartyQueryBuilders(convertBuilder(getMultiMatchQueryBuilderForParties().operator(And).boost(0.4F))).build());
             booleanQueryBuilder.should(wrapWithAdditionalPartyQueryBuilders(convertBuilder(getMultiMatchQueryBuilderForParties().operator(Or))).build());
@@ -166,8 +166,8 @@ public class NameLeafQueryBuilder {
 
         final BoolQuery.Builder booleanQueryBuilder = new BoolQuery.Builder();
 
-        booleanQueryBuilder.should(getMustMatchQueryBuilderForPartyAliases(false).build());
-        booleanQueryBuilder.should(getMustMatchQueryBuilderForPartyAliases(true).build());
+        booleanQueryBuilder.should(getMustMatchQueryBuilderForParties(false, getMustMatchQueryBuilderForPartyAliasesList()).build());
+        booleanQueryBuilder.should(getMustMatchQueryBuilderForParties(true, getMustMatchQueryBuilderForPartyAliasesList()).build());
 
         if (!allNames.isEmpty()) {
             booleanQueryBuilder.should(wrapWithAdditionalPartyQueryBuilders(convertBuilder(getMultiMatchQueryBuilderForPartyAliases().operator(And).boost(0.4F))).build());
@@ -196,12 +196,11 @@ public class NameLeafQueryBuilder {
     }
 
 
-    private Query.Builder getMustMatchQueryBuilderForParties(final boolean isFuzziness) {
+    private Query.Builder getMustMatchQueryBuilderForParties(final boolean isFuzziness, final List<Query.Builder> mustMatchQueryBuilderList) {
         final BoolQuery.Builder booleanQueryBuilder = new BoolQuery.Builder();
 
         this.additionalPartyQueryBuilders.forEach(booleanQueryBuilder::must);
 
-        final List<Query.Builder> mustMatchQueryBuilderList = getMustMatchQueryBuilderForPartiesList();
         if(isFuzziness){
             mustMatchQueryBuilderList.stream()
                     .map(q -> q.build().match())
@@ -219,32 +218,6 @@ public class NameLeafQueryBuilder {
             mustMatchQueryBuilderList.forEach(b -> booleanQueryBuilder.must(b.build()));
             booleanQueryBuilder.boost(3.0F);
         }
-        return convertBuilder(booleanQueryBuilder);
-    }
-
-    private Query.Builder getMustMatchQueryBuilderForPartyAliases(final boolean isFuzziness) {
-        final BoolQuery.Builder booleanQueryBuilder = new BoolQuery.Builder();
-        this.additionalPartyQueryBuilders.forEach(booleanQueryBuilder::must);
-        final List<Query.Builder> mustMatchQueryBuilderList = getMustMatchQueryBuilderForPartyAliasesList();
-        if(isFuzziness){
-            mustMatchQueryBuilderList.stream()
-                    .map(q -> q.build().match())
-                    .forEach(mqb -> {
-                        MatchQuery.Builder builder = new MatchQuery.Builder();
-                        builder.field(mqb.field());
-                        builder.query(mqb.query());
-                        builder.boost(mqb.boost());
-                        builder.fuzziness(FUZZINESS_AUTO);
-                        booleanQueryBuilder.must(builder.build());
-                    });
-
-
-            booleanQueryBuilder.boost(2.0F);
-        } else {
-            mustMatchQueryBuilderList.forEach(b -> booleanQueryBuilder.must(b.build()));
-            booleanQueryBuilder.boost(3.0F);
-        }
-
         return convertBuilder(booleanQueryBuilder);
     }
 

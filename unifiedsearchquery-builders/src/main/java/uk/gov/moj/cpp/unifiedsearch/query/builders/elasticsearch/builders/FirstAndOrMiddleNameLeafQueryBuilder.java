@@ -82,8 +82,8 @@ public class FirstAndOrMiddleNameLeafQueryBuilder {
     public Query.Builder nestedPartiesBuilder() {
 
         final BoolQuery.Builder booleanQueryBuilder = new BoolQuery.Builder();
-        booleanQueryBuilder.should(getMustMatchQueryBuilderForParties(false).build());
-        booleanQueryBuilder.should(getMustMatchQueryBuilderForParties(true).build());
+        booleanQueryBuilder.should(getMustMatchQueryBuilderForParties(false, getMustMatchQueryBuilderForPartiesList()).build());
+        booleanQueryBuilder.should(getMustMatchQueryBuilderForParties(true, getMustMatchQueryBuilderForPartiesList()).build());
         booleanQueryBuilder.should(wrapWithAdditionalPartyQueryBuilders(convertBuilder(getMultiMatchQueryBuilderForParties().operator(And).boost(0.4F))).build());
         booleanQueryBuilder.should(wrapWithAdditionalPartyQueryBuilders(convertBuilder(getMultiMatchQueryBuilderForParties().operator(Or))).build());
 
@@ -97,8 +97,8 @@ public class FirstAndOrMiddleNameLeafQueryBuilder {
 
         final BoolQuery.Builder booleanQueryBuilder = new BoolQuery.Builder();
 
-        booleanQueryBuilder.should(getMustMatchQueryBuilderForPartyAliases(false).build());
-        booleanQueryBuilder.should(getMustMatchQueryBuilderForPartyAliases(true).build());
+        booleanQueryBuilder.should(getMustMatchQueryBuilderForParties(false,getMustMatchQueryBuilderForPartyAliasesList()).build());
+        booleanQueryBuilder.should(getMustMatchQueryBuilderForParties(true,getMustMatchQueryBuilderForPartyAliasesList()).build());
         booleanQueryBuilder.should(wrapWithAdditionalPartyQueryBuilders(convertBuilder(getMultiMatchQueryBuilderForPartyAliases().operator(And).boost(0.4F))).build());
         booleanQueryBuilder.should(wrapWithAdditionalPartyQueryBuilders(convertBuilder(getMultiMatchQueryBuilderForPartyAliases().operator(Or))).build());
 
@@ -110,12 +110,9 @@ public class FirstAndOrMiddleNameLeafQueryBuilder {
         return convertBuilder(nestedQuery(PARTY_NESTED_PATH, convertBuilder(partyAliasesNestedQueryBuilder)));
     }
 
-    private Query.Builder getMustMatchQueryBuilderForParties(final Boolean isFuzziness) {
+    private Query.Builder getMustMatchQueryBuilderForParties(final Boolean isFuzziness, final List<Query.Builder> mustMatchQueryBuilderList) {
         final BoolQuery.Builder booleanQueryBuilder = new BoolQuery.Builder();
-
         this.additionalPartyQueryBuilders.forEach( b-> booleanQueryBuilder.must(b));
-
-        final List<Query.Builder> mustMatchQueryBuilderList = getMustMatchQueryBuilderForPartiesList();
         if (isFuzziness){
             mustMatchQueryBuilderList.stream()
                     .map(mqb -> mqb.build().match())
@@ -128,28 +125,6 @@ public class FirstAndOrMiddleNameLeafQueryBuilder {
             booleanQueryBuilder.boost(2.0F);
         } else {
             mustMatchQueryBuilderList.forEach(b -> booleanQueryBuilder.must(b.build()));
-
-            booleanQueryBuilder.boost(3.0F);
-        }
-        return convertBuilder(booleanQueryBuilder);
-    }
-
-    private Query.Builder getMustMatchQueryBuilderForPartyAliases(final boolean isFuzziness) {
-        final BoolQuery.Builder booleanQueryBuilder = new BoolQuery.Builder();
-        this.additionalPartyQueryBuilders.forEach( b-> booleanQueryBuilder.must(b));
-        final List<Query.Builder> mustMatchQueryBuilderList = getMustMatchQueryBuilderForPartyAliasesList();
-        if (isFuzziness){
-            mustMatchQueryBuilderList.stream()
-                    .map(q -> q.build().match())
-                    .forEach(mqb -> {
-                        final MatchQuery.Builder builder = QueryBuilderUtils.copyQuery(mqb);
-                        builder.fuzziness(FUZZINESS_AUTO);
-                        booleanQueryBuilder.must(builder.build());
-                    });
-            booleanQueryBuilder.boost(2.0F);
-        } else {
-            mustMatchQueryBuilderList.forEach(b -> booleanQueryBuilder.must(b.build()));
-
             booleanQueryBuilder.boost(3.0F);
         }
         return convertBuilder(booleanQueryBuilder);
