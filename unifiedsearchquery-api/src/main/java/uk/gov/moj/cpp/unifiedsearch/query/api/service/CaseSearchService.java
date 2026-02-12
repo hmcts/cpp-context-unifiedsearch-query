@@ -116,7 +116,7 @@ public class CaseSearchService implements BaseCaseSearchService {
                 .field(f -> f
                         .field(COURT_PROCEEDINGS_INITIATED)
                         .order(co.elastic.clients.elasticsearch._types.SortOrder.Asc)
-                        .nested(n -> n.path("parties"))
+                        .nested(n -> n.path(RESULT_INNER_HIT_NODE_NAME))
                 )
         );
 

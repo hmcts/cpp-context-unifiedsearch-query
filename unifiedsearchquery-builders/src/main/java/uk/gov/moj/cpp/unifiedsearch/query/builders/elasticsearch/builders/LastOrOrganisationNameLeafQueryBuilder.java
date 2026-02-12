@@ -36,6 +36,7 @@ import co.elastic.clients.elasticsearch._types.query_dsl.TextQueryType;
  * all words are searched for across all 2 fields so this will catch all permutations not catered
  * for above, e.g. lastName/lastName
  */
+@SuppressWarnings("common-java:DuplicatedBlocks")
 public class LastOrOrganisationNameLeafQueryBuilder {
 
     private static final String PARTY_LAST_NAME_FIELD = "parties.lastName";
@@ -53,6 +54,7 @@ public class LastOrOrganisationNameLeafQueryBuilder {
     private static final List<String> allPartyAliasNamesFields = asList(PARTY_ALIAS_LAST_NAME_FIELD, PARTY_ALIAS_ORGANISATION_NAME_FIELD);
 
     private static final String FUZZINESS_AUTO = "AUTO";
+    public static final String F = "^2.0f";
     private final List<Query> additionalPartyQueryBuilders;
 
     private String allNames;
@@ -158,16 +160,16 @@ public class LastOrOrganisationNameLeafQueryBuilder {
 
     private MultiMatchQuery.Builder getMultiMatchQueryBuilderForParties() {
         final MultiMatchQuery.Builder allNameFieldsMultiMatchQuery = crossFieldsMultiMatchQueryBuilder(allNames, allPartyNamesFields);
-        allNameFieldsMultiMatchQuery.fields(PARTY_LAST_NAME_FIELD+"^2.0f");
-        allNameFieldsMultiMatchQuery.fields(PARTY_ORGANISATION_NAME_FIELD+"^2.0f");
+        allNameFieldsMultiMatchQuery.fields(PARTY_LAST_NAME_FIELD+ F);
+        allNameFieldsMultiMatchQuery.fields(PARTY_ORGANISATION_NAME_FIELD+ F);
         allNameFieldsMultiMatchQuery.boost(0.3F);
         return allNameFieldsMultiMatchQuery;
     }
 
     private MultiMatchQuery.Builder getMultiMatchQueryBuilderForPartyAliases() {
         final MultiMatchQuery.Builder partyAliasFieldsMultiMatchQuery = crossFieldsMultiMatchQueryBuilder(allNames, allPartyAliasNamesFields);
-        partyAliasFieldsMultiMatchQuery.fields(PARTY_ALIAS_LAST_NAME_FIELD+"^2.0f");
-        partyAliasFieldsMultiMatchQuery.fields(PARTY_ALIAS_ORGANISATION_NAME_FIELD+"^2.0f");
+        partyAliasFieldsMultiMatchQuery.fields(PARTY_ALIAS_LAST_NAME_FIELD+ F);
+        partyAliasFieldsMultiMatchQuery.fields(PARTY_ALIAS_ORGANISATION_NAME_FIELD+ F);
         partyAliasFieldsMultiMatchQuery.boost(0.3F);
         return partyAliasFieldsMultiMatchQuery;
     }

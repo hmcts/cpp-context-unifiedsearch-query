@@ -39,6 +39,7 @@ import co.elastic.clients.elasticsearch._types.query_dsl.Query;
  * all words are searched for across all 4 fields so this will catch all permutations not catered
  * for above, e.g. lastName/firstName
  */
+@SuppressWarnings("common-java:DuplicatedBlocks")
 public class NameLeafQueryBuilder {
 
     private static final String PARTY_FIRST_NAME_FIELD = "parties.firstName";
@@ -63,6 +64,7 @@ public class NameLeafQueryBuilder {
     private static final List<String> lastNameAndOrganisationNameAliasFields = asList(PARTY_ALIAS_LAST_NAME_FIELD, PARTY_ALIAS_ORGANISATION_NAME_FIELD);
 
     private static final String FUZZINESS_AUTO = "AUTO";
+    public static final String F = "^2.0f";
     private final List<Query> additionalPartyQueryBuilders;
 
     private String allNames;
@@ -272,8 +274,8 @@ public class NameLeafQueryBuilder {
         }
         final MultiMatchQuery.Builder allNameFieldsMultiMatchQuery = crossFieldsMultiMatchQueryBuilder(allNames, fields);
         if (hasOneName) {
-            allNameFieldsMultiMatchQuery.fields(PARTY_LAST_NAME_FIELD+"^2.0f");
-            allNameFieldsMultiMatchQuery.fields(PARTY_ORGANISATION_NAME_FIELD+"^2.0f");
+            allNameFieldsMultiMatchQuery.fields(PARTY_LAST_NAME_FIELD+ F);
+            allNameFieldsMultiMatchQuery.fields(PARTY_ORGANISATION_NAME_FIELD+ F);
         }
 
         allNameFieldsMultiMatchQuery.boost(0.3F);
@@ -300,7 +302,7 @@ public class NameLeafQueryBuilder {
         }
         final MultiMatchQuery.Builder partyAliasFieldsMultiMatchQuery = crossFieldsMultiMatchQueryBuilder(allNames, fields);
         if (hasOneName) {
-            partyAliasFieldsMultiMatchQuery.fields(asList(PARTY_ALIAS_LAST_NAME_FIELD+"^2.0f",PARTY_ALIAS_ORGANISATION_NAME_FIELD+"^2.0f" ));
+            partyAliasFieldsMultiMatchQuery.fields(asList(PARTY_ALIAS_LAST_NAME_FIELD+ F,PARTY_ALIAS_ORGANISATION_NAME_FIELD+ F));
         }
 
         partyAliasFieldsMultiMatchQuery.boost(0.3F);

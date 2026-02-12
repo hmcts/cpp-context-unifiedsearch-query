@@ -1,5 +1,6 @@
 package uk.gov.moj.cpp.unifiedsearch.query.common.constant;
 
+@SuppressWarnings("java:S115")
 public enum SortOrder {
     ASC("Asc"),
     DESC("Desc"),

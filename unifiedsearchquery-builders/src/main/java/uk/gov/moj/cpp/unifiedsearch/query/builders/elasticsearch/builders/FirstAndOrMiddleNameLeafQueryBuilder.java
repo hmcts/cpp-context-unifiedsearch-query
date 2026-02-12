@@ -36,6 +36,7 @@ import co.elastic.clients.elasticsearch._types.query_dsl.TextQueryType;
  * all words are searched for across all 2 fields so this will catch all permutations not catered
  * for above, e.g. lastName/firstName
  */
+@SuppressWarnings("common-java:DuplicatedBlocks")
 public class FirstAndOrMiddleNameLeafQueryBuilder {
 
     private static final String PARTY_FIRST_NAME_FIELD = "parties.firstName";
@@ -54,6 +55,7 @@ public class FirstAndOrMiddleNameLeafQueryBuilder {
     private static final List<String> allPartyAliasNamesFields = asList(PARTY_ALIAS_FIRST_NAME_FIELD, PARTY_ALIAS_MIDDLE_NAME_FIELD);
 
     private static final String FUZZINESS_AUTO = "AUTO";
+    public static final String F = "^2.0f";
     private final List<Query> additionalPartyQueryBuilders;
 
     private String allNames;
@@ -175,13 +177,13 @@ public class FirstAndOrMiddleNameLeafQueryBuilder {
     private MultiMatchQuery.Builder getMultiMatchQueryBuilderForParties() {
         if (hasOneName) {
             final MultiMatchQuery.Builder allNameFieldsMultiMatchQuery = crossFieldsMultiMatchQueryBuilder(allNames, asList(PARTY_FIRST_NAME_FIELD));
-            allNameFieldsMultiMatchQuery.fields(PARTY_FIRST_NAME_FIELD+"^2.0f");
+            allNameFieldsMultiMatchQuery.fields(PARTY_FIRST_NAME_FIELD+ F);
             allNameFieldsMultiMatchQuery.boost(0.3F);
             return allNameFieldsMultiMatchQuery;
         } else {
             final MultiMatchQuery.Builder allNameFieldsMultiMatchQuery = crossFieldsMultiMatchQueryBuilder(allNames, allPartyNamesFields);
-            allNameFieldsMultiMatchQuery.fields(PARTY_FIRST_NAME_FIELD+"^2.0f");
-            allNameFieldsMultiMatchQuery.fields(PARTY_MIDDLE_NAME_FIELD+"^2.0f");
+            allNameFieldsMultiMatchQuery.fields(PARTY_FIRST_NAME_FIELD+ F);
+            allNameFieldsMultiMatchQuery.fields(PARTY_MIDDLE_NAME_FIELD+ F);
             allNameFieldsMultiMatchQuery.boost(0.3F);
             return allNameFieldsMultiMatchQuery;
         }
@@ -192,13 +194,13 @@ public class FirstAndOrMiddleNameLeafQueryBuilder {
     private MultiMatchQuery.Builder getMultiMatchQueryBuilderForPartyAliases() {
         if (hasOneName) {
             final MultiMatchQuery.Builder partyAliasFieldsMultiMatchQuery = crossFieldsMultiMatchQueryBuilder(allNames, asList(PARTY_FIRST_NAME_FIELD));
-            partyAliasFieldsMultiMatchQuery.fields(PARTY_ALIAS_FIRST_NAME_FIELD+"^2.0f");
+            partyAliasFieldsMultiMatchQuery.fields(PARTY_ALIAS_FIRST_NAME_FIELD+ F);
             partyAliasFieldsMultiMatchQuery.boost(0.3F);
             return partyAliasFieldsMultiMatchQuery;
         } else {
             final MultiMatchQuery.Builder partyAliasFieldsMultiMatchQuery = crossFieldsMultiMatchQueryBuilder(allNames, allPartyAliasNamesFields);
-            partyAliasFieldsMultiMatchQuery.fields(PARTY_ALIAS_FIRST_NAME_FIELD+"^2.0f");
-            partyAliasFieldsMultiMatchQuery.fields(PARTY_ALIAS_MIDDLE_NAME_FIELD+"^2.0f");
+            partyAliasFieldsMultiMatchQuery.fields(PARTY_ALIAS_FIRST_NAME_FIELD+ F);
+            partyAliasFieldsMultiMatchQuery.fields(PARTY_ALIAS_MIDDLE_NAME_FIELD+ F);
             partyAliasFieldsMultiMatchQuery.boost(0.3F);
             return partyAliasFieldsMultiMatchQuery;
         }
