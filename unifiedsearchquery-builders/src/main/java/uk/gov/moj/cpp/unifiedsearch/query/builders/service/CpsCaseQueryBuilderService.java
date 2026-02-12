@@ -2,7 +2,7 @@ package uk.gov.moj.cpp.unifiedsearch.query.builders.service;
 
 import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
-import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
+import static uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.ElasticSearchQueryBuilder.convertBuilder;
 import static uk.gov.moj.cpp.unifiedsearch.query.common.constant.CpsCaseSearchConstants.CASE_STATUS;
 import static uk.gov.moj.cpp.unifiedsearch.query.common.constant.CpsCaseSearchConstants.CASE_TYPE;
 import static uk.gov.moj.cpp.unifiedsearch.query.common.constant.CpsCaseSearchConstants.CJS_AREA;
@@ -42,18 +42,18 @@ import java.util.Map;
 
 import javax.enterprise.context.ApplicationScoped;
 
+import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import com.google.common.collect.ImmutableMap;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 
 @ApplicationScoped
 public class CpsCaseQueryBuilderService extends AbstractQueryBuilderService implements
         UnifiedSearchQueryBuilderService<CpsQueryParameters> {
 
     @Override
-    public QueryBuilder builder(final CpsQueryParameters queryParameters) {
+    public Query.Builder builder(final CpsQueryParameters queryParameters) {
 
-        final BoolQueryBuilder queryBuilder = boolQuery();
+        final BoolQuery.Builder queryBuilder = new BoolQuery.Builder();
 
         addCaseQueryBuilders(queryParameters, queryBuilder);
 
@@ -63,11 +63,11 @@ public class CpsCaseQueryBuilderService extends AbstractQueryBuilderService impl
 
         addLinkedCaseQueryBuilders(queryParameters, queryBuilder);
 
-        return queryBuilder;
+        return convertBuilder(queryBuilder);
     }
 
     private void addCaseQueryBuilders(CpsQueryParameters queryParameters,
-                                      BoolQueryBuilder queryBuilder) {
+                                      BoolQuery.Builder queryBuilder) {
         final String urn = trimToEmpty(queryParameters.getUrn());
         final String caseStatusCode = trimToEmpty(queryParameters.getCaseStatusCode());
         final String caseType = trimToEmpty(queryParameters.getCaseType());
@@ -94,13 +94,13 @@ public class CpsCaseQueryBuilderService extends AbstractQueryBuilderService impl
       }
 
     private void addLinkedCaseQueryBuilders(final CpsQueryParameters queryParameters,
-                                            final BoolQueryBuilder queryBuilder){
+                                            final BoolQuery.Builder queryBuilder){
         final String excludeAutomaticallyLinkedCasesTo = trimToEmpty(queryParameters.getExcludeAutomaticallyLinkedCasesTo());
         addFilterToQueryIfPresent(excludeAutomaticallyLinkedCasesTo, LINKED_CASE_ID, queryBuilder);
     }
 
     private void addHearingQueryBuilders(final CpsQueryParameters queryParameters,
-                                         final BoolQueryBuilder queryBuilder) {
+                                         final BoolQuery.Builder queryBuilder) {
         final String hearingType = trimToEmpty(queryParameters.getHearingType());
         final String hearingDateFromParam = trimToEmpty(queryParameters.getHearingDateFrom());
         final String hearingDateToParam = trimToEmpty(queryParameters.getHearingDateTo());
@@ -113,13 +113,13 @@ public class CpsCaseQueryBuilderService extends AbstractQueryBuilderService impl
                 .put(COURT_HOUSE, courtHouse)
                 .put(JURISDICTION, jurisdictionTypes);
 
-        final List<QueryBuilder> allHearingFilters = createFilters(builder.build());
+        final List<Query> allHearingFilters = createFilters(builder.build());
         if (!hearingDateFromParam.isEmpty() || !hearingDateToParam.isEmpty()) {
             allHearingFilters.add(getQueryBuilder(HEARING_DATE_TIME, hearingDateFromParam,
                     hearingDateToParam));
         }
 
-        final QueryBuilder additionalHearingFilterQueries = createAdditionalMustFilter(
+        final Query additionalHearingFilterQueries = createAdditionalMustFilter(
                 HEARINGS_NESTED_PATH, allHearingFilters);
         if (additionalHearingFilterQueries != null) {
             queryBuilder.must(additionalHearingFilterQueries);
@@ -127,7 +127,7 @@ public class CpsCaseQueryBuilderService extends AbstractQueryBuilderService impl
     }
 
     private void addPartyQueryBuilders(final CpsQueryParameters queryParameters,
-                                       final BoolQueryBuilder queryBuilder) {
+                                       final BoolQuery.Builder queryBuilder) {
 
         final String dateOfBirth = trimToEmpty(queryParameters.getDateOfBirth());
         final String partyTypes = trimToEmpty(queryParameters.getPartyTypes());
@@ -143,12 +143,12 @@ public class CpsCaseQueryBuilderService extends AbstractQueryBuilderService impl
                 .put(DATE_OF_BIRTH, dateOfBirth);
 
 
-        final List<QueryBuilder> allPartyFilters = createFilters(builder.build());
+        final List<Query> allPartyFilters = createFilters(builder.build());
 
         addFiltersForPartyNamesAndTypes(partyTypes, partyFirstName, partyLastName,
                 organisationName, allPartyFilters);
 
-        final QueryBuilder additionalPartyFilterQueries = createAdditionalMustFilter(
+        final Query additionalPartyFilterQueries = createAdditionalMustFilter(
                 PARTY_NESTED_PATH, allPartyFilters);
         if (additionalPartyFilterQueries != null) {
             queryBuilder.must(additionalPartyFilterQueries);
@@ -159,18 +159,18 @@ public class CpsCaseQueryBuilderService extends AbstractQueryBuilderService impl
 
     private void addFiltersForPartyNamesAndTypes(final String partyTypes, final String partyFirstName,
                                                  final String partyLastName, final String organisationName,
-                                                 final List<QueryBuilder> allPartyFilters) {
-        final QueryBuilder queryBuilder = getQueryBuilder(PARTY_NAMES, ImmutableMap.of(
+                                                 final List<Query> allPartyFilters) {
+        final Query query = getQueryBuilder(PARTY_NAMES, ImmutableMap.of(
                 PARTY_TYPES, partyTypes,
                 PARTY_FIRST_NAME, partyFirstName,
                 PARTY_LAST_NAME, partyLastName,
                 ORGANISATION, organisationName));
 
-        ofNullable(queryBuilder).ifPresent(allPartyFilters::add);
+        ofNullable(query).ifPresent(allPartyFilters::add);
     }
 
     private void addOffenceQueryBuilders(CpsQueryParameters queryParameters,
-                                         BoolQueryBuilder queryBuilder) {
+                                         BoolQuery.Builder queryBuilder) {
         final String offence = trimToEmpty(queryParameters.getOffence());
         final Map<String, Object> partiesExactQueryBuilders = new HashMap<>();
         if (!offence.isEmpty()) {
@@ -178,7 +178,7 @@ public class CpsCaseQueryBuilderService extends AbstractQueryBuilderService impl
         }
         //TODO: Offence start and end date search
 
-        final QueryBuilder additionalPartyFilterQueries = createAdditionalMustFilter(
+        final Query additionalPartyFilterQueries = createAdditionalMustFilter(
                 OFFENCES_NESTED_PATH, createFilters(partiesExactQueryBuilders));
         if (additionalPartyFilterQueries != null) {
             queryBuilder.must(additionalPartyFilterQueries);

@@ -1,17 +1,16 @@
 package uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.builders;
 
-import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static uk.gov.moj.cpp.unifiedsearch.query.builders.utils.HearingDateUtil.stringToDate;
 import static uk.gov.moj.cpp.unifiedsearch.query.common.constant.CaseSearchConstants.HEARING_DAY_REFERENCE_PATH;
 
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.RangeQueryBuilder;
-import org.elasticsearch.index.query.TermQueryBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import co.elastic.clients.elasticsearch._types.query_dsl.RangeQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.TermQuery;
 
 public class HearingDateSearchQueryBuilderTest {
 
@@ -26,31 +25,29 @@ public class HearingDateSearchQueryBuilderTest {
     public void shouldReturnValidQueryBuilderForHearingDateFrom() {
         final String hearingDateFrom = "2019-04-19";
         final String hearingDateTo = "";
-        final QueryBuilder actualQueryBuilder = hearingDateSearchQueryBuilder.getQueryBuilderBy(hearingDateFrom, hearingDateTo);
+        final Query actualQueryBuilder = hearingDateSearchQueryBuilder.getQueryBuilderBy(hearingDateFrom, hearingDateTo);
 
         assertThat(actualQueryBuilder, is(notNullValue()));
 
-        assertThat(actualQueryBuilder, instanceOf(TermQueryBuilder.class));
+        assertThat(actualQueryBuilder.term(), notNullValue());
 
-        final TermQueryBuilder termQueryBuilder = (TermQueryBuilder) actualQueryBuilder;
-        assertThat(termQueryBuilder.getName(), is("term"));
-        assertThat(termQueryBuilder.fieldName(), is(HEARING_DAY_REFERENCE_PATH));
-        assertThat(termQueryBuilder.value(), is(hearingDateFrom));
+        final TermQuery termQueryBuilder = actualQueryBuilder.term();
+        assertThat(termQueryBuilder.field(), is(HEARING_DAY_REFERENCE_PATH));
+        assertThat(termQueryBuilder.value().stringValue(), is(hearingDateFrom));
     }
 
     @Test
     public void shouldReturnValidQueryBuilderForHearingDateTo() {
         final String hearingDateFrom = "";
         final String hearingDateTo = "2019-04-19";
-        final QueryBuilder actualQueryBuilder = hearingDateSearchQueryBuilder.getQueryBuilderBy(hearingDateFrom, hearingDateTo);
+        final Query actualQueryBuilder = hearingDateSearchQueryBuilder.getQueryBuilderBy(hearingDateFrom, hearingDateTo);
 
         assertThat(actualQueryBuilder, is(notNullValue()));
-        assertThat(actualQueryBuilder, instanceOf(TermQueryBuilder.class));
+        assertThat(actualQueryBuilder.term(), notNullValue());
 
-        final TermQueryBuilder termQueryBuilder = (TermQueryBuilder) actualQueryBuilder;
-        assertThat(termQueryBuilder.getName(), is("term"));
-        assertThat(termQueryBuilder.fieldName(), is(HEARING_DAY_REFERENCE_PATH));
-        assertThat(termQueryBuilder.value(), is(hearingDateTo));
+        final TermQuery termQueryBuilder = actualQueryBuilder.term();
+        assertThat(termQueryBuilder.field(), is(HEARING_DAY_REFERENCE_PATH));
+        assertThat(termQueryBuilder.value().stringValue(), is(hearingDateTo));
     }
 
     @Test
@@ -58,16 +55,15 @@ public class HearingDateSearchQueryBuilderTest {
         final String hearingDateFrom = "2019-04-19";
         final String hearingDateTo = "2019-05-17";
 
-        final QueryBuilder actualQueryBuilder = hearingDateSearchQueryBuilder.getQueryBuilderBy(hearingDateFrom, hearingDateTo);
+        final Query actualQueryBuilder = hearingDateSearchQueryBuilder.getQueryBuilderBy(hearingDateFrom, hearingDateTo);
 
         assertThat(actualQueryBuilder, is(notNullValue()));
-        assertThat(actualQueryBuilder, instanceOf(RangeQueryBuilder.class));
+        assertThat(actualQueryBuilder.range(), notNullValue());
 
-        final RangeQueryBuilder rangeQueryBuilder = (RangeQueryBuilder) actualQueryBuilder;
-        assertThat(rangeQueryBuilder.getName(), is("range"));
-        assertThat(rangeQueryBuilder.fieldName(), is(HEARING_DAY_REFERENCE_PATH));
-        assertThat(rangeQueryBuilder.from(), is(stringToDate(hearingDateFrom)));
-        assertThat(rangeQueryBuilder.to(), is(stringToDate(hearingDateTo)));
+        final RangeQuery rangeQueryBuilder =actualQueryBuilder.range();
+        assertThat(rangeQueryBuilder.untyped().field(), is(HEARING_DAY_REFERENCE_PATH));
+        assertThat(rangeQueryBuilder.untyped().gte().toString(), is(hearingDateFrom));
+        assertThat(rangeQueryBuilder.untyped().lte().toString(), is(hearingDateTo));
     }
 }
 

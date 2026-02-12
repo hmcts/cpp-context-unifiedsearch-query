@@ -1,13 +1,13 @@
 package uk.gov.moj.cpp.unifiedsearch.query.api.service;
 
-import static org.elasticsearch.search.sort.SortBuilders.fieldSort;
-import static org.elasticsearch.search.sort.SortOrder.ASC;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.core.IsNull.notNullValue;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.eq;
 import static uk.gov.moj.cpp.unifiedsearch.query.api.service.CaseSearchService.APPOINTMENT_DATE;
 import static uk.gov.moj.cpp.unifiedsearch.query.api.service.CaseSearchService.CASE_REFERENCE;
 import static uk.gov.moj.cpp.unifiedsearch.query.api.service.CaseSearchService.COURT_PROCEEDINGS_INITIATED;
@@ -33,15 +33,16 @@ import javax.json.JsonArray;
 import javax.json.JsonNumber;
 import javax.json.JsonObject;
 
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.search.sort.FieldSortBuilder;
-import org.elasticsearch.search.sort.NestedSortBuilder;
+import co.elastic.clients.elasticsearch._types.SortOptions;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import co.elastic.clients.elasticsearch._types.SortOrder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.ArgumentCaptor;
 
 @ExtendWith(MockitoExtension.class)
 public class CaseSearchServiceTest {
@@ -53,7 +54,7 @@ public class CaseSearchServiceTest {
     private JsonNumber totalResults;
 
     @Mock
-    private BoolQueryBuilder boolQueryBuilder;
+    private Query.Builder query;
 
     @Mock
     private JsonObject response;
@@ -80,8 +81,8 @@ public class CaseSearchServiceTest {
         final QueryParameters queryParameters = mock(QueryParameters.class);
 
 
-        when(unifiedSearchQueryBuilderService.builder(queryParameters)).thenReturn(boolQueryBuilder);
-        when(unifiedSearchService.search(boolQueryBuilder,
+        when(unifiedSearchQueryBuilderService.builder(queryParameters)).thenReturn(query);
+        when(unifiedSearchService.search(query,
                 CRIME_CASE_INDEX_NAME,
                 uk.gov.moj.cpp.unifiedsearch.query.api.domain.response.indexdoc2apiresponse.Case.class,
                 resultHitNodeName,
@@ -117,8 +118,8 @@ public class CaseSearchServiceTest {
                 .build();
         final JsonArray cases = Json.createArrayBuilder().add(case1).add(case2).build();
 
-        when(unifiedSearchQueryBuilderService.builder(queryParameters)).thenReturn(boolQueryBuilder);
-        when(unifiedSearchService.search(boolQueryBuilder,
+        when(unifiedSearchQueryBuilderService.builder(queryParameters)).thenReturn(query);
+        when(unifiedSearchService.search(query,
                 CRIME_CASE_INDEX_NAME,
                 ProbationDefendantDetails.class,
                 resultHitNodeName,
@@ -139,57 +140,80 @@ public class CaseSearchServiceTest {
     @Test
     public void shouldReturnSortedBySjpNoticeServedSearchCasesResult() {
         final QueryParameters queryParameters = mock(QueryParameters.class);
-        final FieldSortBuilder fieldSortBuilder = fieldSort(SJP_NOTICE_SERVED)
-                .missing(missing_last)
-                .order(ASC);
+        SortOptions expectedSortOptions = SortOptions.of(s -> s
+                .field(f -> f
+                        .field(SJP_NOTICE_SERVED)
+                        .missing(missing_last)
+                        .order(SortOrder.Asc)
+                )
+        );
 
         when(queryParameters.getSortBySjpNoticeServed()).thenReturn("asc");
 
-        when(unifiedSearchQueryBuilderService.builder(queryParameters)).thenReturn(boolQueryBuilder);
-        when(unifiedSearchService.search(boolQueryBuilder,
-                CRIME_CASE_INDEX_NAME,
-                uk.gov.moj.cpp.unifiedsearch.query.api.domain.response.indexdoc2apiresponse.Case.class,
-                resultHitNodeName,
-                queryParameters.getPageSize(),
-                queryParameters.getStartFrom(),
-                fieldSortBuilder))
-                .thenReturn(response);
+        when(unifiedSearchQueryBuilderService.builder(queryParameters)).thenReturn(query);
+        ArgumentCaptor<SortOptions> sortOptionsCaptor = ArgumentCaptor.forClass(SortOptions.class);
+        when(unifiedSearchService.search(
+                eq(query),
+                eq(CRIME_CASE_INDEX_NAME),
+                eq(uk.gov.moj.cpp.unifiedsearch.query.api.domain.response.indexdoc2apiresponse.Case.class),
+                eq(resultHitNodeName),
+                anyInt(),
+                anyInt(),
+                sortOptionsCaptor.capture()
+        )).thenReturn(response);
 
         final JsonObject caseQueryResult = caseQueryService.searchCases(queryParameters);
 
         assertThat(caseQueryResult, is(notNullValue()));
 
         verify(unifiedSearchQueryBuilderService).builder(queryParameters);
+        assertThat(sortOptionsCaptor.getValue().toString(), is(expectedSortOptions.toString()));
     }
 
     @Test
     public void shouldReturnSortedByAppointmentDateSearchCasesResult() {
         final QueryParameters queryParameters = mock(QueryParameters.class);
-        final FieldSortBuilder fieldSortBuilder = fieldSort(APPOINTMENT_DATE).missing(missing_last).order(ASC).setNestedSort(new NestedSortBuilder(HEARINGS));
+        SortOptions expectedSortOptions = SortOptions.of(s -> s
+                .field(f -> {
+                    f.field(APPOINTMENT_DATE)
+                     .missing(missing_last)
+                     .order(SortOrder.Asc);
+                    f.nested(n -> n.path(HEARINGS));
+                    return f;
+                })
+        );
 
         when(queryParameters.getSortByAppointmentDate()).thenReturn("asc");
-
-        when(unifiedSearchQueryBuilderService.builder(queryParameters)).thenReturn(boolQueryBuilder);
-        when(unifiedSearchService.search(boolQueryBuilder,
-                CRIME_CASE_INDEX_NAME,
-                uk.gov.moj.cpp.unifiedsearch.query.api.domain.response.indexdoc2apiresponse.Case.class,
-                resultHitNodeName,
-                queryParameters.getPageSize(),
-                queryParameters.getStartFrom(),
-                fieldSortBuilder))
-                .thenReturn(response);
+        when(unifiedSearchQueryBuilderService.builder(queryParameters)).thenReturn(query);
+        ArgumentCaptor<SortOptions> sortOptionsCaptor = ArgumentCaptor.forClass(SortOptions.class);
+        when(unifiedSearchService.search(
+                eq(query),
+                eq(CRIME_CASE_INDEX_NAME),
+                eq(uk.gov.moj.cpp.unifiedsearch.query.api.domain.response.indexdoc2apiresponse.Case.class),
+                eq(resultHitNodeName),
+                anyInt(),
+               anyInt(),
+                sortOptionsCaptor.capture()
+        )).thenReturn(response);
 
         final JsonObject caseQueryResult = caseQueryService.searchCases(queryParameters);
 
         assertThat(caseQueryResult, is(notNullValue()));
 
         verify(unifiedSearchQueryBuilderService).builder(queryParameters);
+        assertThat(sortOptionsCaptor.getValue().toString(), is(expectedSortOptions.toString()));
     }
 
     @Test
     public void shouldReturnSortedSearchCasesResultForDefendantSearch() {
         final QueryParameters queryParameters = mock(QueryParameters.class);
-        final FieldSortBuilder fieldSortBuilder = fieldSort(COURT_PROCEEDINGS_INITIATED).order(ASC);
+        SortOptions expectedSortOptions = SortOptions.of(s -> s
+                .field(f -> f
+                        .field(COURT_PROCEEDINGS_INITIATED)
+                        .order(SortOrder.Asc)
+                        .nested(n -> n.path("parties"))
+                )
+        );
         final JsonObject party = Json.createObjectBuilder().add("defendantId", UUID.randomUUID().toString()).build();
         final JsonArray parties = Json.createArrayBuilder().add(party).build();
 
@@ -199,27 +223,26 @@ public class CaseSearchServiceTest {
                 .add(DEFENDANTS, parties)
                 .build();
         final JsonArray cases = Json.createArrayBuilder().add(case1).build();
-        when(unifiedSearchQueryBuilderService.builder(queryParameters)).thenReturn(boolQueryBuilder);
-
-        when(unifiedSearchService.search(boolQueryBuilder,
-                CRIME_CASE_INDEX_NAME,
-                uk.gov.moj.cpp.unifiedsearch.query.api.domain.response.index2defendantcaseresponse.Case.class,
-                resultHitNodeName,
-                queryParameters.getPageSize(),
-                queryParameters.getStartFrom(),
-                fieldSortBuilder,
-                uk.gov.moj.cpp.unifiedsearch.query.api.domain.response.index2defendantcaseresponse.Party.class,
-                RESULT_INNER_HIT_NODE_NAME
-        ))
-                .thenReturn(response);
+        when(unifiedSearchQueryBuilderService.builder(queryParameters)).thenReturn(query);
+        ArgumentCaptor<SortOptions> sortOptionsCaptor = ArgumentCaptor.forClass(SortOptions.class);
+        when(unifiedSearchService.search(
+                eq(query),
+                eq(CRIME_CASE_INDEX_NAME),
+                eq(uk.gov.moj.cpp.unifiedsearch.query.api.domain.response.index2defendantcaseresponse.Case.class),
+                eq(resultHitNodeName),
+                anyInt(),
+                anyInt(),
+                sortOptionsCaptor.capture(),
+                eq(uk.gov.moj.cpp.unifiedsearch.query.api.domain.response.index2defendantcaseresponse.Party.class),
+                eq(RESULT_INNER_HIT_NODE_NAME)
+        )).thenReturn(response);
         when(response.getJsonArray(RESULT_INNER_HIT_NODE_NAME)).thenReturn(parties);
         when(response.getJsonArray(RESULT_HIT_NODE_NAME)).thenReturn(cases);
         when(response.getJsonNumber(TOTAL_RESULTS)).thenReturn(totalResults);
 
         final JsonObject caseQueryResult = caseQueryService.searchDefendantCases(queryParameters);
-
         assertThat(caseQueryResult, is(notNullValue()));
-
         verify(unifiedSearchQueryBuilderService).builder(queryParameters);
+        assertThat(sortOptionsCaptor.getValue().toString(), is(expectedSortOptions.toString()));
     }
 }

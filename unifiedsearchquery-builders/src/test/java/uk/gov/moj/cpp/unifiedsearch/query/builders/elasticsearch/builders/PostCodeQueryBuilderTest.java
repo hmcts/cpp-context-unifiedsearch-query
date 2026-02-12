@@ -1,12 +1,11 @@
 package uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.builders;
 
-import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import org.elasticsearch.index.query.MatchQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
+import co.elastic.clients.elasticsearch._types.query_dsl.MatchQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import org.junit.jupiter.api.Test;
 
 public class PostCodeQueryBuilderTest {
@@ -17,15 +16,14 @@ public class PostCodeQueryBuilderTest {
         final PostCodeQueryBuilder postCodeQueryBuilder = new PostCodeQueryBuilder();
 
         final String postCode = "W13 7TB";
-        final QueryBuilder actualQueryBuilder = postCodeQueryBuilder.getQueryBuilderBy(postCode);
+        final Query actualQuery = postCodeQueryBuilder.getQueryBuilderBy(postCode);
 
-        assertThat(actualQueryBuilder, is(notNullValue()));
-        assertThat(actualQueryBuilder, instanceOf(MatchQueryBuilder.class));
+        assertThat(actualQuery, is(notNullValue()));
+        final MatchQuery matchQueryBuilder = actualQuery.match();
+        assertThat(matchQueryBuilder, notNullValue());
 
-        final MatchQueryBuilder matchQueryBuilder = (MatchQueryBuilder) actualQueryBuilder;
-        assertThat(matchQueryBuilder.getName(), is("match"));
-        assertThat(matchQueryBuilder.fieldName(), is("parties.postCode"));
-        assertThat(matchQueryBuilder.value(), is(postCode));
+        assertThat(matchQueryBuilder.field(), is("parties.postCode"));
+        assertThat(matchQueryBuilder.query().stringValue(), is(postCode));
     }
 
 }

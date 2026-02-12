@@ -1,35 +1,36 @@
 package uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.builders;
 
-import static org.apache.lucene.search.join.ScoreMode.Avg;
-import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
-import static org.elasticsearch.index.query.QueryBuilders.nestedQuery;
+import static uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.ElasticSearchQueryBuilder.convertBuilder;
+import static uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.ElasticSearchQueryBuilder.nestedQuery;
 import static uk.gov.moj.cpp.unifiedsearch.query.common.constant.CaseSearchConstants.APPLICATIONS_NESTED_PATH;
 import static uk.gov.moj.cpp.unifiedsearch.query.common.constant.CaseSearchConstants.APPLICATION_REFERENCE_PATH;
 import static uk.gov.moj.cpp.unifiedsearch.query.common.constant.CaseSearchConstants.CASE_REFERENCE;
+import static uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.ElasticSearchQueryBuilder.termQuery;
 
 import uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.ElasticSearchQueryBuilder;
 
 import java.util.List;
 
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.TermQueryBuilder;
+import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
+
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+
 
 public class ReferenceSearchQueryBuilder implements ElasticSearchQueryBuilder {
 
 
     @Override
-    public QueryBuilder getQueryBuilderBy(final Object... queryParam) {
-        final Object caseReferenceValue = queryParam[0];
-        final List<QueryBuilder> applicationFilters = (List<QueryBuilder>) queryParam[1];
+    public Query getQueryBuilderBy(final Object... queryParam) {
+        final String caseReferenceValue = String.valueOf(queryParam[0]);
+        final List<Query> applicationFilters = (List<Query>) queryParam[1];
 
-        final BoolQueryBuilder applicationInnerBoolWrapper = boolQuery()
-                .must(new TermQueryBuilder(APPLICATION_REFERENCE_PATH, caseReferenceValue));
+        final BoolQuery.Builder applicationInnerBoolWrapper = (new BoolQuery.Builder())
+                .must(termQuery(APPLICATION_REFERENCE_PATH, caseReferenceValue).build());
 
         applicationFilters.forEach(applicationInnerBoolWrapper::must);
 
-        return boolQuery()
-                .should(new TermQueryBuilder(CASE_REFERENCE, caseReferenceValue))
-                .should(nestedQuery(APPLICATIONS_NESTED_PATH, applicationInnerBoolWrapper, Avg));
+        return convertBuilder((new BoolQuery.Builder())
+                .should(termQuery(CASE_REFERENCE, caseReferenceValue).build())
+                .should(convertBuilder(nestedQuery(APPLICATIONS_NESTED_PATH, convertBuilder(applicationInnerBoolWrapper))).build())).build();
     }
 }
