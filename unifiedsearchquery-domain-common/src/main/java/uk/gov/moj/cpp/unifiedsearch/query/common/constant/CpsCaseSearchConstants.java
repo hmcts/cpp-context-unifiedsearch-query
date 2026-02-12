@@ -1,9 +1,8 @@
 package uk.gov.moj.cpp.unifiedsearch.query.common.constant;
 
 
-import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
-
-import org.elasticsearch.index.query.RangeQueryBuilder;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import co.elastic.clients.json.JsonData;
 
 public class CpsCaseSearchConstants {
 
@@ -78,7 +77,13 @@ public class CpsCaseSearchConstants {
     public static final String OFFENCE_DESCRIPTION_SORT_BY = "offenceDescription";
     public static final String DEFENDANT_LASTNAME_SORT_BY = "defendantLastName";
     public static final String PARTY_LASTNAME_OR_ORGANISATIONNAME_SORT_BY = "partyLastOrOrganisationName";
-    public static final RangeQueryBuilder HEARING_DATE_NESTED_FILTER = rangeQuery(HEARING_DATE_TIME_PATH).gte("now");
+    public static final Query HEARING_DATE_NESTED_FILTER =
+            Query.of(q -> q.range(r -> r
+                    .untyped(u -> u
+                            .field(HEARING_DATE_TIME_PATH)
+                            .gte(JsonData.of("now"))
+                    )
+            ));
 
     private CpsCaseSearchConstants() {
     }

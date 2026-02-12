@@ -4,7 +4,6 @@ import static java.util.Optional.empty;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
-import static org.elasticsearch.search.sort.SortBuilders.fieldSort;
 import static uk.gov.moj.cpp.unifiedsearch.query.common.constant.CaseSearchConstants.CRIME_CASE_INDEX_NAME;
 
 import uk.gov.justice.services.unifiedsearch.UnifiedSearchName;
@@ -27,9 +26,8 @@ import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.search.sort.FieldSortBuilder;
-import org.elasticsearch.search.sort.SortOrder;
+import co.elastic.clients.elasticsearch._types.SortOptions;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 
 
 @ApplicationScoped
@@ -61,8 +59,8 @@ public class CaseSearchService implements BaseCaseSearchService {
     private UnifiedSearchQueryBuilderService unifiedSearchQueryBuilderService;
 
     public JsonObject searchCases(final QueryParameters queryParameters) {
-        final QueryBuilder queryBuilder = unifiedSearchQueryBuilderService.builder(queryParameters);
-        final Optional<FieldSortBuilder> fieldSortBuilder = getSortBuilder(queryParameters);
+        final Query.Builder queryBuilder = unifiedSearchQueryBuilderService.builder(queryParameters);
+        final Optional<SortOptions> fieldSortBuilder = getSortBuilder(queryParameters);
 
         return unifiedSearchService.search(queryBuilder,
                 CRIME_CASE_INDEX_NAME,
@@ -75,7 +73,7 @@ public class CaseSearchService implements BaseCaseSearchService {
 
 
     public JsonObject searchLaaCases(final QueryParameters queryParameters) {
-        final QueryBuilder queryBuilder = unifiedSearchQueryBuilderService.builder(queryParameters);
+        final Query.Builder queryBuilder = unifiedSearchQueryBuilderService.builder(queryParameters);
 
         final JsonObject results = unifiedSearchService.search(queryBuilder,
                 CRIME_CASE_INDEX_NAME,
@@ -89,7 +87,7 @@ public class CaseSearchService implements BaseCaseSearchService {
 
 
     public JsonObject searchProbationDefendantDetails(final QueryParameters queryParameters) {
-        final QueryBuilder queryBuilder = unifiedSearchQueryBuilderService.builder(queryParameters);
+        final Query.Builder queryBuilder = unifiedSearchQueryBuilderService.builder(queryParameters);
 
         final JsonObject result = unifiedSearchService.search(queryBuilder,
                 CRIME_CASE_INDEX_NAME,
@@ -113,8 +111,14 @@ public class CaseSearchService implements BaseCaseSearchService {
     }
 
     public JsonObject searchDefendantCases(final QueryParameters queryParameters) {
-        final QueryBuilder queryBuilder = unifiedSearchQueryBuilderService.builder(queryParameters);
-        final FieldSortBuilder fieldSortBuilder = fieldSort(COURT_PROCEEDINGS_INITIATED).order(SortOrder.ASC);
+        final Query.Builder queryBuilder = unifiedSearchQueryBuilderService.builder(queryParameters);
+        final SortOptions sortOptions = SortOptions.of(s -> s
+                .field(f -> f
+                        .field(COURT_PROCEEDINGS_INITIATED)
+                        .order(co.elastic.clients.elasticsearch._types.SortOrder.Asc)
+                        .nested(n -> n.path("parties"))
+                )
+        );
 
         final JsonObject result = unifiedSearchService.search(queryBuilder,
                 CRIME_CASE_INDEX_NAME,
@@ -122,7 +126,7 @@ public class CaseSearchService implements BaseCaseSearchService {
                 RESULT_HIT_NODE_NAME,
                 queryParameters.getPageSize(),
                 queryParameters.getStartFrom(),
-                fieldSortBuilder,
+                sortOptions,
                 uk.gov.moj.cpp.unifiedsearch.query.api.domain.response.index2defendantcaseresponse.Party.class,
                 RESULT_INNER_HIT_NODE_NAME);
 
@@ -186,7 +190,7 @@ public class CaseSearchService implements BaseCaseSearchService {
     }
 
 
-    private Optional<FieldSortBuilder> getSortBuilder(final QueryParameters queryParameters) {
+    private Optional<SortOptions> getSortBuilder(final QueryParameters queryParameters) {
 
         final String sjpNoticeServedSortField = trimToEmpty(queryParameters.getSortBySjpNoticeServed());
         if (isNotEmpty(sjpNoticeServedSortField)) {

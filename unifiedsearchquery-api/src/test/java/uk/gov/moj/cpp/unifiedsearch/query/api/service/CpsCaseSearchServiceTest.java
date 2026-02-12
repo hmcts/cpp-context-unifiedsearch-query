@@ -1,10 +1,11 @@
 package uk.gov.moj.cpp.unifiedsearch.query.api.service;
 
-import static org.elasticsearch.search.sort.SortBuilders.fieldSort;
-import static org.elasticsearch.search.sort.SortOrder.ASC;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.core.IsNull.notNullValue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -20,12 +21,13 @@ import uk.gov.moj.cpp.unifiedsearch.query.common.domain.response.cps.Case;
 
 import javax.json.JsonObject;
 
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.search.sort.FieldSortBuilder;
-import org.elasticsearch.search.sort.NestedSortBuilder;
-import org.elasticsearch.search.sort.SortOrder;
+import co.elastic.clients.elasticsearch._types.SortOptions;
+import co.elastic.clients.elasticsearch._types.SortOrder;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -37,7 +39,7 @@ public class CpsCaseSearchServiceTest {
     private UnifiedSearchService unifiedSearchService;
 
     @Mock
-    private BoolQueryBuilder boolQueryBuilder;
+    private Query.Builder boolQuery;
 
     @Mock
     private JsonObject response;
@@ -50,49 +52,68 @@ public class CpsCaseSearchServiceTest {
 
     private final String missing_last = "_last";
 
+    @Captor
+    private ArgumentCaptor<SortOptions> sortOptionsArgumentCaptor;
+
     @Test
     public void shouldReturnSearchCasesResult() {
         final CpsQueryParameters queryParameters = mock(CpsQueryParameters.class);
-        final FieldSortBuilder fieldSortBuilder = fieldSort(URN).missing(missing_last).order(ASC);
+        final SortOptions sortOptions = SortOptions.of(s -> s
+                .field(f -> f
+                        .field(URN)
+                        .missing(missing_last)
+                        .order(SortOrder.Asc)
+                )
+        );
 
         when(unifiedSearchQueryBuilderService.builder(queryParameters))
-                .thenReturn(boolQueryBuilder);
-        when(unifiedSearchService.search(boolQueryBuilder,
-                CPS_CASE_INDEX_NAME,
-                Case.class,
-                RESULT_HIT_NODE_NAME,
-                queryParameters.getPageSize(),
-                queryParameters.getStartFrom(),
-                fieldSortBuilder))
+                .thenReturn(boolQuery);
+        when(unifiedSearchService.search(eq(boolQuery),
+                eq(CPS_CASE_INDEX_NAME),
+                eq(Case.class),
+                eq(RESULT_HIT_NODE_NAME),
+                anyInt(),
+                anyInt(),
+                sortOptionsArgumentCaptor.capture()))
                 .thenReturn(response);
 
         final JsonObject caseQueryResult = cpsCaseQueryService.searchCases(queryParameters);
         assertThat(caseQueryResult, is(notNullValue()));
+        SortOptions actual = sortOptionsArgumentCaptor.getValue();
+        assertThat(actual.toString(), is(sortOptions.toString()));
         verify(unifiedSearchQueryBuilderService).builder(queryParameters);
     }
 
     @Test
     public void shouldReturnSearchCasesResultSortByCaseStatus() {
         final CpsQueryParameters queryParameters = mock(CpsQueryParameters.class);
-        final FieldSortBuilder fieldSortBuilder = fieldSort(CpsCaseSortBy.STATUS.getFieldName()).missing(missing_last).order(SortOrder.DESC);
+        final SortOptions sortOptions = SortOptions.of(s -> s
+                .field(f -> f
+                        .field(CpsCaseSortBy.STATUS.getFieldName())
+                        .missing(missing_last)
+                        .order(SortOrder.Desc)
+                )
+        );
 
         when(queryParameters.getOrderBy()).thenReturn(CpsCaseSortBy.STATUS.getKeyName());
-        when(queryParameters.getOrder()).thenReturn(SortOrder.DESC);
+        when(queryParameters.getOrder()).thenReturn(uk.gov.moj.cpp.unifiedsearch.query.common.constant.SortOrder.Desc);
 
         when(unifiedSearchQueryBuilderService.builder(queryParameters))
-                .thenReturn(boolQueryBuilder);
+                .thenReturn(boolQuery);
 
-        when(unifiedSearchService.search(boolQueryBuilder,
-                CPS_CASE_INDEX_NAME,
-                Case.class,
-                RESULT_HIT_NODE_NAME,
-                queryParameters.getPageSize(),
-                queryParameters.getStartFrom(),
-                fieldSortBuilder))
+        when(unifiedSearchService.search(eq(boolQuery),
+                eq(CPS_CASE_INDEX_NAME),
+                eq(Case.class),
+                eq(RESULT_HIT_NODE_NAME),
+                anyInt(),
+                anyInt(),
+                sortOptionsArgumentCaptor.capture()))
                 .thenReturn(response);
 
         final JsonObject caseQueryResult = cpsCaseQueryService.searchCases(queryParameters);
         assertThat(caseQueryResult, is(notNullValue()));
+        SortOptions actual = sortOptionsArgumentCaptor.getValue();
+        assertThat(actual.toString(), is(sortOptions.toString()));
         verify(unifiedSearchQueryBuilderService).builder(queryParameters);
     }
 
@@ -101,28 +122,36 @@ public class CpsCaseSearchServiceTest {
         final CpsQueryParameters queryParameters = mock(CpsQueryParameters.class);
 
         final CpsCaseSortBy sortByDateOfBirth = CpsCaseSortBy.DATE_OF_BIRTH;
-        final FieldSortBuilder fieldSortBuilder = fieldSort(sortByDateOfBirth.getFieldName())
-                .missing(missing_last)
-                .order(SortOrder.ASC)
-                .setNestedSort(new NestedSortBuilder(sortByDateOfBirth.getNestedPath().orElse(null)));
+        final SortOptions sortOptions = SortOptions.of(s -> s
+                .field(f -> f
+                        .field(sortByDateOfBirth.getFieldName())
+                        .missing(missing_last)
+                        .order(SortOrder.Asc)
+                        .nested(n -> n
+                                .path(sortByDateOfBirth.getNestedPath().orElse(null))
+                        )
+                )
+        );
 
         when(queryParameters.getOrderBy()).thenReturn(sortByDateOfBirth.getKeyName());
-        when(queryParameters.getOrder()).thenReturn(SortOrder.ASC);
+        when(queryParameters.getOrder()).thenReturn(uk.gov.moj.cpp.unifiedsearch.query.common.constant.SortOrder.Asc);
 
         when(unifiedSearchQueryBuilderService.builder(queryParameters))
-                .thenReturn(boolQueryBuilder);
+                .thenReturn(boolQuery);
 
-        when(unifiedSearchService.search(boolQueryBuilder,
-                CPS_CASE_INDEX_NAME,
-                Case.class,
-                RESULT_HIT_NODE_NAME,
-                queryParameters.getPageSize(),
-                queryParameters.getStartFrom(),
-                fieldSortBuilder))
+        when(unifiedSearchService.search(eq(boolQuery),
+                eq(CPS_CASE_INDEX_NAME),
+                eq(Case.class),
+                eq(RESULT_HIT_NODE_NAME),
+                anyInt(),
+                anyInt(),
+                sortOptionsArgumentCaptor.capture()))
                 .thenReturn(response);
 
         final JsonObject caseQueryResult = cpsCaseQueryService.searchCases(queryParameters);
         assertThat(caseQueryResult, is(notNullValue()));
+        SortOptions actual = sortOptionsArgumentCaptor.getValue();
+        assertThat(actual.toString(), is(sortOptions.toString()));
         verify(unifiedSearchQueryBuilderService).builder(queryParameters);
     }
 
@@ -131,30 +160,40 @@ public class CpsCaseSearchServiceTest {
         final CpsQueryParameters queryParameters = mock(CpsQueryParameters.class);
 
         final CpsCaseSortBy sortByHearingType = CpsCaseSortBy.HEARING_TYPE;
-        final FieldSortBuilder fieldSortBuilder = fieldSort(sortByHearingType.getFieldName())
-                .missing(missing_last)
-                .order(SortOrder.DESC)
-                .setNestedSort(new NestedSortBuilder(sortByHearingType.getNestedPath().orElse(null)).
-                        setFilter(sortByHearingType.getNestedFilter().orElse(null)).
-                        setMaxChildren(sortByHearingType.getNestedMaxChildren().orElse(null)));
+        final SortOptions sortOptions = SortOptions.of(s -> s
+                .field(f -> {
+                    f.field(sortByHearingType.getFieldName())
+                     .missing(missing_last)
+                     .order(SortOrder.Desc);
+                    f.nested(n -> {
+                        n.path(sortByHearingType.getNestedPath().orElse(null));
+                        sortByHearingType.getNestedFilter().ifPresent(n::filter);
+                        sortByHearingType.getNestedMaxChildren().ifPresent(n::maxChildren);
+                        return n;
+                    });
+                    return f;
+                })
+        );
 
         when(queryParameters.getOrderBy()).thenReturn(sortByHearingType.getKeyName());
-        when(queryParameters.getOrder()).thenReturn(SortOrder.DESC);
+        when(queryParameters.getOrder()).thenReturn(uk.gov.moj.cpp.unifiedsearch.query.common.constant.SortOrder.Desc);
 
         when(unifiedSearchQueryBuilderService.builder(queryParameters))
-                .thenReturn(boolQueryBuilder);
+                .thenReturn(boolQuery);
 
-        when(unifiedSearchService.search(boolQueryBuilder,
-                CPS_CASE_INDEX_NAME,
-                Case.class,
-                RESULT_HIT_NODE_NAME,
-                queryParameters.getPageSize(),
-                queryParameters.getStartFrom(),
-                fieldSortBuilder))
+        when(unifiedSearchService.search(eq(boolQuery),
+                eq(CPS_CASE_INDEX_NAME),
+                eq(Case.class),
+                eq(RESULT_HIT_NODE_NAME),
+                anyInt(),
+                anyInt(),
+                sortOptionsArgumentCaptor.capture()))
                 .thenReturn(response);
 
         final JsonObject caseQueryResult = cpsCaseQueryService.searchCases(queryParameters);
         assertThat(caseQueryResult, is(notNullValue()));
+        SortOptions actual = sortOptionsArgumentCaptor.getValue();
+        assertThat(actual.toString(), is(sortOptions.toString()));
         verify(unifiedSearchQueryBuilderService).builder(queryParameters);
     }
 
@@ -163,28 +202,35 @@ public class CpsCaseSearchServiceTest {
         final CpsQueryParameters queryParameters = mock(CpsQueryParameters.class);
 
         final CpsCaseSortBy sortByProsecutor = CpsCaseSortBy.PROSECUTOR;
-        final FieldSortBuilder fieldSortBuilder = fieldSort(sortByProsecutor.getFieldName())
-                .missing(missing_last)
-                .order(SortOrder.ASC);
+        final SortOptions sortOptions = SortOptions.of(s -> s
+                .field(f -> f
+                        .field(sortByProsecutor.getFieldName())
+                        .missing(missing_last)
+                        .order(SortOrder.Asc)
+                )
+        );
 
         when(queryParameters.getOrderBy()).thenReturn(sortByProsecutor.getKeyName());
-        when(queryParameters.getOrder()).thenReturn(SortOrder.ASC);
+        when(queryParameters.getOrder()).thenReturn(uk.gov.moj.cpp.unifiedsearch.query.common.constant.SortOrder.Asc);
 
         when(unifiedSearchQueryBuilderService.builder(queryParameters))
-                .thenReturn(boolQueryBuilder);
+                .thenReturn(boolQuery);
 
-        when(unifiedSearchService.search(boolQueryBuilder,
-                CPS_CASE_INDEX_NAME,
-                Case.class,
-                RESULT_HIT_NODE_NAME,
-                queryParameters.getPageSize(),
-                queryParameters.getStartFrom(),
-                fieldSortBuilder))
+        when(unifiedSearchService.search(eq(boolQuery),
+                eq(CPS_CASE_INDEX_NAME),
+                eq(Case.class),
+                eq(RESULT_HIT_NODE_NAME),
+                anyInt(),
+                anyInt(),
+                sortOptionsArgumentCaptor.capture()))
                 .thenReturn(response);
 
         final JsonObject caseQueryResult = cpsCaseQueryService.searchCases(queryParameters);
         assertThat(caseQueryResult, is(notNullValue()));
+        SortOptions actual = sortOptionsArgumentCaptor.getValue();
+        assertThat(actual.toString(), is(sortOptions.toString()));
         verify(unifiedSearchQueryBuilderService).builder(queryParameters);
+
     }
 
     @Test
@@ -192,28 +238,36 @@ public class CpsCaseSearchServiceTest {
         final CpsQueryParameters queryParameters = mock(CpsQueryParameters.class);
 
         final CpsCaseSortBy sortByOffence = CpsCaseSortBy.OFFENCE_DESCRIPTION;
-        final FieldSortBuilder fieldSortBuilder = fieldSort(sortByOffence.getFieldName())
-                .missing(missing_last)
-                .order(SortOrder.DESC)
-                .setNestedSort(new NestedSortBuilder(sortByOffence.getNestedPath().orElse(null)));
+        final SortOptions sortOptions = SortOptions.of(s -> s
+                .field(f -> f
+                        .field(sortByOffence.getFieldName())
+                        .missing(missing_last)
+                        .order(SortOrder.Desc)
+                        .nested(n -> n
+                                .path(sortByOffence.getNestedPath().orElse(null))
+                        )
+                )
+        );
 
         when(queryParameters.getOrderBy()).thenReturn(sortByOffence.getKeyName());
-        when(queryParameters.getOrder()).thenReturn(SortOrder.DESC);
+        when(queryParameters.getOrder()).thenReturn(uk.gov.moj.cpp.unifiedsearch.query.common.constant.SortOrder.Desc);
 
         when(unifiedSearchQueryBuilderService.builder(queryParameters))
-                .thenReturn(boolQueryBuilder);
+                .thenReturn(boolQuery);
 
-        when(unifiedSearchService.search(boolQueryBuilder,
-                CPS_CASE_INDEX_NAME,
-                Case.class,
-                RESULT_HIT_NODE_NAME,
-                queryParameters.getPageSize(),
-                queryParameters.getStartFrom(),
-                fieldSortBuilder))
+        when(unifiedSearchService.search(eq(boolQuery),
+                eq(CPS_CASE_INDEX_NAME),
+                eq(Case.class),
+                eq(RESULT_HIT_NODE_NAME),
+                anyInt(),
+                anyInt(),
+                sortOptionsArgumentCaptor.capture()))
                 .thenReturn(response);
 
         final JsonObject caseQueryResult = cpsCaseQueryService.searchCases(queryParameters);
         assertThat(caseQueryResult, is(notNullValue()));
+        SortOptions actual = sortOptionsArgumentCaptor.getValue();
+        assertThat(actual.toString(), is(sortOptions.toString()));
         verify(unifiedSearchQueryBuilderService).builder(queryParameters);
     }
 
@@ -222,28 +276,36 @@ public class CpsCaseSearchServiceTest {
         final CpsQueryParameters queryParameters = mock(CpsQueryParameters.class);
 
         final CpsCaseSortBy sortByOffence = CpsCaseSortBy.DEFENDANT_LASTNAME;
-        final FieldSortBuilder fieldSortBuilder = fieldSort(sortByOffence.getFieldName())
-                .missing(missing_last)
-                .order(SortOrder.DESC)
-                .setNestedSort(new NestedSortBuilder(sortByOffence.getNestedPath().orElse(null)));
+        final SortOptions sortOptions = SortOptions.of(s -> s
+                .field(f -> f
+                        .field(sortByOffence.getFieldName())
+                        .missing(missing_last)
+                        .order(SortOrder.Desc)
+                        .nested(n -> n
+                                .path(sortByOffence.getNestedPath().orElse(null))
+                        )
+                )
+        );
 
         when(queryParameters.getOrderBy()).thenReturn(sortByOffence.getKeyName());
-        when(queryParameters.getOrder()).thenReturn(SortOrder.DESC);
+        when(queryParameters.getOrder()).thenReturn(uk.gov.moj.cpp.unifiedsearch.query.common.constant.SortOrder.Desc);
 
         when(unifiedSearchQueryBuilderService.builder(queryParameters))
-                .thenReturn(boolQueryBuilder);
+                .thenReturn(boolQuery);
 
-        when(unifiedSearchService.search(boolQueryBuilder,
-                CPS_CASE_INDEX_NAME,
-                Case.class,
-                RESULT_HIT_NODE_NAME,
-                queryParameters.getPageSize(),
-                queryParameters.getStartFrom(),
-                fieldSortBuilder))
+        when(unifiedSearchService.search(eq(boolQuery),
+                eq(CPS_CASE_INDEX_NAME),
+                eq(Case.class),
+                eq(RESULT_HIT_NODE_NAME),
+                anyInt(),
+                anyInt(),
+                sortOptionsArgumentCaptor.capture()))
                 .thenReturn(response);
 
         final JsonObject caseQueryResult = cpsCaseQueryService.searchCases(queryParameters);
         assertThat(caseQueryResult, is(notNullValue()));
+        SortOptions actual = sortOptionsArgumentCaptor.getValue();
+        assertThat(actual.toString(), is(sortOptions.toString()));
         verify(unifiedSearchQueryBuilderService).builder(queryParameters);
     }
 }

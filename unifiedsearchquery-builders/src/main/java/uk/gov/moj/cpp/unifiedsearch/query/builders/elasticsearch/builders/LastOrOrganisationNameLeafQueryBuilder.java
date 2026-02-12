@@ -2,24 +2,26 @@ package uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.builders;
 
 import static com.google.common.collect.ImmutableList.of;
 import static java.util.Arrays.asList;
-import static org.elasticsearch.index.query.MultiMatchQueryBuilder.Type.CROSS_FIELDS;
-import static org.elasticsearch.index.query.Operator.OR;
-import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
-import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
-import static org.elasticsearch.index.query.QueryBuilders.multiMatchQuery;
-import static org.elasticsearch.index.query.QueryBuilders.nestedQuery;
+import static uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.ElasticSearchQueryBuilder.matchQuery;
+import static uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.ElasticSearchQueryBuilder.multiMatchQuery;
 import static uk.gov.moj.cpp.unifiedsearch.query.common.constant.CaseSearchConstants.PARTY_NESTED_PATH;
+import static uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.ElasticSearchQueryBuilder.convertBuilder;
+import static uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.ElasticSearchQueryBuilder.nestedQuery;
+
+import uk.gov.moj.cpp.unifiedsearch.query.builders.utils.QueryBuilderUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.lucene.search.join.ScoreMode;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.MatchQueryBuilder;
-import org.elasticsearch.index.query.MultiMatchQueryBuilder;
-import org.elasticsearch.index.query.NestedQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
+import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.MatchQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.MultiMatchQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.NestedQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.Operator;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import co.elastic.clients.elasticsearch._types.query_dsl.TextQueryType;
+
 
 /**
  * Not in use
@@ -51,184 +53,186 @@ public class LastOrOrganisationNameLeafQueryBuilder {
     private static final List<String> allPartyAliasNamesFields = asList(PARTY_ALIAS_LAST_NAME_FIELD, PARTY_ALIAS_ORGANISATION_NAME_FIELD);
 
     private static final String FUZZINESS_AUTO = "AUTO";
-    private final List<QueryBuilder> additionalPartyQueryBuilders;
+    private final List<Query> additionalPartyQueryBuilders;
 
     private String allNames;
 
-    public LastOrOrganisationNameLeafQueryBuilder(final String allNames, final List<QueryBuilder> additionalPartyQueryBuilders) {
+    public LastOrOrganisationNameLeafQueryBuilder(final String allNames, final List<Query> additionalPartyQueryBuilders) {
 
         this.additionalPartyQueryBuilders = additionalPartyQueryBuilders == null ? of() : additionalPartyQueryBuilders;
         this.allNames = allNames.trim();
 
     }
 
-    public QueryBuilder nestedPartiesBuilder() {
+    public Query.Builder nestedPartiesBuilder() {
 
-        final BoolQueryBuilder booleanQueryBuilder = boolQuery();
-        booleanQueryBuilder.should(getMustMatchQueryBuilderForParties());
-        booleanQueryBuilder.should(getMustMatchWithFuzzinessQueryBuilderForParties());
-        booleanQueryBuilder.should(wrapWithAdditionalPartyQueryBuilders(getMultiMatchQueryBuilderForParties().operator(OR)));
+        final BoolQuery.Builder booleanQueryBuilder = new BoolQuery.Builder();
+        booleanQueryBuilder.should(getMustMatchQueryBuilderForParties().build());
+        booleanQueryBuilder.should(getMustMatchWithFuzzinessQueryBuilderForParties().build());
+        booleanQueryBuilder.should(wrapWithAdditionalPartyQueryBuilders(convertBuilder(getMultiMatchQueryBuilderForParties().operator(Operator.Or))).build());
 
-        final List<QueryBuilder> prefixQueryBuilderList = getMatchNgramQueryBuilderForPartiesList();
-        prefixQueryBuilderList.forEach(queryBuilder -> booleanQueryBuilder.should(wrapWithAdditionalPartyQueryBuilders(queryBuilder)));
+        final List<Query.Builder> prefixQueryBuilderList = getMatchNgramQueryBuilderForPartiesList();
+        prefixQueryBuilderList.forEach(queryBuilder -> booleanQueryBuilder.should(wrapWithAdditionalPartyQueryBuilders(queryBuilder).build()));
 
-        return nestedQuery(PARTY_NESTED_PATH, booleanQueryBuilder, ScoreMode.Avg);
+        return convertBuilder(nestedQuery(PARTY_NESTED_PATH, convertBuilder(booleanQueryBuilder)));
     }
 
-    public QueryBuilder nestedPartyAliasesBuilder() {
+    public Query.Builder nestedPartyAliasesBuilder() {
 
-        final BoolQueryBuilder booleanQueryBuilder = boolQuery();
+        final BoolQuery.Builder booleanQueryBuilder = new BoolQuery.Builder();
 
-        booleanQueryBuilder.should(getMustMatchQueryBuilderForPartyAliases());
-        booleanQueryBuilder.should(getMustMatchWithFuzzinessQueryBuilderForPartyAliases());
-        booleanQueryBuilder.should(wrapWithAdditionalPartyQueryBuilders(getMultiMatchQueryBuilderForPartyAliases().operator(OR)));
+        booleanQueryBuilder.should(getMustMatchQueryBuilderForPartyAliases().build());
+        booleanQueryBuilder.should(getMustMatchWithFuzzinessQueryBuilderForPartyAliases().build());
+        booleanQueryBuilder.should(wrapWithAdditionalPartyQueryBuilders(convertBuilder(getMultiMatchQueryBuilderForPartyAliases().operator(Operator.Or))).build());
 
-        final List<QueryBuilder> prefixQueryBuilderList = getMatchNgramQueryBuilderForPartyAliasesList();
-        prefixQueryBuilderList.forEach(queryBuilder -> booleanQueryBuilder.should(wrapWithAdditionalPartyQueryBuilders(queryBuilder)));
+        final List<Query.Builder> prefixQueryBuilderList = getMatchNgramQueryBuilderForPartyAliasesList();
+        prefixQueryBuilderList.forEach(queryBuilder -> booleanQueryBuilder.should(wrapWithAdditionalPartyQueryBuilders(queryBuilder).build()));
 
-        final NestedQueryBuilder partyAliasesNestedQueryBuilder = nestedQuery(PARTY_ALIAS_NESTED_PATH, booleanQueryBuilder, ScoreMode.Avg);
+        final NestedQuery.Builder partyAliasesNestedQueryBuilder = nestedQuery(PARTY_ALIAS_NESTED_PATH, convertBuilder(booleanQueryBuilder));
 
-        return nestedQuery(PARTY_NESTED_PATH, partyAliasesNestedQueryBuilder, ScoreMode.Avg);
+        return convertBuilder(nestedQuery(PARTY_NESTED_PATH, convertBuilder(partyAliasesNestedQueryBuilder)));
     }
 
-    private QueryBuilder getMustMatchQueryBuilderForParties() {
-        final BoolQueryBuilder booleanQueryBuilder = boolQuery();
+    private Query.Builder getMustMatchQueryBuilderForParties() {
+        final BoolQuery.Builder booleanQueryBuilder = new BoolQuery.Builder();
 
-        this.additionalPartyQueryBuilders.forEach(booleanQueryBuilder::must);
+        this.additionalPartyQueryBuilders.forEach(b -> booleanQueryBuilder.must(b));
 
-        final List<QueryBuilder> mustMatchQueryBuilderList = getMustMatchQueryBuilderForPartiesList();
-        mustMatchQueryBuilderList.forEach(booleanQueryBuilder::must);
+        final List<Query.Builder> mustMatchQueryBuilderList = getMustMatchQueryBuilderForPartiesList();
+        mustMatchQueryBuilderList.forEach(b-> booleanQueryBuilder.must(b.build()));
 
         booleanQueryBuilder.boost(3.0F);
 
-        return booleanQueryBuilder;
+        return convertBuilder(booleanQueryBuilder);
     }
 
-    private QueryBuilder getMustMatchWithFuzzinessQueryBuilderForParties() {
-        final BoolQueryBuilder booleanQueryBuilder = boolQuery();
-        this.additionalPartyQueryBuilders.forEach(booleanQueryBuilder::must);
+    private Query.Builder getMustMatchWithFuzzinessQueryBuilderForParties() {
+        final BoolQuery.Builder booleanQueryBuilder = new BoolQuery.Builder();
+        this.additionalPartyQueryBuilders.forEach(b -> booleanQueryBuilder.must(b));
 
-        final List<QueryBuilder> mustMatchQueryBuilderList = getMustMatchQueryBuilderForPartiesList();
+        final List<Query.Builder> mustMatchQueryBuilderList = getMustMatchQueryBuilderForPartiesList();
 
         mustMatchQueryBuilderList.stream()
-                .map(MatchQueryBuilder.class::cast)
+                .map(q -> q.build().match())
                 .forEach(mqb -> {
-                    mqb.fuzziness(FUZZINESS_AUTO);
-                    booleanQueryBuilder.must(mqb);
+                    final MatchQuery.Builder builder = QueryBuilderUtils.copyQuery(mqb);
+                    builder.fuzziness(FUZZINESS_AUTO);
+                    booleanQueryBuilder.must(builder.build());
                 });
 
         booleanQueryBuilder.boost(2.0F);
 
-        return booleanQueryBuilder;
+        return convertBuilder(booleanQueryBuilder);
     }
 
-    private QueryBuilder getMustMatchQueryBuilderForPartyAliases() {
-        final BoolQueryBuilder booleanQueryBuilder = boolQuery();
-        this.additionalPartyQueryBuilders.forEach(booleanQueryBuilder::must);
-        final List<QueryBuilder> mustMatchQueryBuilderList = getMustMatchQueryBuilderForPartyAliasesList();
-        mustMatchQueryBuilderList.forEach(booleanQueryBuilder::must);
+    private Query.Builder getMustMatchQueryBuilderForPartyAliases() {
+        final BoolQuery.Builder booleanQueryBuilder = new BoolQuery.Builder();
+        this.additionalPartyQueryBuilders.forEach( b-> booleanQueryBuilder.must(b));
+        final List<Query.Builder> mustMatchQueryBuilderList = getMustMatchQueryBuilderForPartyAliasesList();
+        mustMatchQueryBuilderList.forEach(b -> booleanQueryBuilder.must(b.build()));
 
         booleanQueryBuilder.boost(3.0F);
 
-        return booleanQueryBuilder;
+        return convertBuilder(booleanQueryBuilder);
     }
 
-    private QueryBuilder getMustMatchWithFuzzinessQueryBuilderForPartyAliases() {
-        final BoolQueryBuilder booleanQueryBuilder = boolQuery();
-        this.additionalPartyQueryBuilders.forEach(booleanQueryBuilder::must);
-        final List<QueryBuilder> mustMatchQueryBuilderList = getMustMatchQueryBuilderForPartyAliasesList();
+    private Query.Builder getMustMatchWithFuzzinessQueryBuilderForPartyAliases() {
+        final BoolQuery.Builder booleanQueryBuilder = new BoolQuery.Builder();
+        this.additionalPartyQueryBuilders.forEach(b -> booleanQueryBuilder.must(b));
+        final List<Query.Builder> mustMatchQueryBuilderList = getMustMatchQueryBuilderForPartyAliasesList();
 
         mustMatchQueryBuilderList.stream()
-                .map(MatchQueryBuilder.class::cast)
+                .map(q -> q.build().match())
                 .forEach(mqb -> {
-                    mqb.fuzziness(FUZZINESS_AUTO);
-                    booleanQueryBuilder.must(mqb);
+                    final MatchQuery.Builder builder = QueryBuilderUtils.copyQuery(mqb);
+                    builder.fuzziness(FUZZINESS_AUTO);
+                    booleanQueryBuilder.must(builder.build());
                 });
 
 
         booleanQueryBuilder.boost(2.0F);
 
-        return booleanQueryBuilder;
+        return convertBuilder(booleanQueryBuilder);
     }
 
 
-    private MultiMatchQueryBuilder getMultiMatchQueryBuilderForParties() {
-        final MultiMatchQueryBuilder allNameFieldsMultiMatchQuery = crossFieldsMultiMatchQueryBuilder(allNames, allPartyNamesFields);
-        allNameFieldsMultiMatchQuery.field(PARTY_LAST_NAME_FIELD, 2.0f);
-        allNameFieldsMultiMatchQuery.field(PARTY_ORGANISATION_NAME_FIELD, 2.0f);
+    private MultiMatchQuery.Builder getMultiMatchQueryBuilderForParties() {
+        final MultiMatchQuery.Builder allNameFieldsMultiMatchQuery = crossFieldsMultiMatchQueryBuilder(allNames, allPartyNamesFields);
+        allNameFieldsMultiMatchQuery.fields(PARTY_LAST_NAME_FIELD+"^2.0f");
+        allNameFieldsMultiMatchQuery.fields(PARTY_ORGANISATION_NAME_FIELD+"^2.0f");
         allNameFieldsMultiMatchQuery.boost(0.3F);
         return allNameFieldsMultiMatchQuery;
     }
 
-    private MultiMatchQueryBuilder getMultiMatchQueryBuilderForPartyAliases() {
-        final MultiMatchQueryBuilder partyAliasFieldsMultiMatchQuery = crossFieldsMultiMatchQueryBuilder(allNames, allPartyAliasNamesFields);
-        partyAliasFieldsMultiMatchQuery.field(PARTY_ALIAS_LAST_NAME_FIELD, 2.0f);
-        partyAliasFieldsMultiMatchQuery.field(PARTY_ALIAS_ORGANISATION_NAME_FIELD, 2.0f);
+    private MultiMatchQuery.Builder getMultiMatchQueryBuilderForPartyAliases() {
+        final MultiMatchQuery.Builder partyAliasFieldsMultiMatchQuery = crossFieldsMultiMatchQueryBuilder(allNames, allPartyAliasNamesFields);
+        partyAliasFieldsMultiMatchQuery.fields(PARTY_ALIAS_LAST_NAME_FIELD+"^2.0f");
+        partyAliasFieldsMultiMatchQuery.fields(PARTY_ALIAS_ORGANISATION_NAME_FIELD+"^2.0f");
         partyAliasFieldsMultiMatchQuery.boost(0.3F);
         return partyAliasFieldsMultiMatchQuery;
     }
 
-    private List<QueryBuilder> getMustMatchQueryBuilderForPartiesList() {
+    private List<Query.Builder> getMustMatchQueryBuilderForPartiesList() {
 
         return getMustMatchQueryBuilderList(PARTY_LAST_NAME_FIELD, PARTY_ORGANISATION_NAME_FIELD);
 
     }
 
-    private List<QueryBuilder> getMustMatchQueryBuilderForPartyAliasesList() {
+    private List<Query.Builder> getMustMatchQueryBuilderForPartyAliasesList() {
 
         return getMustMatchQueryBuilderList(PARTY_ALIAS_LAST_NAME_FIELD, PARTY_ALIAS_ORGANISATION_NAME_FIELD);
 
     }
 
-    private List<QueryBuilder> getMatchNgramQueryBuilderForPartiesList() {
+    private List<Query.Builder> getMatchNgramQueryBuilderForPartiesList() {
 
         return getMatchNgramQueryBuilderList(PARTY_LAST_NAME_NGRAM_FIELD);
     }
 
-    private List<QueryBuilder> getMatchNgramQueryBuilderForPartyAliasesList() {
+    private List<Query.Builder> getMatchNgramQueryBuilderForPartyAliasesList() {
 
         return getMatchNgramQueryBuilderList(PARTY_ALIAS_LAST_NAME_NGRAM_FIELD);
     }
 
-    private List<QueryBuilder> getMustMatchQueryBuilderList(final String lastNameField, final String orgNameField) {
+    private List<Query.Builder> getMustMatchQueryBuilderList(final String lastNameField, final String orgNameField) {
 
-        final List<QueryBuilder> queryBuilderList = new ArrayList<>();
-        queryBuilderList.add(matchQueryBuilder(allNames, lastNameField));
-        queryBuilderList.add(matchQueryBuilder(allNames, orgNameField));
+        final List<Query.Builder> queryBuilderList = new ArrayList<>();
+        queryBuilderList.add(convertBuilder(matchQueryBuilder(allNames, lastNameField)));
+        queryBuilderList.add(convertBuilder(matchQueryBuilder(allNames, orgNameField)));
         return queryBuilderList;
     }
 
-    private List<QueryBuilder> getMatchNgramQueryBuilderList(final String fieldName) {
+    private List<Query.Builder> getMatchNgramQueryBuilderList(final String fieldName) {
 
-        final List<QueryBuilder> queryBuilderList = new ArrayList<>();
+        final List<Query.Builder> queryBuilderList = new ArrayList<>();
 
-        queryBuilderList.add(matchQueryBuilder(allNames, fieldName, Optional.of(1.7f)));
+        queryBuilderList.add(convertBuilder(matchQueryBuilder(allNames, fieldName, Optional.of(1.7f))));
 
         return queryBuilderList;
     }
 
-    private MatchQueryBuilder matchQueryBuilder(final String query, final String field) {
+    private MatchQuery.Builder matchQueryBuilder(final String query, final String field) {
         return matchQuery(field, query);
     }
 
-    private MatchQueryBuilder matchQueryBuilder(final String query, final String field, final Optional<Float> boost) {
-        final MatchQueryBuilder builder = matchQuery(field, query);
+    private MatchQuery.Builder matchQueryBuilder(final String query, final String field, final Optional<Float> boost) {
+        final MatchQuery.Builder builder = matchQuery(field, query);
         boost.ifPresent(builder::boost);
         return builder;
     }
 
-    private MultiMatchQueryBuilder crossFieldsMultiMatchQueryBuilder(final String query, final List<String> fields) {
+    private MultiMatchQuery.Builder crossFieldsMultiMatchQueryBuilder(final String query, final List<String> fields) {
 
-        final MultiMatchQueryBuilder builder = multiMatchQuery(query, fields.toArray(new String[0]));
-        builder.type(CROSS_FIELDS);
+        final MultiMatchQuery.Builder builder = multiMatchQuery(query, fields);
+        builder.type(TextQueryType.CrossFields);
 
         return builder;
     }
 
-    private QueryBuilder wrapWithAdditionalPartyQueryBuilders(final QueryBuilder queryBuilder) {
-        final BoolQueryBuilder booleanQueryBuilder = boolQuery();
-        this.additionalPartyQueryBuilders.forEach(booleanQueryBuilder::must);
-        booleanQueryBuilder.must(queryBuilder);
-        return booleanQueryBuilder;
+    private Query.Builder wrapWithAdditionalPartyQueryBuilders(final Query.Builder queryBuilder) {
+        final BoolQuery.Builder booleanQueryBuilder = new BoolQuery.Builder();
+        this.additionalPartyQueryBuilders.forEach(b -> booleanQueryBuilder.must(b));
+        booleanQueryBuilder.must(queryBuilder.build());
+        return convertBuilder(booleanQueryBuilder);
     }
 }
