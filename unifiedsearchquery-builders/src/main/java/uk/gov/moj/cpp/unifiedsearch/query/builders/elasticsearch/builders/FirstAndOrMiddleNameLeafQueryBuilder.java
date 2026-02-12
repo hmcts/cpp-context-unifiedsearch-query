@@ -36,7 +36,6 @@ import co.elastic.clients.elasticsearch._types.query_dsl.TextQueryType;
  * all words are searched for across all 2 fields so this will catch all permutations not catered
  * for above, e.g. lastName/firstName
  */
-@SuppressWarnings("common-java:DuplicatedBlocks")
 public class FirstAndOrMiddleNameLeafQueryBuilder {
 
     private static final String PARTY_FIRST_NAME_FIELD = "parties.firstName";
@@ -83,8 +82,8 @@ public class FirstAndOrMiddleNameLeafQueryBuilder {
     public Query.Builder nestedPartiesBuilder() {
 
         final BoolQuery.Builder booleanQueryBuilder = new BoolQuery.Builder();
-        booleanQueryBuilder.should(getMustMatchQueryBuilderForParties().build());
-        booleanQueryBuilder.should(getMustMatchWithFuzzinessQueryBuilderForParties().build());
+        booleanQueryBuilder.should(getMustMatchQueryBuilderForParties(false).build());
+        booleanQueryBuilder.should(getMustMatchQueryBuilderForParties(true).build());
         booleanQueryBuilder.should(wrapWithAdditionalPartyQueryBuilders(convertBuilder(getMultiMatchQueryBuilderForParties().operator(And).boost(0.4F))).build());
         booleanQueryBuilder.should(wrapWithAdditionalPartyQueryBuilders(convertBuilder(getMultiMatchQueryBuilderForParties().operator(Or))).build());
 
@@ -98,8 +97,8 @@ public class FirstAndOrMiddleNameLeafQueryBuilder {
 
         final BoolQuery.Builder booleanQueryBuilder = new BoolQuery.Builder();
 
-        booleanQueryBuilder.should(getMustMatchQueryBuilderForPartyAliases().build());
-        booleanQueryBuilder.should(getMustMatchWithFuzzinessQueryBuilderForPartyAliases().build());
+        booleanQueryBuilder.should(getMustMatchQueryBuilderForPartyAliases(false).build());
+        booleanQueryBuilder.should(getMustMatchQueryBuilderForPartyAliases(true).build());
         booleanQueryBuilder.should(wrapWithAdditionalPartyQueryBuilders(convertBuilder(getMultiMatchQueryBuilderForPartyAliases().operator(And).boost(0.4F))).build());
         booleanQueryBuilder.should(wrapWithAdditionalPartyQueryBuilders(convertBuilder(getMultiMatchQueryBuilderForPartyAliases().operator(Or))).build());
 
@@ -111,101 +110,75 @@ public class FirstAndOrMiddleNameLeafQueryBuilder {
         return convertBuilder(nestedQuery(PARTY_NESTED_PATH, convertBuilder(partyAliasesNestedQueryBuilder)));
     }
 
-    private Query.Builder getMustMatchQueryBuilderForParties() {
+    private Query.Builder getMustMatchQueryBuilderForParties(final Boolean isFuzziness) {
         final BoolQuery.Builder booleanQueryBuilder = new BoolQuery.Builder();
 
         this.additionalPartyQueryBuilders.forEach( b-> booleanQueryBuilder.must(b));
 
         final List<Query.Builder> mustMatchQueryBuilderList = getMustMatchQueryBuilderForPartiesList();
-        mustMatchQueryBuilderList.forEach(b -> booleanQueryBuilder.must(b.build()));
+        if (isFuzziness){
+            mustMatchQueryBuilderList.stream()
+                    .map(mqb -> mqb.build().match())
+                    .forEach(mqb -> {
+                        final MatchQuery.Builder builder = QueryBuilderUtils.copyQuery(mqb);
+                        builder.fuzziness(FUZZINESS_AUTO);
+                        booleanQueryBuilder.must(builder.build());
+                    });
 
-        booleanQueryBuilder.boost(3.0F);
+            booleanQueryBuilder.boost(2.0F);
+        } else {
+            mustMatchQueryBuilderList.forEach(b -> booleanQueryBuilder.must(b.build()));
 
+            booleanQueryBuilder.boost(3.0F);
+        }
         return convertBuilder(booleanQueryBuilder);
     }
 
-    private Query.Builder getMustMatchWithFuzzinessQueryBuilderForParties() {
-        final BoolQuery.Builder booleanQueryBuilder = new BoolQuery.Builder();
-        this.additionalPartyQueryBuilders.forEach( b-> booleanQueryBuilder.must(b));
-
-        final List<Query.Builder> mustMatchQueryBuilderList = getMustMatchQueryBuilderForPartiesList();
-
-        mustMatchQueryBuilderList.stream()
-                .map(mqb -> mqb.build().match())
-                .forEach(mqb -> {
-                    final MatchQuery.Builder builder = QueryBuilderUtils.copyQuery(mqb);
-                    builder.fuzziness(FUZZINESS_AUTO);
-                    booleanQueryBuilder.must(builder.build());
-                });
-
-        booleanQueryBuilder.boost(2.0F);
-
-        return convertBuilder(booleanQueryBuilder);
-    }
-
-    private Query.Builder getMustMatchQueryBuilderForPartyAliases() {
+    private Query.Builder getMustMatchQueryBuilderForPartyAliases(final boolean isFuzziness) {
         final BoolQuery.Builder booleanQueryBuilder = new BoolQuery.Builder();
         this.additionalPartyQueryBuilders.forEach( b-> booleanQueryBuilder.must(b));
         final List<Query.Builder> mustMatchQueryBuilderList = getMustMatchQueryBuilderForPartyAliasesList();
-        mustMatchQueryBuilderList.forEach(b->booleanQueryBuilder.must(b.build()));
+        if (isFuzziness){
+            mustMatchQueryBuilderList.stream()
+                    .map(q -> q.build().match())
+                    .forEach(mqb -> {
+                        final MatchQuery.Builder builder = QueryBuilderUtils.copyQuery(mqb);
+                        builder.fuzziness(FUZZINESS_AUTO);
+                        booleanQueryBuilder.must(builder.build());
+                    });
+            booleanQueryBuilder.boost(2.0F);
+        } else {
+            mustMatchQueryBuilderList.forEach(b -> booleanQueryBuilder.must(b.build()));
 
-        booleanQueryBuilder.boost(3.0F);
-
+            booleanQueryBuilder.boost(3.0F);
+        }
         return convertBuilder(booleanQueryBuilder);
     }
-
-    private Query.Builder getMustMatchWithFuzzinessQueryBuilderForPartyAliases() {
-        final BoolQuery.Builder booleanQueryBuilder = new BoolQuery.Builder();
-        this.additionalPartyQueryBuilders.forEach(b -> booleanQueryBuilder.must(b));
-        final List<Query.Builder> mustMatchQueryBuilderList = getMustMatchQueryBuilderForPartyAliasesList();
-
-        mustMatchQueryBuilderList.stream()
-                .map(q -> q.build().match())
-                .forEach(mqb -> {
-                    final MatchQuery.Builder builder = QueryBuilderUtils.copyQuery(mqb);
-                    builder.fuzziness(FUZZINESS_AUTO);
-                    booleanQueryBuilder.must(builder.build());
-                });
-
-
-        booleanQueryBuilder.boost(2.0F);
-
-        return convertBuilder(booleanQueryBuilder);
-    }
-
 
     private MultiMatchQuery.Builder getMultiMatchQueryBuilderForParties() {
+        final MultiMatchQuery.Builder allNameFieldsMultiMatchQuery;
         if (hasOneName) {
-            final MultiMatchQuery.Builder allNameFieldsMultiMatchQuery = crossFieldsMultiMatchQueryBuilder(allNames, asList(PARTY_FIRST_NAME_FIELD));
-            allNameFieldsMultiMatchQuery.fields(PARTY_FIRST_NAME_FIELD+ F);
-            allNameFieldsMultiMatchQuery.boost(0.3F);
-            return allNameFieldsMultiMatchQuery;
+            allNameFieldsMultiMatchQuery = crossFieldsMultiMatchQueryBuilder(allNames, asList(PARTY_FIRST_NAME_FIELD));
         } else {
-            final MultiMatchQuery.Builder allNameFieldsMultiMatchQuery = crossFieldsMultiMatchQueryBuilder(allNames, allPartyNamesFields);
-            allNameFieldsMultiMatchQuery.fields(PARTY_FIRST_NAME_FIELD+ F);
+            allNameFieldsMultiMatchQuery = crossFieldsMultiMatchQueryBuilder(allNames, allPartyNamesFields);
             allNameFieldsMultiMatchQuery.fields(PARTY_MIDDLE_NAME_FIELD+ F);
-            allNameFieldsMultiMatchQuery.boost(0.3F);
-            return allNameFieldsMultiMatchQuery;
         }
-
-
+        allNameFieldsMultiMatchQuery.fields(PARTY_FIRST_NAME_FIELD+ F);
+        allNameFieldsMultiMatchQuery.boost(0.3F);
+        return allNameFieldsMultiMatchQuery;
     }
 
     private MultiMatchQuery.Builder getMultiMatchQueryBuilderForPartyAliases() {
+        final MultiMatchQuery.Builder partyAliasFieldsMultiMatchQuery;
         if (hasOneName) {
-            final MultiMatchQuery.Builder partyAliasFieldsMultiMatchQuery = crossFieldsMultiMatchQueryBuilder(allNames, asList(PARTY_FIRST_NAME_FIELD));
-            partyAliasFieldsMultiMatchQuery.fields(PARTY_ALIAS_FIRST_NAME_FIELD+ F);
-            partyAliasFieldsMultiMatchQuery.boost(0.3F);
-            return partyAliasFieldsMultiMatchQuery;
+            partyAliasFieldsMultiMatchQuery = crossFieldsMultiMatchQueryBuilder(allNames, asList(PARTY_FIRST_NAME_FIELD));
         } else {
-            final MultiMatchQuery.Builder partyAliasFieldsMultiMatchQuery = crossFieldsMultiMatchQueryBuilder(allNames, allPartyAliasNamesFields);
-            partyAliasFieldsMultiMatchQuery.fields(PARTY_ALIAS_FIRST_NAME_FIELD+ F);
+            partyAliasFieldsMultiMatchQuery = crossFieldsMultiMatchQueryBuilder(allNames, allPartyAliasNamesFields);
             partyAliasFieldsMultiMatchQuery.fields(PARTY_ALIAS_MIDDLE_NAME_FIELD+ F);
-            partyAliasFieldsMultiMatchQuery.boost(0.3F);
-            return partyAliasFieldsMultiMatchQuery;
         }
-
-
+        partyAliasFieldsMultiMatchQuery.fields(PARTY_ALIAS_FIRST_NAME_FIELD+ F);
+        partyAliasFieldsMultiMatchQuery.boost(0.3F);
+        return partyAliasFieldsMultiMatchQuery;
     }
 
     private List<Query.Builder> getMustMatchQueryBuilderForPartiesList() {
