@@ -3,8 +3,6 @@ package uk.gov.moj.unifiedsearch.query.it.cps;
 import static java.util.Comparator.reverseOrder;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
-import static org.elasticsearch.search.sort.SortOrder.ASC;
-import static org.elasticsearch.search.sort.SortOrder.DESC;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static uk.gov.moj.cpp.unifiedsearch.query.common.constant.CpsCaseSearchConstants.CASE_STATUS_SORT_BY;
@@ -80,7 +78,7 @@ public class SortByQueryIT {
     public void shouldReturnCasesAsSortedAscendingByDateOfBirth() throws IOException {
         final Map<String, String> parameters = new HashMap();
         parameters.putIfAbsent(ORDER_BY, DATE_OF_BIRTH);
-        parameters.putIfAbsent(ORDER, ASC.toString());
+        parameters.putIfAbsent(ORDER, "ASC");
 
         final CaseSearchResponse caseSearchResponse = searchApiClient.searchCases(parameters);
 
@@ -99,7 +97,7 @@ public class SortByQueryIT {
     public void shouldReturnCasesAsSortedDescendingByDateOfBirth() throws IOException {
         final Map<String, String> parameters = new HashMap();
         parameters.putIfAbsent(ORDER_BY, DATE_OF_BIRTH);
-        parameters.putIfAbsent(ORDER, DESC.toString());
+        parameters.putIfAbsent(ORDER, "DESC");
 
         final CaseSearchResponse caseSearchResponse = searchApiClient.searchCases(parameters);
 
@@ -118,7 +116,7 @@ public class SortByQueryIT {
     public void shouldReturnCasesAsSortedDescendingByHearingDateTime() throws IOException {
         final Map<String, String> parameters = new HashMap();
         parameters.putIfAbsent(ORDER_BY, HEARING_DATE_SORT_BY);
-        parameters.putIfAbsent(ORDER, DESC.toString());
+        parameters.putIfAbsent(ORDER, "DESC");
 
         final CaseSearchResponse caseSearchResponse = searchApiClient.searchCases(parameters);
 
@@ -134,7 +132,7 @@ public class SortByQueryIT {
     public void shouldReturnCasesAsSortedAscendingByHearingDateTime() throws IOException {
         final Map<String, String> parameters = new HashMap();
         parameters.putIfAbsent(ORDER_BY, HEARING_DATE_SORT_BY);
-        parameters.putIfAbsent(ORDER, ASC.toString());
+        parameters.putIfAbsent(ORDER, "ASC");
 
         final CaseSearchResponse caseSearchResponse = searchApiClient.searchCases(parameters);
 
@@ -150,7 +148,7 @@ public class SortByQueryIT {
     public void shouldReturnCasesAsSortedDescendingByHearingType() throws IOException {
         final Map<String, String> parameters = new HashMap();
         parameters.putIfAbsent(ORDER_BY, HEARING_TYPE);
-        parameters.putIfAbsent(ORDER, DESC.toString());
+        parameters.putIfAbsent(ORDER, "DESC");
 
         final CaseSearchResponse caseSearchResponse = searchApiClient.searchCases(parameters);
 
@@ -166,7 +164,7 @@ public class SortByQueryIT {
     public void shouldReturnCasesAsSortedAscendingByHearingType() throws IOException {
         final Map<String, String> parameters = new HashMap();
         parameters.putIfAbsent(ORDER_BY, HEARING_TYPE);
-        parameters.putIfAbsent(ORDER, ASC.toString());
+        parameters.putIfAbsent(ORDER, "ASC");
 
         final CaseSearchResponse caseSearchResponse = searchApiClient.searchCases(parameters);
 
@@ -182,7 +180,7 @@ public class SortByQueryIT {
     public void shouldReturnCasesAsSortedAscendingByCourtRoom() throws IOException {
         final Map<String, String> parameters = new HashMap();
         parameters.putIfAbsent(ORDER_BY, COURT_ROOM);
-        parameters.putIfAbsent(ORDER, ASC.toString());
+        parameters.putIfAbsent(ORDER, "ASC");
 
         final CaseSearchResponse caseSearchResponse = searchApiClient.searchCases(parameters);
 
@@ -198,7 +196,7 @@ public class SortByQueryIT {
     public void shouldReturnCasesAsSortedDescendingByCourtRoom() throws IOException {
         final Map<String, String> parameters = new HashMap();
         parameters.putIfAbsent(ORDER_BY, COURT_ROOM);
-        parameters.putIfAbsent(ORDER, DESC.toString());
+        parameters.putIfAbsent(ORDER, "DESC");
 
         final CaseSearchResponse caseSearchResponse = searchApiClient.searchCases(parameters);
 
@@ -214,7 +212,7 @@ public class SortByQueryIT {
     public void shouldReturnCasesAsSortedAscendingByCourtHouse() throws IOException {
         final Map<String, String> parameters = new HashMap();
         parameters.putIfAbsent(ORDER_BY, COURT_HOUSE);
-        parameters.putIfAbsent(ORDER, ASC.toString());
+        parameters.putIfAbsent(ORDER, "ASC");
 
         final CaseSearchResponse caseSearchResponse = searchApiClient.searchCases(parameters);
 
@@ -230,7 +228,7 @@ public class SortByQueryIT {
     public void shouldReturnCasesAsSortedDescendingByCourtHouse() throws IOException {
         final Map<String, String> parameters = new HashMap();
         parameters.putIfAbsent(ORDER_BY, COURT_HOUSE);
-        parameters.putIfAbsent(ORDER, DESC.toString());
+        parameters.putIfAbsent(ORDER, "DESC");
         final CaseSearchResponse caseSearchResponse = searchApiClient.searchCases(parameters);
 
         final List<Hearing> hearings = flatMapHearingsFromCases(caseSearchResponse);
@@ -245,7 +243,7 @@ public class SortByQueryIT {
     public void shouldReturnCasesAsSortedAscendingByProsecutor() throws Exception {
         final Map<String, String> parameters = new HashMap();
         parameters.putIfAbsent(ORDER_BY, PROSECUTOR);
-        parameters.putIfAbsent(ORDER, ASC.toString());
+        parameters.putIfAbsent(ORDER, "ASC");
 
         final CaseSearchResponse caseSearchResponse = searchApiClient.searchCases(parameters);
 
@@ -261,7 +259,7 @@ public class SortByQueryIT {
     public void shouldReturnCasesAsSortedDescendingByProsecutor() throws Exception {
         final Map<String, String> parameters = new HashMap();
         parameters.putIfAbsent(ORDER_BY, PROSECUTOR);
-        parameters.putIfAbsent(ORDER, DESC.toString());
+        parameters.putIfAbsent(ORDER, "DESC");
 
         final CaseSearchResponse caseSearchResponse = searchApiClient.searchCases(parameters);
 
@@ -277,7 +275,7 @@ public class SortByQueryIT {
     public void shouldReturnCasesAsSortedAscendingByParalegalOfficer() throws Exception {
         final Map<String, String> parameters = new HashMap();
         parameters.putIfAbsent(ORDER_BY, PARALEGAL_OFFICER);
-        parameters.putIfAbsent(ORDER, ASC.toString());
+        parameters.putIfAbsent(ORDER, "ASC");
 
         final CaseSearchResponse caseSearchResponse = searchApiClient.searchCases(parameters);
 
@@ -293,7 +291,7 @@ public class SortByQueryIT {
     public void shouldReturnCasesAsSortedDescendingByParalegalOfficer() throws Exception {
         final Map<String, String> parameters = new HashMap();
         parameters.putIfAbsent(ORDER_BY, PARALEGAL_OFFICER);
-        parameters.putIfAbsent(ORDER, DESC.toString());
+        parameters.putIfAbsent(ORDER, "DESC");
 
         final CaseSearchResponse caseSearchResponse = searchApiClient.searchCases(parameters);
 
@@ -309,7 +307,7 @@ public class SortByQueryIT {
     public void shouldReturnCasesAsSortedAscendingByCrownAdvocate() throws Exception {
         final Map<String, String> parameters = new HashMap();
         parameters.putIfAbsent(ORDER_BY, CROWN_ADVOCATE);
-        parameters.putIfAbsent(ORDER, ASC.toString());
+        parameters.putIfAbsent(ORDER, "ASC");
 
         final CaseSearchResponse caseSearchResponse = searchApiClient.searchCases(parameters);
 
@@ -325,7 +323,7 @@ public class SortByQueryIT {
     public void shouldReturnCasesAsSortedDescendingByCrownAdvocate() throws Exception {
         final Map<String, String> parameters = new HashMap();
         parameters.putIfAbsent(ORDER_BY, CROWN_ADVOCATE);
-        parameters.putIfAbsent(ORDER, DESC.toString());
+        parameters.putIfAbsent(ORDER, "DESC");
 
         final CaseSearchResponse caseSearchResponse = searchApiClient.searchCases(parameters);
 
@@ -341,7 +339,7 @@ public class SortByQueryIT {
     public void shouldReturnCasesAsSortedDescendingByUrn() throws Exception {
         final Map<String, String> parameters = new HashMap();
         parameters.putIfAbsent(ORDER_BY, URN);
-        parameters.putIfAbsent(ORDER, DESC.toString());
+        parameters.putIfAbsent(ORDER, "DESC");
 
         final CaseSearchResponse caseSearchResponse = searchApiClient.searchCases(parameters);
 
@@ -357,7 +355,7 @@ public class SortByQueryIT {
     public void shouldReturnCasesAsSortedAscendingByUrn() throws Exception {
         final Map<String, String> parameters = new HashMap();
         parameters.putIfAbsent(ORDER_BY, URN);
-        parameters.putIfAbsent(ORDER, ASC.toString());
+        parameters.putIfAbsent(ORDER, "ASC");
 
         final CaseSearchResponse caseSearchResponse = searchApiClient.searchCases(parameters);
 
@@ -373,7 +371,7 @@ public class SortByQueryIT {
     public void shouldReturnCasesAsSortedAscendingByCaseStatus() throws IOException {
         final Map<String, String> parameters = new HashMap();
         parameters.putIfAbsent(ORDER_BY, CASE_STATUS_SORT_BY);
-        parameters.putIfAbsent(ORDER, ASC.toString());
+        parameters.putIfAbsent(ORDER, "ASC");
 
         final CaseSearchResponse caseSearchResponse = searchApiClient.searchCases(parameters);
 
@@ -389,7 +387,7 @@ public class SortByQueryIT {
     public void shouldReturnCasesAsSortedDescendingByCaseStatus() throws IOException {
         final Map<String, String> parameters = new HashMap();
         parameters.putIfAbsent(ORDER_BY, CASE_STATUS_SORT_BY);
-        parameters.putIfAbsent(ORDER, DESC.toString());
+        parameters.putIfAbsent(ORDER, "DESC");
 
         final CaseSearchResponse caseSearchResponse = searchApiClient.searchCases(parameters);
 
@@ -406,7 +404,7 @@ public class SortByQueryIT {
     public void shouldReturnCasesAsSortedAscendingByPartyLastNameOrOrganisationName() throws IOException {
         final Map<String, String> parameters = new HashMap();
         parameters.putIfAbsent(ORDER_BY, PARTY_LASTNAME_OR_ORGANISATIONNAME_SORT_BY);
-        parameters.putIfAbsent(ORDER, ASC.toString());
+        parameters.putIfAbsent(ORDER, "ASC");
 
         final CaseSearchResponse caseSearchResponse = searchApiClient.searchCases(parameters);
 
@@ -433,7 +431,7 @@ public class SortByQueryIT {
     public void shouldReturnCasesAsSortedDescendingByPartyLastNameOrOrganisationName() throws IOException {
         final Map<String, String> parameters = new HashMap();
         parameters.putIfAbsent(ORDER_BY, PARTY_LASTNAME_OR_ORGANISATIONNAME_SORT_BY);
-        parameters.putIfAbsent(ORDER, DESC.toString());
+        parameters.putIfAbsent(ORDER, "DESC");
 
         final CaseSearchResponse caseSearchResponse = searchApiClient.searchCases(parameters);
 
@@ -460,7 +458,7 @@ public class SortByQueryIT {
     public void shouldReturnCasesAsSortedAscendingByDefendantLastName() throws IOException {
         final Map<String, String> parameters = new HashMap();
         parameters.putIfAbsent(ORDER_BY, DEFENDANT_LASTNAME_SORT_BY);
-        parameters.putIfAbsent(ORDER, ASC.toString());
+        parameters.putIfAbsent(ORDER, "ASC");
 
         final CaseSearchResponse caseSearchResponse = searchApiClient.searchCases(parameters);
 
@@ -479,7 +477,7 @@ public class SortByQueryIT {
     public void shouldReturnCasesAsSortedDescendingByDefendantLastName() throws IOException {
         final Map<String, String> parameters = new HashMap();
         parameters.putIfAbsent(ORDER_BY, DEFENDANT_LASTNAME_SORT_BY);
-        parameters.putIfAbsent(ORDER, DESC.toString());
+        parameters.putIfAbsent(ORDER, "DESC");
 
         final CaseSearchResponse caseSearchResponse = searchApiClient.searchCases(parameters);
 
@@ -498,7 +496,7 @@ public class SortByQueryIT {
     public void shouldReturnCasesAsSortedAscendingByOffenceDescription() throws IOException {
         final Map<String, String> parameters = new HashMap();
         parameters.putIfAbsent(ORDER_BY, OFFENCE_DESCRIPTION_SORT_BY);
-        parameters.putIfAbsent(ORDER, ASC.toString());
+        parameters.putIfAbsent(ORDER, "ASC");
 
         final CaseSearchResponse caseSearchResponse = searchApiClient.searchCases(parameters);
 
@@ -516,7 +514,7 @@ public class SortByQueryIT {
     public void shouldReturnCasesAsSortedDescendingByOffenceDescription() throws IOException {
         final Map<String, String> parameters = new HashMap();
         parameters.putIfAbsent(ORDER_BY, OFFENCE_DESCRIPTION_SORT_BY);
-        parameters.putIfAbsent(ORDER, DESC.toString());
+        parameters.putIfAbsent(ORDER, "DESC");
 
         final CaseSearchResponse caseSearchResponse = searchApiClient.searchCases(parameters);
 

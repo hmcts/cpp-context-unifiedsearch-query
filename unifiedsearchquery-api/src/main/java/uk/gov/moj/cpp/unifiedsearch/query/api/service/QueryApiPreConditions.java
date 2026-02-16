@@ -18,7 +18,8 @@ import uk.gov.moj.cpp.unifiedsearch.query.common.domain.QueryParameters;
 
 import java.util.List;
 
-import org.elasticsearch.search.sort.SortOrder;
+import co.elastic.clients.elasticsearch._types.SortOrder;
+
 
 public class QueryApiPreConditions {
     private static final String HEARING_DATE_FROM_IS_AFTER_HEARING_DATE_TO = "Hearing Date From: %s is after Hearing Date To: %s";

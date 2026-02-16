@@ -19,10 +19,11 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.JsonObject;
 
+import co.elastic.clients.elasticsearch._types.SortOptions;
+import co.elastic.clients.elasticsearch._types.SortOrder;
 import org.apache.commons.lang3.StringUtils;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.search.sort.FieldSortBuilder;
-import org.elasticsearch.search.sort.SortOrder;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+
 
 @ApplicationScoped
 public class CpsCaseSearchService implements BaseCaseSearchService {
@@ -35,8 +36,8 @@ public class CpsCaseSearchService implements BaseCaseSearchService {
     private UnifiedSearchQueryBuilderService unifiedSearchQueryBuilderService;
 
     public JsonObject searchCases(final CpsQueryParameters queryParameters) {
-        final QueryBuilder queryBuilder = unifiedSearchQueryBuilderService.builder(queryParameters);
-        final Optional<FieldSortBuilder> fieldSortBuilder = getSortBuilder(queryParameters);
+        final Query.Builder queryBuilder = unifiedSearchQueryBuilderService.builder(queryParameters);
+        final Optional<SortOptions> fieldSortBuilder = getSortBuilder(queryParameters);
 
         return unifiedSearchService.search(
                 queryBuilder,
@@ -48,7 +49,7 @@ public class CpsCaseSearchService implements BaseCaseSearchService {
                 fieldSortBuilder.orElse(null));
     }
 
-    private Optional<FieldSortBuilder> getSortBuilder(final CpsQueryParameters queryParameters) {
+    private Optional<SortOptions> getSortBuilder(final CpsQueryParameters queryParameters) {
         if (StringUtils.isNotEmpty(queryParameters.getOrderBy())) {
             final CpsCaseSortBy cpsCaseSortBy = findByKeyNameOrDefault(queryParameters.getOrderBy());
 
@@ -60,10 +61,10 @@ public class CpsCaseSearchService implements BaseCaseSearchService {
                     cpsCaseSortBy.getNestedMaxChildren().orElse(null));
         }
 
-        return createFieldSort(SortOrder.ASC.name(), URN, null);
+        return createFieldSort(SortOrder.Asc.name(), URN, null);
     }
 
-    private String getOrderNameOrDefault(final SortOrder order) {
-        return isNull(order) ? SortOrder.ASC.name() : order.name();
+    private String getOrderNameOrDefault(final uk.gov.moj.cpp.unifiedsearch.query.common.constant.SortOrder order) {
+        return isNull(order) ? SortOrder.Asc.name() : order.getOrder();
     }
 }

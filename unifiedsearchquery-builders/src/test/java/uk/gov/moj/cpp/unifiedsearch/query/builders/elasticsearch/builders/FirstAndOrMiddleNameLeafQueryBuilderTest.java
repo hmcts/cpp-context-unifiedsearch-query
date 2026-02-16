@@ -1,26 +1,23 @@
 package uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.builders;
 
+import static co.elastic.clients.elasticsearch._types.query_dsl.Operator.And;
+import static co.elastic.clients.elasticsearch._types.query_dsl.Operator.Or;
+import static co.elastic.clients.elasticsearch._types.query_dsl.TextQueryType.CrossFields;
 import static com.jayway.jsonassert.impl.matcher.IsCollectionWithSize.hasSize;
 import static java.util.Arrays.asList;
-import static org.elasticsearch.index.query.MultiMatchQueryBuilder.Type.CROSS_FIELDS;
-import static org.elasticsearch.index.query.Operator.AND;
-import static org.elasticsearch.index.query.Operator.OR;
-import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.collection.IsMapContaining.hasEntry;
-import static org.hamcrest.collection.IsMapContaining.hasKey;
 
-import org.elasticsearch.common.unit.Fuzziness;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.MatchQueryBuilder;
-import org.elasticsearch.index.query.MultiMatchQueryBuilder;
-import org.elasticsearch.index.query.NestedQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
 import org.junit.jupiter.api.Test;
+
+import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.MatchQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.MultiMatchQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.NestedQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 
 public class FirstAndOrMiddleNameLeafQueryBuilderTest {
 
@@ -30,69 +27,69 @@ public class FirstAndOrMiddleNameLeafQueryBuilderTest {
 
         final FirstAndOrMiddleNameLeafQueryBuilder firstAndOrMiddleNameLeafQueryBuilder = new FirstAndOrMiddleNameLeafQueryBuilder("John", null);
 
-        final QueryBuilder actualQueryBuilder = firstAndOrMiddleNameLeafQueryBuilder.nestedPartiesBuilder();
+        final Query.Builder actualQueryBuilder = firstAndOrMiddleNameLeafQueryBuilder.nestedPartiesBuilder();
 
         assertThat(actualQueryBuilder, is(notNullValue()));
-        assertThat(actualQueryBuilder, instanceOf(NestedQueryBuilder.class));
+        final NestedQuery actualNestedQueryBuilder = actualQueryBuilder.build().nested();
+        assertThat(actualNestedQueryBuilder, notNullValue());
 
-        final NestedQueryBuilder actualNestedQueryBuilder = (NestedQueryBuilder) actualQueryBuilder;
-        assertThat(actualNestedQueryBuilder.getName(), is("nested"));
-        assertThat(actualNestedQueryBuilder.query(), instanceOf((BoolQueryBuilder.class)));
 
-        final BoolQueryBuilder boolQueryBuilder = (BoolQueryBuilder) actualNestedQueryBuilder.query();
+        assertThat(actualNestedQueryBuilder.query().bool(), notNullValue());
+
+        final BoolQuery boolQueryBuilder = actualNestedQueryBuilder.query().bool();
         assertThat(boolQueryBuilder.should(), hasSize(5));
 
-        final QueryBuilder builder = boolQueryBuilder.should().get(0);
-        assertThat(builder, instanceOf(BoolQueryBuilder.class));
+        final Query builder = boolQueryBuilder.should().get(0);
+        assertThat(builder.bool(), notNullValue());
 
-        final BoolQueryBuilder shouldQueryBuilder1 = (BoolQueryBuilder) boolQueryBuilder.should().get(0);
-        final BoolQueryBuilder shouldQueryBuilder2 = (BoolQueryBuilder) boolQueryBuilder.should().get(1);
-        final BoolQueryBuilder shouldQueryBuilder3 = (BoolQueryBuilder) boolQueryBuilder.should().get(2);
-        final BoolQueryBuilder shouldQueryBuilder4 = (BoolQueryBuilder) boolQueryBuilder.should().get(3);
-        final BoolQueryBuilder shouldQueryBuilder5 = (BoolQueryBuilder) boolQueryBuilder.should().get(4);
+        final BoolQuery shouldQueryBuilder1 = boolQueryBuilder.should().get(0).bool();
+        final BoolQuery shouldQueryBuilder2 = boolQueryBuilder.should().get(1).bool();
+        final BoolQuery shouldQueryBuilder3 = boolQueryBuilder.should().get(2).bool();
+        final BoolQuery shouldQueryBuilder4 = boolQueryBuilder.should().get(3).bool();
+        final BoolQuery shouldQueryBuilder5 = boolQueryBuilder.should().get(4).bool();
 
         assertThat(shouldQueryBuilder1.must(), hasSize(1));
-        assertThat(shouldQueryBuilder1.must().get(0), instanceOf((MatchQueryBuilder.class)));
+        assertThat(shouldQueryBuilder1.must().get(0).match(), notNullValue());
 
-        MatchQueryBuilder matchQueryBuilder = (MatchQueryBuilder) shouldQueryBuilder1.must().get(0);
-        assertThat(matchQueryBuilder.fieldName(), is("parties.firstName"));
-        assertThat(matchQueryBuilder.value(), is("John"));
-        assertThat(matchQueryBuilder.operator(), is(OR));
-        assertThat(matchQueryBuilder.boost(), is(1.0F));
+        MatchQuery matchQueryBuilder = shouldQueryBuilder1.must().get(0).match();
+        assertThat(matchQueryBuilder.field(), is("parties.firstName"));
+        assertThat(matchQueryBuilder.query().stringValue(), is("John"));
+        assertThat(matchQueryBuilder.operator(), is(nullValue()));
+        assertThat(matchQueryBuilder.boost(), is(nullValue()));
         assertThat(matchQueryBuilder.fuzziness(), is(nullValue()));
 
         assertThat(shouldQueryBuilder2.must(), hasSize(1));
-        assertThat(shouldQueryBuilder2.must().get(0), instanceOf((MatchQueryBuilder.class)));
+        assertThat(shouldQueryBuilder2.must().get(0).match(), notNullValue());
 
-        matchQueryBuilder = (MatchQueryBuilder) shouldQueryBuilder2.must().get(0);
-        assertThat(matchQueryBuilder.fieldName(), is("parties.firstName"));
-        assertThat(matchQueryBuilder.value(), is("John"));
-        assertThat(matchQueryBuilder.operator(), is(OR));
-        assertThat(matchQueryBuilder.boost(), is(1.0F));
-        assertThat(matchQueryBuilder.fuzziness(), is(Fuzziness.AUTO));
+        matchQueryBuilder = shouldQueryBuilder2.must().get(0).match();
+        assertThat(matchQueryBuilder.field(), is("parties.firstName"));
+        assertThat(matchQueryBuilder.query().stringValue(), is("John"));
+        assertThat(matchQueryBuilder.operator(), is(nullValue()));
+        assertThat(matchQueryBuilder.boost(), is(nullValue()));
+        assertThat(matchQueryBuilder.fuzziness(), is("AUTO"));
 
-        MultiMatchQueryBuilder multiMatchQueryBuilder = (MultiMatchQueryBuilder) shouldQueryBuilder3.must().get(0);
-        assertThat(multiMatchQueryBuilder.fields(), is(hasEntry("parties.firstName", 2.0F)));
-        assertThat(multiMatchQueryBuilder.fields(), is(not(hasKey("parties.middleName"))));
-        assertThat(multiMatchQueryBuilder.value(), is("John"));
-        assertThat(multiMatchQueryBuilder.type(), is(CROSS_FIELDS));
-        assertThat(multiMatchQueryBuilder.operator(), is(AND));
+        MultiMatchQuery multiMatchQueryBuilder = shouldQueryBuilder3.must().get(0).multiMatch();
+        assertThat(multiMatchQueryBuilder.fields(), is(hasItem("parties.firstName^2.0f")));
+        assertThat(multiMatchQueryBuilder.fields().stream().anyMatch( v -> v.startsWith("parties.middleName")), is(false));
+        assertThat(multiMatchQueryBuilder.query(), is("John"));
+        assertThat(multiMatchQueryBuilder.type(), is(CrossFields));
+        assertThat(multiMatchQueryBuilder.operator(), is(And));
         assertThat(multiMatchQueryBuilder.boost(), is(0.4F));
         assertThat(multiMatchQueryBuilder.fuzziness(), is(nullValue()));
 
-        multiMatchQueryBuilder = (MultiMatchQueryBuilder) shouldQueryBuilder4.must().get(0);
-        assertThat(multiMatchQueryBuilder.fields(), is(hasEntry("parties.firstName", 2.0F)));
-        assertThat(multiMatchQueryBuilder.fields(), is(not(hasKey("parties.middleName"))));
-        assertThat(multiMatchQueryBuilder.value(), is("John"));
-        assertThat(multiMatchQueryBuilder.type(), is(CROSS_FIELDS));
-        assertThat(multiMatchQueryBuilder.operator(), is(OR));
+        multiMatchQueryBuilder = shouldQueryBuilder4.must().get(0).multiMatch();
+        assertThat(multiMatchQueryBuilder.fields(), is(hasItem("parties.firstName^2.0f")));
+        assertThat(multiMatchQueryBuilder.fields().stream().anyMatch( v -> v.startsWith("parties.middleName")), is(false));
+        assertThat(multiMatchQueryBuilder.query(), is("John"));
+        assertThat(multiMatchQueryBuilder.type(), is(CrossFields));
+        assertThat(multiMatchQueryBuilder.operator(), is(Or));
         assertThat(multiMatchQueryBuilder.boost(), is(0.3F));
         assertThat(multiMatchQueryBuilder.fuzziness(), is(nullValue()));
 
-        matchQueryBuilder = (MatchQueryBuilder) shouldQueryBuilder5.must().get(0);
-        assertThat(matchQueryBuilder.fieldName(), is("parties.firstName.ngrammed"));
-        assertThat(matchQueryBuilder.value(), is("John"));
-        assertThat(matchQueryBuilder.operator(), is(OR));
+        matchQueryBuilder = shouldQueryBuilder5.must().get(0).match();
+        assertThat(matchQueryBuilder.field(), is("parties.firstName.ngrammed"));
+        assertThat(matchQueryBuilder.query().stringValue(), is("John"));
+        assertThat(matchQueryBuilder.operator(), is(nullValue()));
         assertThat(matchQueryBuilder.boost(), is(1.7F));
         assertThat(matchQueryBuilder.fuzziness(), is(nullValue()));
 
@@ -104,73 +101,73 @@ public class FirstAndOrMiddleNameLeafQueryBuilderTest {
 
         final FirstAndOrMiddleNameLeafQueryBuilder firstAndOrMiddleNameLeafQueryBuilder = new FirstAndOrMiddleNameLeafQueryBuilder("John", null);
 
-        final QueryBuilder actualQueryBuilder = firstAndOrMiddleNameLeafQueryBuilder.nestedPartyAliasesBuilder();
+        final Query.Builder actualQueryBuilder = firstAndOrMiddleNameLeafQueryBuilder.nestedPartyAliasesBuilder();
 
         assertThat(actualQueryBuilder, is(notNullValue()));
-        assertThat(actualQueryBuilder, instanceOf(NestedQueryBuilder.class));
+        final NestedQuery topLevelNestedQueryBuilder = actualQueryBuilder.build().nested();
+        assertThat(topLevelNestedQueryBuilder, notNullValue());
 
-        final NestedQueryBuilder topLevelNestedQueryBuilder = (NestedQueryBuilder) actualQueryBuilder;
-        assertThat(topLevelNestedQueryBuilder.getName(), is("nested"));
-        assertThat(topLevelNestedQueryBuilder.query(), instanceOf((NestedQueryBuilder.class)));
 
-        assertThat(topLevelNestedQueryBuilder.query(), instanceOf((NestedQueryBuilder.class)));
-        final NestedQueryBuilder actualNestedQueryBuilder = (NestedQueryBuilder) topLevelNestedQueryBuilder.query();
+        assertThat(topLevelNestedQueryBuilder.query().nested(), notNullValue());
 
-        final BoolQueryBuilder boolQueryBuilder = (BoolQueryBuilder) actualNestedQueryBuilder.query();
+        assertThat(topLevelNestedQueryBuilder.query().nested(), notNullValue());
+        final NestedQuery actualNestedQueryBuilder = topLevelNestedQueryBuilder.query().nested();
+
+        final BoolQuery boolQueryBuilder = actualNestedQueryBuilder.query().bool();
         assertThat(boolQueryBuilder.should(), hasSize(5));
 
 
-        final QueryBuilder builder = boolQueryBuilder.should().get(0);
-        assertThat(builder, instanceOf(BoolQueryBuilder.class));
+        final Query builder = boolQueryBuilder.should().get(0);
+        assertThat(builder.bool(), notNullValue());
 
-        final BoolQueryBuilder shouldQueryBuilder1 = (BoolQueryBuilder) boolQueryBuilder.should().get(0);
-        final BoolQueryBuilder shouldQueryBuilder2 = (BoolQueryBuilder) boolQueryBuilder.should().get(1);
-        final BoolQueryBuilder shouldQueryBuilder3 = (BoolQueryBuilder) boolQueryBuilder.should().get(2);
-        final BoolQueryBuilder shouldQueryBuilder4 = (BoolQueryBuilder) boolQueryBuilder.should().get(3);
-        final BoolQueryBuilder shouldQueryBuilder5 = (BoolQueryBuilder) boolQueryBuilder.should().get(4);
+        final BoolQuery shouldQueryBuilder1 = boolQueryBuilder.should().get(0).bool();
+        final BoolQuery shouldQueryBuilder2 = boolQueryBuilder.should().get(1).bool();
+        final BoolQuery shouldQueryBuilder3 = boolQueryBuilder.should().get(2).bool();
+        final BoolQuery shouldQueryBuilder4 = boolQueryBuilder.should().get(3).bool();
+        final BoolQuery shouldQueryBuilder5 = boolQueryBuilder.should().get(4).bool();
 
         assertThat(shouldQueryBuilder1.must(), hasSize(1));
-        assertThat(shouldQueryBuilder1.must().get(0), instanceOf((MatchQueryBuilder.class)));
+        assertThat(shouldQueryBuilder1.must().get(0).match(), notNullValue());
 
-        MatchQueryBuilder matchQueryBuilder = (MatchQueryBuilder) shouldQueryBuilder1.must().get(0);
-        assertThat(matchQueryBuilder.fieldName(), is("parties.aliases.firstName"));
-        assertThat(matchQueryBuilder.value(), is("John"));
-        assertThat(matchQueryBuilder.operator(), is(OR));
-        assertThat(matchQueryBuilder.boost(), is(1.0F));
+        MatchQuery matchQueryBuilder = shouldQueryBuilder1.must().get(0).match();
+        assertThat(matchQueryBuilder.field(), is("parties.aliases.firstName"));
+        assertThat(matchQueryBuilder.query().stringValue(), is("John"));
+        assertThat(matchQueryBuilder.operator(), is(nullValue()));
+        assertThat(matchQueryBuilder.boost(), is(nullValue()));
         assertThat(matchQueryBuilder.fuzziness(), is(nullValue()));
 
         assertThat(shouldQueryBuilder2.must(), hasSize(1));
-        assertThat(shouldQueryBuilder2.must().get(0), instanceOf((MatchQueryBuilder.class)));
+        assertThat(shouldQueryBuilder2.must().get(0).match(), notNullValue());
 
-        matchQueryBuilder = (MatchQueryBuilder) shouldQueryBuilder2.must().get(0);
-        assertThat(matchQueryBuilder.fieldName(), is("parties.aliases.firstName"));
-        assertThat(matchQueryBuilder.value(), is("John"));
-        assertThat(matchQueryBuilder.operator(), is(OR));
-        assertThat(matchQueryBuilder.boost(), is(1.0F));
-        assertThat(matchQueryBuilder.fuzziness(), is(Fuzziness.AUTO));
+        matchQueryBuilder = shouldQueryBuilder2.must().get(0).match();
+        assertThat(matchQueryBuilder.field(), is("parties.aliases.firstName"));
+        assertThat(matchQueryBuilder.query().stringValue(), is("John"));
+        assertThat(matchQueryBuilder.operator(), is(nullValue()));
+        assertThat(matchQueryBuilder.boost(), is(nullValue()));
+        assertThat(matchQueryBuilder.fuzziness(), is("AUTO"));
 
-        MultiMatchQueryBuilder multiMatchQueryBuilder = (MultiMatchQueryBuilder) shouldQueryBuilder3.must().get(0);
-        assertThat(multiMatchQueryBuilder.fields(), is(hasEntry("parties.aliases.firstName", 2.0F)));
-        assertThat(multiMatchQueryBuilder.fields(), is(not(hasKey("parties.aliases.middleName"))));
-        assertThat(multiMatchQueryBuilder.value(), is("John"));
-        assertThat(multiMatchQueryBuilder.type(), is(CROSS_FIELDS));
-        assertThat(multiMatchQueryBuilder.operator(), is(AND));
+        MultiMatchQuery multiMatchQueryBuilder = shouldQueryBuilder3.must().get(0).multiMatch();
+        assertThat(multiMatchQueryBuilder.fields(), is(hasItem("parties.aliases.firstName^2.0f")));
+        assertThat(multiMatchQueryBuilder.fields().stream().anyMatch( v -> v.startsWith("parties.aliases.middleName")), is(false));
+        assertThat(multiMatchQueryBuilder.query(), is("John"));
+        assertThat(multiMatchQueryBuilder.type(), is(CrossFields));
+        assertThat(multiMatchQueryBuilder.operator(), is(And));
         assertThat(multiMatchQueryBuilder.boost(), is(0.4F));
         assertThat(multiMatchQueryBuilder.fuzziness(), is(nullValue()));
 
-        multiMatchQueryBuilder = (MultiMatchQueryBuilder) shouldQueryBuilder4.must().get(0);
-        assertThat(multiMatchQueryBuilder.fields(), is(hasEntry("parties.aliases.firstName", 2.0F)));
-        assertThat(multiMatchQueryBuilder.fields(), is(not(hasKey("parties.aliases.middleName"))));
-        assertThat(multiMatchQueryBuilder.value(), is("John"));
-        assertThat(multiMatchQueryBuilder.type(), is(CROSS_FIELDS));
-        assertThat(multiMatchQueryBuilder.operator(), is(OR));
+        multiMatchQueryBuilder = shouldQueryBuilder4.must().get(0).multiMatch();
+        assertThat(multiMatchQueryBuilder.fields(), is(hasItem("parties.aliases.firstName^2.0f")));
+        assertThat(multiMatchQueryBuilder.fields().stream().anyMatch( v -> v.startsWith("parties.aliases.middleName")), is(false));
+        assertThat(multiMatchQueryBuilder.query(), is("John"));
+        assertThat(multiMatchQueryBuilder.type(), is(CrossFields));
+        assertThat(multiMatchQueryBuilder.operator(), is(Or));
         assertThat(multiMatchQueryBuilder.boost(), is(0.3F));
         assertThat(multiMatchQueryBuilder.fuzziness(), is(nullValue()));
 
-        matchQueryBuilder = (MatchQueryBuilder) shouldQueryBuilder5.must().get(0);
-        assertThat(matchQueryBuilder.fieldName(), is("parties.aliases.firstName.ngrammed"));
-        assertThat(matchQueryBuilder.value(), is("John"));
-        assertThat(matchQueryBuilder.operator(), is(OR));
+        matchQueryBuilder = shouldQueryBuilder5.must().get(0).match();
+        assertThat(matchQueryBuilder.field(), is("parties.aliases.firstName.ngrammed"));
+        assertThat(matchQueryBuilder.query().stringValue(), is("John"));
+        assertThat(matchQueryBuilder.operator(), is(nullValue()));
         assertThat(matchQueryBuilder.boost(), is(1.7F));
         assertThat(matchQueryBuilder.fuzziness(), is(nullValue()));
 
@@ -181,85 +178,85 @@ public class FirstAndOrMiddleNameLeafQueryBuilderTest {
 
         final FirstAndOrMiddleNameLeafQueryBuilder firstAndOrMiddleNameLeafQueryBuilder = new FirstAndOrMiddleNameLeafQueryBuilder("John Smith", null);
 
-        final QueryBuilder actualQueryBuilder = firstAndOrMiddleNameLeafQueryBuilder.nestedPartiesBuilder();
+        final Query.Builder actualQueryBuilder = firstAndOrMiddleNameLeafQueryBuilder.nestedPartiesBuilder();
 
         assertThat(actualQueryBuilder, is(notNullValue()));
-        assertThat(actualQueryBuilder, instanceOf(NestedQueryBuilder.class));
+        final NestedQuery actualNestedQueryBuilder = actualQueryBuilder.build().nested();
+        assertThat(actualNestedQueryBuilder, notNullValue());
 
-        final NestedQueryBuilder actualNestedQueryBuilder = (NestedQueryBuilder) actualQueryBuilder;
-        assertThat(actualNestedQueryBuilder.getName(), is("nested"));
-        assertThat(actualNestedQueryBuilder.query(), instanceOf((BoolQueryBuilder.class)));
+        
+        assertThat(actualNestedQueryBuilder.query().bool(), notNullValue());
 
-        final BoolQueryBuilder boolQueryBuilder = (BoolQueryBuilder) actualNestedQueryBuilder.query();
+        final BoolQuery boolQueryBuilder = actualNestedQueryBuilder.query().bool();
         assertThat(boolQueryBuilder.should(), hasSize(5));
 
-        final QueryBuilder builder = boolQueryBuilder.should().get(0);
-        assertThat(builder, instanceOf(BoolQueryBuilder.class));
+        final Query builder = boolQueryBuilder.should().get(0);
+        assertThat(builder.bool(), notNullValue());
 
-        final BoolQueryBuilder shouldQueryBuilder1 = (BoolQueryBuilder) boolQueryBuilder.should().get(0);
-        final BoolQueryBuilder shouldQueryBuilder2 = (BoolQueryBuilder) boolQueryBuilder.should().get(1);
-        final BoolQueryBuilder shouldQueryBuilder3 = (BoolQueryBuilder) boolQueryBuilder.should().get(2);
-        final BoolQueryBuilder shouldQueryBuilder4 = (BoolQueryBuilder) boolQueryBuilder.should().get(3);
-        final BoolQueryBuilder shouldQueryBuilder5 = (BoolQueryBuilder) boolQueryBuilder.should().get(4);
+        final BoolQuery shouldQueryBuilder1 = boolQueryBuilder.should().get(0).bool();
+        final BoolQuery shouldQueryBuilder2 = boolQueryBuilder.should().get(1).bool();
+        final BoolQuery shouldQueryBuilder3 = boolQueryBuilder.should().get(2).bool();
+        final BoolQuery shouldQueryBuilder4 = boolQueryBuilder.should().get(3).bool();
+        final BoolQuery shouldQueryBuilder5 = boolQueryBuilder.should().get(4).bool();
 
         assertThat(shouldQueryBuilder1.must(), hasSize(2));
-        assertThat(shouldQueryBuilder1.must().get(0), instanceOf((MatchQueryBuilder.class)));
-        assertThat(shouldQueryBuilder1.must().get(1), instanceOf((MatchQueryBuilder.class)));
+        assertThat(shouldQueryBuilder1.must().get(0).match(), notNullValue());
+        assertThat(shouldQueryBuilder1.must().get(1).match(), notNullValue());
 
-        MatchQueryBuilder matchQueryBuilder = (MatchQueryBuilder) shouldQueryBuilder1.must().get(0);
-        assertThat(matchQueryBuilder.fieldName(), is("parties.firstName"));
-        assertThat(matchQueryBuilder.value(), is("John"));
-        assertThat(matchQueryBuilder.operator(), is(OR));
-        assertThat(matchQueryBuilder.boost(), is(1.0F));
+        MatchQuery matchQueryBuilder = shouldQueryBuilder1.must().get(0).match();
+        assertThat(matchQueryBuilder.field(), is("parties.firstName"));
+        assertThat(matchQueryBuilder.query().stringValue(), is("John"));
+        assertThat(matchQueryBuilder.operator(), is(nullValue()));
+        assertThat(matchQueryBuilder.boost(), is(nullValue()));
         assertThat(matchQueryBuilder.fuzziness(), is(nullValue()));
 
-        matchQueryBuilder = (MatchQueryBuilder) shouldQueryBuilder1.must().get(1);
-        assertThat(matchQueryBuilder.fieldName(), is("parties.middleName"));
-        assertThat(matchQueryBuilder.value(), is("Smith"));
-        assertThat(matchQueryBuilder.operator(), is(OR));
-        assertThat(matchQueryBuilder.boost(), is(1.0F));
+        matchQueryBuilder = shouldQueryBuilder1.must().get(1).match();
+        assertThat(matchQueryBuilder.field(), is("parties.middleName"));
+        assertThat(matchQueryBuilder.query().stringValue(), is("Smith"));
+        assertThat(matchQueryBuilder.operator(), is(nullValue()));
+        assertThat(matchQueryBuilder.boost(), is(nullValue()));
         assertThat(matchQueryBuilder.fuzziness(), is(nullValue()));
 
         assertThat(shouldQueryBuilder2.must(), hasSize(2));
-        assertThat(shouldQueryBuilder2.must().get(0), instanceOf((MatchQueryBuilder.class)));
-        assertThat(shouldQueryBuilder2.must().get(1), instanceOf((MatchQueryBuilder.class)));
+        assertThat(shouldQueryBuilder2.must().get(0).match(), notNullValue());
+        assertThat(shouldQueryBuilder2.must().get(1).match(), notNullValue());
 
-        matchQueryBuilder = (MatchQueryBuilder) shouldQueryBuilder2.must().get(0);
-        assertThat(matchQueryBuilder.fieldName(), is("parties.firstName"));
-        assertThat(matchQueryBuilder.value(), is("John"));
-        assertThat(matchQueryBuilder.operator(), is(OR));
-        assertThat(matchQueryBuilder.boost(), is(1.0F));
-        assertThat(matchQueryBuilder.fuzziness(), is(Fuzziness.AUTO));
+        matchQueryBuilder = shouldQueryBuilder2.must().get(0).match();
+        assertThat(matchQueryBuilder.field(), is("parties.firstName"));
+        assertThat(matchQueryBuilder.query().stringValue(), is("John"));
+        assertThat(matchQueryBuilder.operator(), is(nullValue()));
+        assertThat(matchQueryBuilder.boost(), is(nullValue()));
+        assertThat(matchQueryBuilder.fuzziness(), is("AUTO"));
 
-        matchQueryBuilder = (MatchQueryBuilder) shouldQueryBuilder2.must().get(1);
-        assertThat(matchQueryBuilder.fieldName(), is("parties.middleName"));
-        assertThat(matchQueryBuilder.value(), is("Smith"));
-        assertThat(matchQueryBuilder.operator(), is(OR));
-        assertThat(matchQueryBuilder.boost(), is(1.0F));
-        assertThat(matchQueryBuilder.fuzziness(), is(Fuzziness.AUTO));
+        matchQueryBuilder = shouldQueryBuilder2.must().get(1).match();
+        assertThat(matchQueryBuilder.field(), is("parties.middleName"));
+        assertThat(matchQueryBuilder.query().stringValue(), is("Smith"));
+        assertThat(matchQueryBuilder.operator(), is(nullValue()));
+        assertThat(matchQueryBuilder.boost(), is(nullValue()));
+        assertThat(matchQueryBuilder.fuzziness(), is("AUTO"));
 
-        MultiMatchQueryBuilder multiMatchQueryBuilder = (MultiMatchQueryBuilder) shouldQueryBuilder3.must().get(0);
-        assertThat(multiMatchQueryBuilder.fields(), is(hasEntry("parties.firstName", 2.0F)));
-        assertThat(multiMatchQueryBuilder.fields(), is(hasEntry("parties.middleName", 2.0F)));
-        assertThat(multiMatchQueryBuilder.value(), is("John Smith"));
-        assertThat(multiMatchQueryBuilder.type(), is(CROSS_FIELDS));
-        assertThat(multiMatchQueryBuilder.operator(), is(AND));
+        MultiMatchQuery multiMatchQueryBuilder = shouldQueryBuilder3.must().get(0).multiMatch();
+        assertThat(multiMatchQueryBuilder.fields(), is(hasItem("parties.firstName^2.0f")));
+        assertThat(multiMatchQueryBuilder.fields(), is(hasItem("parties.middleName^2.0f")));
+        assertThat(multiMatchQueryBuilder.query(), is("John Smith"));
+        assertThat(multiMatchQueryBuilder.type(), is(CrossFields));
+        assertThat(multiMatchQueryBuilder.operator(), is(And));
         assertThat(multiMatchQueryBuilder.boost(), is(0.4F));
         assertThat(multiMatchQueryBuilder.fuzziness(), is(nullValue()));
 
-        multiMatchQueryBuilder = (MultiMatchQueryBuilder) shouldQueryBuilder4.must().get(0);
-        assertThat(multiMatchQueryBuilder.fields(), is(hasEntry("parties.firstName", 2.0F)));
-        assertThat(multiMatchQueryBuilder.fields(), is(hasEntry("parties.middleName", 2.0F)));
-        assertThat(multiMatchQueryBuilder.value(), is("John Smith"));
-        assertThat(multiMatchQueryBuilder.type(), is(CROSS_FIELDS));
-        assertThat(multiMatchQueryBuilder.operator(), is(OR));
+        multiMatchQueryBuilder = shouldQueryBuilder4.must().get(0).multiMatch();
+        assertThat(multiMatchQueryBuilder.fields(), is(hasItem("parties.firstName^2.0f")));
+        assertThat(multiMatchQueryBuilder.fields(), is(hasItem("parties.middleName^2.0f")));
+        assertThat(multiMatchQueryBuilder.query(), is("John Smith"));
+        assertThat(multiMatchQueryBuilder.type(), is(CrossFields));
+        assertThat(multiMatchQueryBuilder.operator(), is(Or));
         assertThat(multiMatchQueryBuilder.boost(), is(0.3F));
         assertThat(multiMatchQueryBuilder.fuzziness(), is(nullValue()));
 
-        matchQueryBuilder = (MatchQueryBuilder) shouldQueryBuilder5.must().get(0);
-        assertThat(matchQueryBuilder.fieldName(), is("parties.firstName.ngrammed"));
-        assertThat(matchQueryBuilder.value(), is("John"));
-        assertThat(matchQueryBuilder.operator(), is(OR));
+        matchQueryBuilder = shouldQueryBuilder5.must().get(0).match();
+        assertThat(matchQueryBuilder.field(), is("parties.firstName.ngrammed"));
+        assertThat(matchQueryBuilder.query().stringValue(), is("John"));
+        assertThat(matchQueryBuilder.operator(), is(nullValue()));
         assertThat(matchQueryBuilder.boost(), is(1.7F));
         assertThat(matchQueryBuilder.fuzziness(), is(nullValue()));
 
@@ -271,88 +268,87 @@ public class FirstAndOrMiddleNameLeafQueryBuilderTest {
 
         final FirstAndOrMiddleNameLeafQueryBuilder firstAndOrMiddleNameLeafQueryBuilder = new FirstAndOrMiddleNameLeafQueryBuilder("John Smith", null);
 
-        final QueryBuilder actualQueryBuilder = firstAndOrMiddleNameLeafQueryBuilder.nestedPartyAliasesBuilder();
+        final Query.Builder actualQueryBuilder = firstAndOrMiddleNameLeafQueryBuilder.nestedPartyAliasesBuilder();
 
         assertThat(actualQueryBuilder, is(notNullValue()));
-        assertThat(actualQueryBuilder, instanceOf(NestedQueryBuilder.class));
+        final NestedQuery topLevelNestedQueryBuilder = actualQueryBuilder.build().nested();
+        assertThat(topLevelNestedQueryBuilder, notNullValue());
 
-        final NestedQueryBuilder topLevelNestedQueryBuilder = (NestedQueryBuilder) actualQueryBuilder;
-        assertThat(topLevelNestedQueryBuilder.getName(), is("nested"));
-        assertThat(topLevelNestedQueryBuilder.query(), instanceOf((NestedQueryBuilder.class)));
+        assertThat(topLevelNestedQueryBuilder.query().nested(), notNullValue());
 
-        assertThat(topLevelNestedQueryBuilder.query(), instanceOf((NestedQueryBuilder.class)));
-        final NestedQueryBuilder actualNestedQueryBuilder = (NestedQueryBuilder) topLevelNestedQueryBuilder.query();
+        assertThat(topLevelNestedQueryBuilder.query().nested(), notNullValue());
+        final NestedQuery actualNestedQueryBuilder = topLevelNestedQueryBuilder.query().nested();
 
-        final BoolQueryBuilder boolQueryBuilder = (BoolQueryBuilder) actualNestedQueryBuilder.query();
+        final BoolQuery boolQueryBuilder = actualNestedQueryBuilder.query().bool();
         assertThat(boolQueryBuilder.should(), hasSize(5));
 
-        final QueryBuilder builder = boolQueryBuilder.should().get(0);
-        assertThat(builder, instanceOf(BoolQueryBuilder.class));
+        final Query builder = boolQueryBuilder.should().get(0);
+        assertThat(builder.bool(), notNullValue());
 
-        final BoolQueryBuilder shouldQueryBuilder1 = (BoolQueryBuilder) boolQueryBuilder.should().get(0);
-        final BoolQueryBuilder shouldQueryBuilder2 = (BoolQueryBuilder) boolQueryBuilder.should().get(1);
-        final BoolQueryBuilder shouldQueryBuilder3 = (BoolQueryBuilder) boolQueryBuilder.should().get(2);
-        final BoolQueryBuilder shouldQueryBuilder4 = (BoolQueryBuilder) boolQueryBuilder.should().get(3);
-        final BoolQueryBuilder shouldQueryBuilder5 = (BoolQueryBuilder) boolQueryBuilder.should().get(4);
+        final BoolQuery shouldQueryBuilder1 = boolQueryBuilder.should().get(0).bool();
+        final BoolQuery shouldQueryBuilder2 = boolQueryBuilder.should().get(1).bool();
+        final BoolQuery shouldQueryBuilder3 = boolQueryBuilder.should().get(2).bool();
+        final BoolQuery shouldQueryBuilder4 = boolQueryBuilder.should().get(3).bool();
+        final BoolQuery shouldQueryBuilder5 = boolQueryBuilder.should().get(4).bool();
 
         assertThat(shouldQueryBuilder1.must(), hasSize(2));
-        assertThat(shouldQueryBuilder1.must().get(0), instanceOf((MatchQueryBuilder.class)));
-        assertThat(shouldQueryBuilder1.must().get(1), instanceOf((MatchQueryBuilder.class)));
+        assertThat(shouldQueryBuilder1.must().get(0).match(), notNullValue());
+        assertThat(shouldQueryBuilder1.must().get(1).match(), notNullValue());
 
-        MatchQueryBuilder matchQueryBuilder = (MatchQueryBuilder) shouldQueryBuilder1.must().get(0);
-        assertThat(matchQueryBuilder.fieldName(), is("parties.aliases.firstName"));
-        assertThat(matchQueryBuilder.value(), is("John"));
-        assertThat(matchQueryBuilder.operator(), is(OR));
-        assertThat(matchQueryBuilder.boost(), is(1.0F));
+        MatchQuery matchQueryBuilder = shouldQueryBuilder1.must().get(0).match();
+        assertThat(matchQueryBuilder.field(), is("parties.aliases.firstName"));
+        assertThat(matchQueryBuilder.query().stringValue(), is("John"));
+        assertThat(matchQueryBuilder.operator(), is(nullValue()));
+        assertThat(matchQueryBuilder.boost(), is(nullValue()));
         assertThat(matchQueryBuilder.fuzziness(), is(nullValue()));
 
-        matchQueryBuilder = (MatchQueryBuilder) shouldQueryBuilder1.must().get(1);
-        assertThat(matchQueryBuilder.fieldName(), is("parties.aliases.middleName"));
-        assertThat(matchQueryBuilder.value(), is("Smith"));
-        assertThat(matchQueryBuilder.operator(), is(OR));
-        assertThat(matchQueryBuilder.boost(), is(1.0F));
+        matchQueryBuilder = shouldQueryBuilder1.must().get(1).match();
+        assertThat(matchQueryBuilder.field(), is("parties.aliases.middleName"));
+        assertThat(matchQueryBuilder.query().stringValue(), is("Smith"));
+        assertThat(matchQueryBuilder.operator(), is(nullValue()));
+        assertThat(matchQueryBuilder.boost(), is(nullValue()));
         assertThat(matchQueryBuilder.fuzziness(), is(nullValue()));
 
         assertThat(shouldQueryBuilder2.must(), hasSize(2));
-        assertThat(shouldQueryBuilder2.must().get(0), instanceOf((MatchQueryBuilder.class)));
-        assertThat(shouldQueryBuilder2.must().get(1), instanceOf((MatchQueryBuilder.class)));
+        assertThat(shouldQueryBuilder2.must().get(0).match(), notNullValue());
+        assertThat(shouldQueryBuilder2.must().get(1).match(), notNullValue());
 
-        matchQueryBuilder = (MatchQueryBuilder) shouldQueryBuilder2.must().get(0);
-        assertThat(matchQueryBuilder.fieldName(), is("parties.aliases.firstName"));
-        assertThat(matchQueryBuilder.value(), is("John"));
-        assertThat(matchQueryBuilder.operator(), is(OR));
-        assertThat(matchQueryBuilder.boost(), is(1.0F));
-        assertThat(matchQueryBuilder.fuzziness(), is(Fuzziness.AUTO));
+        matchQueryBuilder = shouldQueryBuilder2.must().get(0).match();
+        assertThat(matchQueryBuilder.field(), is("parties.aliases.firstName"));
+        assertThat(matchQueryBuilder.query().stringValue(), is("John"));
+        assertThat(matchQueryBuilder.operator(), is(nullValue()));
+        assertThat(matchQueryBuilder.boost(), is(nullValue()));
+        assertThat(matchQueryBuilder.fuzziness(), is("AUTO"));
 
-        matchQueryBuilder = (MatchQueryBuilder) shouldQueryBuilder2.must().get(1);
-        assertThat(matchQueryBuilder.fieldName(), is("parties.aliases.middleName"));
-        assertThat(matchQueryBuilder.value(), is("Smith"));
-        assertThat(matchQueryBuilder.operator(), is(OR));
-        assertThat(matchQueryBuilder.boost(), is(1.0F));
-        assertThat(matchQueryBuilder.fuzziness(), is(Fuzziness.AUTO));
+        matchQueryBuilder = shouldQueryBuilder2.must().get(1).match();
+        assertThat(matchQueryBuilder.field(), is("parties.aliases.middleName"));
+        assertThat(matchQueryBuilder.query().stringValue(), is("Smith"));
+        assertThat(matchQueryBuilder.operator(), is(nullValue()));
+        assertThat(matchQueryBuilder.boost(), is(nullValue()));
+        assertThat(matchQueryBuilder.fuzziness(), is("AUTO"));
 
-        MultiMatchQueryBuilder multiMatchQueryBuilder = (MultiMatchQueryBuilder) shouldQueryBuilder3.must().get(0);
-        assertThat(multiMatchQueryBuilder.fields(), is(hasEntry("parties.aliases.firstName", 2.0F)));
-        assertThat(multiMatchQueryBuilder.fields(), is(hasEntry("parties.aliases.middleName", 2.0F)));
-        assertThat(multiMatchQueryBuilder.value(), is("John Smith"));
-        assertThat(multiMatchQueryBuilder.type(), is(CROSS_FIELDS));
-        assertThat(multiMatchQueryBuilder.operator(), is(AND));
+        MultiMatchQuery multiMatchQueryBuilder = shouldQueryBuilder3.must().get(0).multiMatch();
+        assertThat(multiMatchQueryBuilder.fields(), is(hasItem("parties.aliases.firstName^2.0f")));
+        assertThat(multiMatchQueryBuilder.fields(), is(hasItem("parties.aliases.middleName^2.0f")));
+        assertThat(multiMatchQueryBuilder.query(), is("John Smith"));
+        assertThat(multiMatchQueryBuilder.type(), is(CrossFields));
+        assertThat(multiMatchQueryBuilder.operator(), is(And));
         assertThat(multiMatchQueryBuilder.boost(), is(0.4F));
         assertThat(multiMatchQueryBuilder.fuzziness(), is(nullValue()));
 
-        multiMatchQueryBuilder = (MultiMatchQueryBuilder) shouldQueryBuilder4.must().get(0);
-        assertThat(multiMatchQueryBuilder.fields(), is(hasEntry("parties.aliases.firstName", 2.0F)));
-        assertThat(multiMatchQueryBuilder.fields(), is(hasEntry("parties.aliases.middleName", 2.0F)));
-        assertThat(multiMatchQueryBuilder.value(), is("John Smith"));
-        assertThat(multiMatchQueryBuilder.type(), is(CROSS_FIELDS));
-        assertThat(multiMatchQueryBuilder.operator(), is(OR));
+        multiMatchQueryBuilder =  shouldQueryBuilder4.must().get(0).multiMatch();
+        assertThat(multiMatchQueryBuilder.fields(), is(hasItem("parties.aliases.firstName^2.0f")));
+        assertThat(multiMatchQueryBuilder.fields(), is(hasItem("parties.aliases.middleName^2.0f")));
+        assertThat(multiMatchQueryBuilder.query(), is("John Smith"));
+        assertThat(multiMatchQueryBuilder.type(), is(CrossFields));
+        assertThat(multiMatchQueryBuilder.operator(), is(Or));
         assertThat(multiMatchQueryBuilder.boost(), is(0.3F));
         assertThat(multiMatchQueryBuilder.fuzziness(), is(nullValue()));
 
-        matchQueryBuilder = (MatchQueryBuilder) shouldQueryBuilder5.must().get(0);
-        assertThat(matchQueryBuilder.fieldName(), is("parties.aliases.firstName.ngrammed"));
-        assertThat(matchQueryBuilder.value(), is("John"));
-        assertThat(matchQueryBuilder.operator(), is(OR));
+        matchQueryBuilder = shouldQueryBuilder5.must().get(0).match();
+        assertThat(matchQueryBuilder.field(), is("parties.aliases.firstName.ngrammed"));
+        assertThat(matchQueryBuilder.query().stringValue(), is("John"));
+        assertThat(matchQueryBuilder.operator(), is(nullValue()));
         assertThat(matchQueryBuilder.boost(), is(1.7F));
         assertThat(matchQueryBuilder.fuzziness(), is(nullValue()));
 
@@ -361,117 +357,117 @@ public class FirstAndOrMiddleNameLeafQueryBuilderTest {
     @Test
     public void shouldCreateValidBuilderForFirstOrMiddleNameAndAdditionalBuilder() {
 
-        final QueryBuilder additionalBuilder = new PostCodeQueryBuilder().getQueryBuilderBy("AB1 2CD");
-        final FirstAndOrMiddleNameLeafQueryBuilder firstAndOrMiddleNameLeafQueryBuilder = new FirstAndOrMiddleNameLeafQueryBuilder("John Smith", asList(additionalBuilder));
+        final Query additionalQuery = new PostCodeQueryBuilder().getQueryBuilderBy("AB1 2CD");
+        final FirstAndOrMiddleNameLeafQueryBuilder firstAndOrMiddleNameLeafQueryBuilder = new FirstAndOrMiddleNameLeafQueryBuilder("John Smith", asList(additionalQuery));
 
-        final QueryBuilder actualQueryBuilder = firstAndOrMiddleNameLeafQueryBuilder.nestedPartiesBuilder();
+        final Query.Builder actualQueryBuilder = firstAndOrMiddleNameLeafQueryBuilder.nestedPartiesBuilder();
 
         assertThat(actualQueryBuilder, is(notNullValue()));
-        assertThat(actualQueryBuilder, instanceOf(NestedQueryBuilder.class));
+        final NestedQuery actualNestedQueryBuilder = actualQueryBuilder.build().nested();
+        assertThat(actualNestedQueryBuilder, notNullValue());
 
-        final NestedQueryBuilder actualNestedQueryBuilder = (NestedQueryBuilder) actualQueryBuilder;
-        assertThat(actualNestedQueryBuilder.getName(), is("nested"));
-        assertThat(actualNestedQueryBuilder.query(), instanceOf((BoolQueryBuilder.class)));
+        
+        assertThat(actualNestedQueryBuilder.query().bool(), notNullValue());
 
-        final BoolQueryBuilder boolQueryBuilder = (BoolQueryBuilder) actualNestedQueryBuilder.query();
+        final BoolQuery boolQueryBuilder = actualNestedQueryBuilder.query().bool();
         assertThat(boolQueryBuilder.should(), hasSize(5));
 
-        final QueryBuilder builder = boolQueryBuilder.should().get(0);
-        assertThat(builder, instanceOf(BoolQueryBuilder.class));
+        final Query builder = boolQueryBuilder.should().get(0);
+        assertThat(builder.bool(), notNullValue());
 
-        final BoolQueryBuilder shouldQueryBuilder1 = (BoolQueryBuilder) boolQueryBuilder.should().get(0);
-        final BoolQueryBuilder shouldQueryBuilder2 = (BoolQueryBuilder) boolQueryBuilder.should().get(1);
-        final BoolQueryBuilder shouldQueryBuilder3 = (BoolQueryBuilder) boolQueryBuilder.should().get(2);
-        final BoolQueryBuilder shouldQueryBuilder4 = (BoolQueryBuilder) boolQueryBuilder.should().get(3);
-        final BoolQueryBuilder shouldQueryBuilder5 = (BoolQueryBuilder) boolQueryBuilder.should().get(4);
+        final BoolQuery shouldQueryBuilder1 = boolQueryBuilder.should().get(0).bool();
+        final BoolQuery shouldQueryBuilder2 = boolQueryBuilder.should().get(1).bool();
+        final BoolQuery shouldQueryBuilder3 = boolQueryBuilder.should().get(2).bool();
+        final BoolQuery shouldQueryBuilder4 = boolQueryBuilder.should().get(3).bool();
+        final BoolQuery shouldQueryBuilder5 = boolQueryBuilder.should().get(4).bool();
 
         assertThat(shouldQueryBuilder1.must(), hasSize(3));
-        assertThat(shouldQueryBuilder1.must().get(0), instanceOf((MatchQueryBuilder.class)));
-        assertThat(shouldQueryBuilder1.must().get(1), instanceOf((MatchQueryBuilder.class)));
-        assertThat(shouldQueryBuilder1.must().get(2), instanceOf((MatchQueryBuilder.class)));
+        assertThat(shouldQueryBuilder1.must().get(0).match(), notNullValue());
+        assertThat(shouldQueryBuilder1.must().get(1).match(), notNullValue());
+        assertThat(shouldQueryBuilder1.must().get(2).match(), notNullValue());
 
-        MatchQueryBuilder matchQueryBuilder = (MatchQueryBuilder) shouldQueryBuilder1.must().get(0);
+        MatchQuery matchQueryBuilder = shouldQueryBuilder1.must().get(0).match();
         assertPostCodeQueryBuilder(matchQueryBuilder);
 
-        matchQueryBuilder = (MatchQueryBuilder) shouldQueryBuilder1.must().get(1);
-        assertThat(matchQueryBuilder.fieldName(), is("parties.firstName"));
-        assertThat(matchQueryBuilder.value(), is("John"));
-        assertThat(matchQueryBuilder.operator(), is(OR));
-        assertThat(matchQueryBuilder.boost(), is(1.0F));
+        matchQueryBuilder = shouldQueryBuilder1.must().get(1).match();
+        assertThat(matchQueryBuilder.field(), is("parties.firstName"));
+        assertThat(matchQueryBuilder.query().stringValue(), is("John"));
+        assertThat(matchQueryBuilder.operator(), is(nullValue()));
+        assertThat(matchQueryBuilder.boost(), is(nullValue()));
         assertThat(matchQueryBuilder.fuzziness(), is(nullValue()));
 
-        matchQueryBuilder = (MatchQueryBuilder) shouldQueryBuilder1.must().get(2);
-        assertThat(matchQueryBuilder.fieldName(), is("parties.middleName"));
-        assertThat(matchQueryBuilder.value(), is("Smith"));
-        assertThat(matchQueryBuilder.operator(), is(OR));
-        assertThat(matchQueryBuilder.boost(), is(1.0F));
+        matchQueryBuilder = shouldQueryBuilder1.must().get(2).match();
+        assertThat(matchQueryBuilder.field(), is("parties.middleName"));
+        assertThat(matchQueryBuilder.query().stringValue(), is("Smith"));
+        assertThat(matchQueryBuilder.operator(), is(nullValue()));
+        assertThat(matchQueryBuilder.boost(), is(nullValue()));
         assertThat(matchQueryBuilder.fuzziness(), is(nullValue()));
 
         assertThat(shouldQueryBuilder2.must(), hasSize(3));
-        assertThat(shouldQueryBuilder2.must().get(0), instanceOf((MatchQueryBuilder.class)));
-        assertThat(shouldQueryBuilder2.must().get(1), instanceOf((MatchQueryBuilder.class)));
-        assertThat(shouldQueryBuilder2.must().get(2), instanceOf((MatchQueryBuilder.class)));
+        assertThat(shouldQueryBuilder2.must().get(0).match(), notNullValue());
+        assertThat(shouldQueryBuilder2.must().get(1).match(), notNullValue());
+        assertThat(shouldQueryBuilder2.must().get(2).match(), notNullValue());
 
-        matchQueryBuilder = (MatchQueryBuilder) shouldQueryBuilder2.must().get(0);
+        matchQueryBuilder = shouldQueryBuilder2.must().get(0).match();
         assertPostCodeQueryBuilder(matchQueryBuilder);
 
 
-        matchQueryBuilder = (MatchQueryBuilder) shouldQueryBuilder2.must().get(1);
-        assertThat(matchQueryBuilder.fieldName(), is("parties.firstName"));
-        assertThat(matchQueryBuilder.value(), is("John"));
-        assertThat(matchQueryBuilder.operator(), is(OR));
-        assertThat(matchQueryBuilder.boost(), is(1.0F));
-        assertThat(matchQueryBuilder.fuzziness(), is(Fuzziness.AUTO));
+        matchQueryBuilder = shouldQueryBuilder2.must().get(1).match();
+        assertThat(matchQueryBuilder.field(), is("parties.firstName"));
+        assertThat(matchQueryBuilder.query().stringValue(), is("John"));
+        assertThat(matchQueryBuilder.operator(), is(nullValue()));
+        assertThat(matchQueryBuilder.boost(), is(nullValue()));
+        assertThat(matchQueryBuilder.fuzziness(), is("AUTO"));
 
-        matchQueryBuilder = (MatchQueryBuilder) shouldQueryBuilder2.must().get(2);
-        assertThat(matchQueryBuilder.fieldName(), is("parties.middleName"));
-        assertThat(matchQueryBuilder.value(), is("Smith"));
-        assertThat(matchQueryBuilder.operator(), is(OR));
-        assertThat(matchQueryBuilder.boost(), is(1.0F));
-        assertThat(matchQueryBuilder.fuzziness(), is(Fuzziness.AUTO));
+        matchQueryBuilder = shouldQueryBuilder2.must().get(2).match();
+        assertThat(matchQueryBuilder.field(), is("parties.middleName"));
+        assertThat(matchQueryBuilder.query().stringValue(), is("Smith"));
+        assertThat(matchQueryBuilder.operator(), is(nullValue()));
+        assertThat(matchQueryBuilder.boost(), is(nullValue()));
+        assertThat(matchQueryBuilder.fuzziness(), is("AUTO"));
 
-        matchQueryBuilder = (MatchQueryBuilder) shouldQueryBuilder3.must().get(0);
+        matchQueryBuilder = shouldQueryBuilder3.must().get(0).match();
         assertPostCodeQueryBuilder(matchQueryBuilder);
 
-        MultiMatchQueryBuilder multiMatchQueryBuilder = (MultiMatchQueryBuilder) shouldQueryBuilder3.must().get(1);
-        assertThat(multiMatchQueryBuilder.fields(), is(hasEntry("parties.firstName", 2.0F)));
-        assertThat(multiMatchQueryBuilder.fields(), is(hasEntry("parties.middleName", 2.0F)));
-        assertThat(multiMatchQueryBuilder.value(), is("John Smith"));
-        assertThat(multiMatchQueryBuilder.type(), is(CROSS_FIELDS));
-        assertThat(multiMatchQueryBuilder.operator(), is(AND));
+        MultiMatchQuery multiMatchQueryBuilder = shouldQueryBuilder3.must().get(1).multiMatch();
+        assertThat(multiMatchQueryBuilder.fields(), is(hasItem("parties.firstName^2.0f")));
+        assertThat(multiMatchQueryBuilder.fields(), is(hasItem("parties.middleName^2.0f")));
+        assertThat(multiMatchQueryBuilder.query(), is("John Smith"));
+        assertThat(multiMatchQueryBuilder.type(), is(CrossFields));
+        assertThat(multiMatchQueryBuilder.operator(), is(And));
         assertThat(multiMatchQueryBuilder.boost(), is(0.4F));
         assertThat(multiMatchQueryBuilder.fuzziness(), is(nullValue()));
 
-        matchQueryBuilder = (MatchQueryBuilder) shouldQueryBuilder4.must().get(0);
+        matchQueryBuilder = shouldQueryBuilder4.must().get(0).match();
         assertPostCodeQueryBuilder(matchQueryBuilder);
 
-        multiMatchQueryBuilder = (MultiMatchQueryBuilder) shouldQueryBuilder4.must().get(1);
-        assertThat(multiMatchQueryBuilder.fields(), is(hasEntry("parties.firstName", 2.0F)));
-        assertThat(multiMatchQueryBuilder.fields(), is(hasEntry("parties.middleName", 2.0F)));
-        assertThat(multiMatchQueryBuilder.value(), is("John Smith"));
-        assertThat(multiMatchQueryBuilder.type(), is(CROSS_FIELDS));
-        assertThat(multiMatchQueryBuilder.operator(), is(OR));
+        multiMatchQueryBuilder = shouldQueryBuilder4.must().get(1).multiMatch();
+        assertThat(multiMatchQueryBuilder.fields(), is(hasItem("parties.firstName^2.0f")));
+        assertThat(multiMatchQueryBuilder.fields(), is(hasItem("parties.middleName^2.0f")));
+        assertThat(multiMatchQueryBuilder.query(), is("John Smith"));
+        assertThat(multiMatchQueryBuilder.type(), is(CrossFields));
+        assertThat(multiMatchQueryBuilder.operator(), is(Or));
         assertThat(multiMatchQueryBuilder.boost(), is(0.3F));
         assertThat(multiMatchQueryBuilder.fuzziness(), is(nullValue()));
 
-        matchQueryBuilder = (MatchQueryBuilder) shouldQueryBuilder5.must().get(0);
+        matchQueryBuilder = shouldQueryBuilder5.must().get(0).match();
         assertPostCodeQueryBuilder(matchQueryBuilder);
 
-        matchQueryBuilder = (MatchQueryBuilder) shouldQueryBuilder5.must().get(1);
-        assertThat(matchQueryBuilder.fieldName(), is("parties.firstName.ngrammed"));
-        assertThat(matchQueryBuilder.value(), is("John"));
-        assertThat(matchQueryBuilder.operator(), is(OR));
+        matchQueryBuilder = shouldQueryBuilder5.must().get(1).match();
+        assertThat(matchQueryBuilder.field(), is("parties.firstName.ngrammed"));
+        assertThat(matchQueryBuilder.query().stringValue(), is("John"));
+        assertThat(matchQueryBuilder.operator(), is(nullValue()));
         assertThat(matchQueryBuilder.boost(), is(1.7F));
         assertThat(matchQueryBuilder.fuzziness(), is(nullValue()));
 
     }
 
 
-    private void assertPostCodeQueryBuilder(final MatchQueryBuilder matchQueryBuilder) {
-        assertThat(matchQueryBuilder.fieldName(), is("parties.postCode"));
-        assertThat(matchQueryBuilder.value(), is("AB1 2CD"));
-        assertThat(matchQueryBuilder.operator(), is(AND));
-        assertThat(matchQueryBuilder.boost(), is(1.0F));
+    private void assertPostCodeQueryBuilder(final MatchQuery matchQueryBuilder) {
+        assertThat(matchQueryBuilder.field(), is("parties.postCode"));
+        assertThat(matchQueryBuilder.query().stringValue(), is("AB1 2CD"));
+        assertThat(matchQueryBuilder.operator(), is(And));
+        assertThat(matchQueryBuilder.boost(), is(nullValue()));
         assertThat(matchQueryBuilder.fuzziness(), is(nullValue()));
     }
 

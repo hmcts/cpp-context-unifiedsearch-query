@@ -4,9 +4,10 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import org.elasticsearch.index.query.MatchQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
 import org.junit.jupiter.api.Test;
+
+import co.elastic.clients.elasticsearch._types.query_dsl.MatchQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 
 public class AddressQueryBuilderTest {
 
@@ -17,13 +18,12 @@ public class AddressQueryBuilderTest {
 
         final String address = "156 Long street Liverpool";
 
-        final QueryBuilder actualQueryBuilder = addressQueryBuilder.getQueryBuilderBy(address);
+        final Query actualQuery = addressQueryBuilder.getQueryBuilderBy(address);
 
-        assertThat(actualQueryBuilder, is(notNullValue()));
-        final MatchQueryBuilder matchQueryBuilder = (MatchQueryBuilder) actualQueryBuilder;
-        assertThat(matchQueryBuilder.getName(), is("match"));
-        assertThat(matchQueryBuilder.fieldName(), is("parties.addressLines"));
-        assertThat(matchQueryBuilder.value(), is(address));
+        assertThat(actualQuery, is(notNullValue()));
+        final MatchQuery matchQueryBuilder = actualQuery.match();
+        assertThat(matchQueryBuilder.field(), is("parties.addressLines"));
+        assertThat(matchQueryBuilder.query().stringValue(), is(address));
     }
 
 

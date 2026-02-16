@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.elasticsearch.index.query.QueryBuilder;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 
 public enum CpsCaseSortBy {
 
@@ -34,7 +34,7 @@ public enum CpsCaseSortBy {
     private String fieldName;
 
     //Apply this filter before sorting
-    private final Optional<QueryBuilder> nestedFilter;
+    private final Optional<Query> nestedFilter;
     //How many children matching the above filter to consider for sorting
     private final Optional<Integer> nestedMaxChildren;
 
@@ -49,7 +49,7 @@ public enum CpsCaseSortBy {
         );
     }
 
-    CpsCaseSortBy(final String keyName, final String fieldName, final Optional<String> nestedPath, final Optional<QueryBuilder> nestedFilter, final Optional<Integer> nestedMaxChildren) {
+    CpsCaseSortBy(final String keyName, final String fieldName, final Optional<String> nestedPath, final Optional<Query> nestedFilter, final Optional<Integer> nestedMaxChildren) {
         this.keyName = keyName;
         this.fieldName = fieldName;
         this.nestedPath = nestedPath;
@@ -73,7 +73,7 @@ public enum CpsCaseSortBy {
         return lookUp.putIfAbsent(keyName, URN);
     }
 
-    public Optional<QueryBuilder> getNestedFilter() {
+    public Optional<Query> getNestedFilter() {
         return nestedFilter;
     }
 

@@ -7,9 +7,8 @@ import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
-import static org.apache.lucene.search.join.ScoreMode.Avg;
-import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
-import static org.elasticsearch.index.query.QueryBuilders.nestedQuery;
+import static uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.ElasticSearchQueryBuilder.convertBuilder;
+import static uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.ElasticSearchQueryBuilder.nestedQuery;
 import static uk.gov.moj.cpp.unifiedsearch.query.common.constant.ActiveCaseStatusEnum.getActiveCaseStatusEnumValues;
 import static uk.gov.moj.cpp.unifiedsearch.query.common.constant.CaseSearchConstants.ACTIVE;
 import static uk.gov.moj.cpp.unifiedsearch.query.common.constant.CaseSearchConstants.ADDRESS;
@@ -52,6 +51,7 @@ import uk.gov.moj.cpp.unifiedsearch.query.builders.UnifiedSearchQueryBuilderServ
 import uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.ElasticSearchQueryBuilder;
 import uk.gov.moj.cpp.unifiedsearch.query.common.domain.QueryParameters;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,12 +59,12 @@ import java.util.Optional;
 
 import javax.enterprise.context.ApplicationScoped;
 
+import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.NestedQuery;
+import co.elastic.clients.elasticsearch.core.search.InnerHits;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.collections.MapUtils;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.InnerHitBuilder;
-import org.elasticsearch.index.query.NestedQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 
 @ApplicationScoped
 public class CaseQueryBuilderService extends AbstractQueryBuilderService implements UnifiedSearchQueryBuilderService<QueryParameters> {
@@ -72,9 +72,9 @@ public class CaseQueryBuilderService extends AbstractQueryBuilderService impleme
     public static final String CHAR_COMMA = ",";
 
     @Override
-    public QueryBuilder builder(final QueryParameters queryParameters) {
+    public Query.Builder builder(final QueryParameters queryParameters) {
 
-        final BoolQueryBuilder queryBuilder = boolQuery();
+        final BoolQuery.Builder queryBuilder = new BoolQuery.Builder();
         if (queryParameters.isCrownOrMagistrates() != null) {
             addMustToQuery(CROWN_OR_MAGISTRATES, queryBuilder, queryParameters.isCrownOrMagistrates());
         }
@@ -103,10 +103,10 @@ public class CaseQueryBuilderService extends AbstractQueryBuilderService impleme
             }
         }
 
-        return queryBuilder;
+        return convertBuilder(queryBuilder);
     }
 
-    private void addHearingQueryBuilders(final QueryParameters queryParameters, final BoolQueryBuilder queryBuilder) {
+    private void addHearingQueryBuilders(final QueryParameters queryParameters, final BoolQuery.Builder queryBuilder) {
         final Boolean isBoxHearing = queryParameters.isBoxWorkHearing();
         final Boolean isVirtualBoxHearing = queryParameters.isBoxWorkVirtualHearing();
         final String hearingTypeId = trimToEmpty(queryParameters.getHearingTypeId());
@@ -115,7 +115,7 @@ public class CaseQueryBuilderService extends AbstractQueryBuilderService impleme
         final String courtId = trimToEmpty(queryParameters.getCourtId());
         final String hearingId = queryParameters.getHearingId();
 
-        final List<QueryBuilder> allHearingFilters = createFilters(of(HEARING_TYPE_ID, hearingTypeId));
+        final List<Query> allHearingFilters = createFilters(of(HEARING_TYPE_ID, hearingTypeId));
         if (!hearingDateFromParam.isEmpty() || !hearingDateToParam.isEmpty()) {
             allHearingFilters.add(getQueryBuilder(HEARING_DATE, hearingDateFromParam, hearingDateToParam));
         }
@@ -136,13 +136,13 @@ public class CaseQueryBuilderService extends AbstractQueryBuilderService impleme
             allHearingFilters.add(getQueryBuilder(HEARING_ID, hearingId));
         }
 
-        final QueryBuilder additionalHearingFilterQueries = createAdditionalMustFilter(HEARING_NESTED_PATH, allHearingFilters);
+        final Query additionalHearingFilterQueries = createAdditionalMustFilter(HEARING_NESTED_PATH, allHearingFilters);
         if (additionalHearingFilterQueries != null) {
             queryBuilder.must(additionalHearingFilterQueries);
         }
     }
 
-    private void addPartyQueryBuilders(final QueryParameters queryParameters, final BoolQueryBuilder queryBuilder) {
+    private void addPartyQueryBuilders(final QueryParameters queryParameters, final BoolQuery.Builder queryBuilder) {
         addDefendantMatchingQueryBuilders(queryBuilder, queryParameters);
 
         final String nameParam = trimToEmpty(queryParameters.getPartyName());
@@ -163,13 +163,13 @@ public class CaseQueryBuilderService extends AbstractQueryBuilderService impleme
                 .put(NINO, nino)
                 .put(ARREST_SUMMONS_NUMBER, arrestSummonsNumber);
 
-        final List<QueryBuilder> allPartyFilters = createFilters(builder.build());
+        final List<Query> allPartyFilters = createFilters(builder.build());
         if (!partyLastNameOrOrganisationNameParam.isEmpty() || !partyFirstAndOrMiddleNameParam.isEmpty()) {
             addMustToQuery(NAME, queryBuilder, partyFirstAndOrMiddleNameParam, partyLastNameOrOrganisationNameParam, allPartyFilters);
         } else if (!nameParam.isEmpty()) {
             addMustToQuery(NAME, queryBuilder, nameParam, allPartyFilters);
         } else {
-            final QueryBuilder additionalPartyFilterQueries = createAdditionalMustFilter(PARTY_NESTED_PATH, allPartyFilters);
+            final Query additionalPartyFilterQueries = createAdditionalMustFilter(PARTY_NESTED_PATH, allPartyFilters);
             if (additionalPartyFilterQueries != null) {
                 queryBuilder.must(additionalPartyFilterQueries);
             }
@@ -177,7 +177,7 @@ public class CaseQueryBuilderService extends AbstractQueryBuilderService impleme
 
     }
 
-    private void addDefendantMatchingQueryBuilders(final BoolQueryBuilder queryBuilder,
+    private void addDefendantMatchingQueryBuilders(final BoolQuery.Builder queryBuilder,
                                                    final QueryParameters queryParameters) {
         final String pncIdParam = trimToEmpty(queryParameters.getPncId());
         final String croNumberParam = trimToEmpty(queryParameters.getCroNumber());
@@ -188,7 +188,7 @@ public class CaseQueryBuilderService extends AbstractQueryBuilderService impleme
         final String courtOrderValidityDateParam = trimToEmpty(queryParameters.getCourtOrderValidityDate());
 
         final Map<String, Object> partiesExactQueryBuilders = new HashMap<>();
-        final Map<String, QueryBuilder> activePartiesShouldClauseQueryBuilders = new HashMap<>();
+        final Map<String, Query> activePartiesShouldClauseQueryBuilders = new HashMap<>();
 
         if (proceedingConcludedParam != null) {
             activePartiesShouldClauseQueryBuilders.putIfAbsent(PARTY_NESTED_PATH, getQueryBuilder(PROCEEDINGS_CONCLUDED, proceedingConcludedParam));
@@ -219,133 +219,133 @@ public class CaseQueryBuilderService extends AbstractQueryBuilderService impleme
         }
 
 
-        final QueryBuilder additionalPartyFilterQueries = createAdditionalMustFilterWithInnerHits(PARTY_NESTED_PATH, createFilters(partiesExactQueryBuilders));
+        final Query additionalPartyFilterQueries = createAdditionalMustFilterWithInnerHits(PARTY_NESTED_PATH, createFilters(partiesExactQueryBuilders));
 
         if (additionalPartyFilterQueries != null) {
             queryBuilder.must(additionalPartyFilterQueries);
         }
 
         if (MapUtils.isNotEmpty(activePartiesShouldClauseQueryBuilders)) {
-            final QueryBuilder queriesWithClause = createAdditionalShouldFilter(activePartiesShouldClauseQueryBuilders, additionalPartyFilterQueries == null);
-            queryBuilder.must(queriesWithClause);
+            final Query.Builder queriesWithClause = createAdditionalShouldFilter(activePartiesShouldClauseQueryBuilders, additionalPartyFilterQueries == null);
+            queryBuilder.must(queriesWithClause.build());
         }
     }
 
-    private void addApplicationQueryBuilders(final BoolQueryBuilder queryBuilder, final QueryParameters queryParameters) {
+    private void addApplicationQueryBuilders(final BoolQuery.Builder queryBuilder, final QueryParameters queryParameters) {
         final String applicationType = trimToEmpty(queryParameters.getApplicationType());
         final String referenceParam = trimToEmpty(queryParameters.getCaseReference());
         final Boolean excludeCompletedApplications = queryParameters.excludeCompletedApplications();
         final Boolean isBoxHearing = queryParameters.isBoxWorkHearing();
 
-        final List<QueryBuilder> allApplicationFilters = createFilters(of(APPLICATION_TYPE, applicationType));
+        final List<Query> allApplicationFilters = createFilters(of(APPLICATION_TYPE, applicationType));
 
         if (!referenceParam.isEmpty() && (nonNull(isBoxHearing) && isBoxHearing)) {
-            final Optional<QueryBuilder> additionalApplicationFilter = ofNullable(createAdditionalMustFilter(APPLICATIONS_NESTED_PATH, allApplicationFilters));
+            final Optional<Query> additionalApplicationFilter = ofNullable(createAdditionalMustFilter(APPLICATIONS_NESTED_PATH, allApplicationFilters));
             additionalApplicationFilter.ifPresent(queryBuilder::must);
 
-            final BoolQueryBuilder boolQueryBuilder = boolQuery();
+            final BoolQuery.Builder boolQueryBuilder = new BoolQuery.Builder();
             APPLICATION_STATUS_LIST.forEach(applicationStatus ->
-                    boolQueryBuilder.should(getNestedQuery(APPLICATIONS_NESTED_PATH, getQueryBuilder(APPLICATION_STATUS, applicationStatus), additionalApplicationFilter.isPresent(), join(APPLICATIONS_NESTED_PATH, applicationStatus))));
-            queryBuilder.must(boolQueryBuilder);
+                    boolQueryBuilder.should(convertBuilder(getNestedQuery(APPLICATIONS_NESTED_PATH, getQueryBuilder(APPLICATION_STATUS, applicationStatus), additionalApplicationFilter.isPresent(), join(APPLICATIONS_NESTED_PATH, applicationStatus))).build()));
+            queryBuilder.must(boolQueryBuilder.build());
 
             addMustToQuery(CASE_REFERENCE, queryBuilder, referenceParam, allApplicationFilters);
 
         } else if (!referenceParam.isEmpty()) {
             addMustToQuery(CASE_REFERENCE, queryBuilder, referenceParam, allApplicationFilters);
         } else {
-            final QueryBuilder additionalApplicationFilter = createAdditionalMustFilter(APPLICATIONS_NESTED_PATH, allApplicationFilters);
+            final Query additionalApplicationFilter = createAdditionalMustFilter(APPLICATIONS_NESTED_PATH, allApplicationFilters);
             if (additionalApplicationFilter != null) {
                 queryBuilder.must(additionalApplicationFilter);
             }
 
             if ((nonNull(isBoxHearing) && isBoxHearing) || (nonNull(excludeCompletedApplications) && excludeCompletedApplications)) {
-                final BoolQueryBuilder boolQueryBuilder = boolQuery();
+                final BoolQuery.Builder boolQueryBuilder = new BoolQuery.Builder();
 
                 APPLICATION_STATUS_LIST.stream().forEach(applicationStatus ->
-                        boolQueryBuilder.should(getNestedQuery(APPLICATIONS_NESTED_PATH, getQueryBuilder(APPLICATION_STATUS, applicationStatus), additionalApplicationFilter == null, join(APPLICATIONS_NESTED_PATH, applicationStatus))));
+                        boolQueryBuilder.should(Collections.singletonList(convertBuilder(getNestedQuery(APPLICATIONS_NESTED_PATH, getQueryBuilder(APPLICATION_STATUS, applicationStatus), additionalApplicationFilter == null, join(APPLICATIONS_NESTED_PATH, applicationStatus))).build())));
 
-                queryBuilder.must(boolQueryBuilder);
+                queryBuilder.must(boolQueryBuilder.build());
             }
         }
     }
 
     @Override
-    protected void addMustToQuery(final String queryBuilderCacheKey, final BoolQueryBuilder queryBuilder, final Object... params) {
+    protected void addMustToQuery(final String queryBuilderCacheKey, final BoolQuery.Builder queryBuilder, final Object... params) {
         queryBuilder.must(getQueryBuilder(queryBuilderCacheKey, params));
     }
 
     @Override
-    protected void addMustNotToQuery(final String queryBuilderCacheKey, final BoolQueryBuilder queryBuilder, final Object... params) {
+    protected void addMustNotToQuery(final String queryBuilderCacheKey, final BoolQuery.Builder queryBuilder, final Object... params) {
         queryBuilder.mustNot(getQueryBuilder(queryBuilderCacheKey, params));
     }
 
     @Override
-    protected void addFilterToQuery(final String queryBuilderCacheKey, final BoolQueryBuilder queryBuilder, final Object... params) {
+    protected void addFilterToQuery(final String queryBuilderCacheKey, final BoolQuery.Builder queryBuilder, final Object... params) {
         queryBuilder.filter(getQueryBuilder(queryBuilderCacheKey, params));
     }
 
     @Override
-    protected void addFilterToQueryIfPresent(final String param, final String queryBuilderCacheKey, final BoolQueryBuilder queryBuilder) {
+    protected void addFilterToQueryIfPresent(final String param, final String queryBuilderCacheKey, final BoolQuery.Builder queryBuilder) {
         if (!param.isEmpty()) {
             queryBuilder.filter(getQueryBuilder(queryBuilderCacheKey, param));
         }
     }
 
     @Override
-    protected QueryBuilder getQueryBuilder(final String queryBuilderCacheKey, final Object... params) {
+    protected Query getQueryBuilder(final String queryBuilderCacheKey, final Object... params) {
         final ElasticSearchQueryBuilder unifiedSearchQueryBuilderBy = elasticSearchQueryBuilderCache.getQueryBuilderFromCacheBy(queryBuilderCacheKey);
         return unifiedSearchQueryBuilderBy.getQueryBuilderBy(params);
     }
 
     @Override
-    protected QueryBuilder createAdditionalMustFilterWithInnerHits(final String nestedPath, final List<QueryBuilder> allInnerQueries) {
+    protected Query createAdditionalMustFilterWithInnerHits(final String nestedPath, final List<Query> allInnerQueries) {
         if (allInnerQueries.isEmpty()) {
             return null;
         }
 
-        final BoolQueryBuilder innerBooleanQueryBuilder = boolQuery();
+        final BoolQuery.Builder innerBooleanQueryBuilder = new BoolQuery.Builder();
         allInnerQueries.forEach(innerBooleanQueryBuilder::must);
-        return getNestedQuery(nestedPath, innerBooleanQueryBuilder, true, "parties");
+        return convertBuilder(getNestedQuery(nestedPath, convertBuilder(innerBooleanQueryBuilder).build(), true, "parties")).build();
     }
 
     @Override
-    protected QueryBuilder createAdditionalMustFilter(final String nestedPath, final List<QueryBuilder> allInnerQueries) {
+    protected Query createAdditionalMustFilter(final String nestedPath, final List<Query> allInnerQueries) {
         if (allInnerQueries.isEmpty()) {
             return null;
         }
 
-        final BoolQueryBuilder innerBooleanQueryBuilder = boolQuery();
+        final BoolQuery.Builder innerBooleanQueryBuilder = new BoolQuery.Builder();
         allInnerQueries.forEach(innerBooleanQueryBuilder::must);
-        return nestedQuery(nestedPath, innerBooleanQueryBuilder, Avg);
+        return convertBuilder(nestedQuery(nestedPath, convertBuilder(innerBooleanQueryBuilder))).build();
     }
 
-    private QueryBuilder createAdditionalShouldFilter(final Map<String, QueryBuilder> innerQueries, final boolean withInnerHits) {
+    private Query.Builder createAdditionalShouldFilter(final Map<String, Query> innerQueries, final boolean withInnerHits) {
         if (MapUtils.isEmpty(innerQueries)) {
             return null;
         }
 
-        final BoolQueryBuilder booleanQueryBuilder = boolQuery();
+        final BoolQuery.Builder booleanQueryBuilder = new BoolQuery.Builder();
 
-        for (final Map.Entry<String, QueryBuilder> innerQuery : innerQueries.entrySet()) {
-            booleanQueryBuilder.should(getNestedQuery(innerQuery.getKey(), innerQuery.getValue(), withInnerHits, innerQuery.getKey()));
+        for (final Map.Entry<String, Query> innerQuery : innerQueries.entrySet()) {
+            booleanQueryBuilder.should(Collections.singletonList(convertBuilder(getNestedQuery(innerQuery.getKey(), innerQuery.getValue(), withInnerHits, innerQuery.getKey())).build()));
         }
-        return booleanQueryBuilder;
+        return convertBuilder(booleanQueryBuilder);
     }
 
-    private NestedQueryBuilder getNestedQuery(final String key, final QueryBuilder value, final boolean withInnerHits, final String innerHitKey) {
-        return withInnerHits ? nestedQuery(key, value, Avg).innerHit(new InnerHitBuilder(innerHitKey)) :
-                nestedQuery(key, value, Avg);
+    private NestedQuery.Builder getNestedQuery(final String key, final Query value, final boolean withInnerHits, final String innerHitKey) {
+        return withInnerHits ? nestedQuery(key, value).innerHits(InnerHits.of(i -> i.name(innerHitKey))) :
+                nestedQuery(key, value);
     }
 
     @Override
-    protected List<QueryBuilder> createFilters(final Map<String, Object> parameterAndValues) {
+    protected List<Query> createFilters(final Map<String, Object> parameterAndValues) {
         return parameterAndValues.entrySet().stream().
                 filter(entry -> !hasNoValue(entry.getValue())).
                 map(entry -> getQueryBuilder(entry.getKey(), entry.getValue())).
                 collect(toList());
     }
 
-    private void addJurisdictionTypeFilters(final BoolQueryBuilder queryBuilder, final QueryParameters queryParameters) {
+    private void addJurisdictionTypeFilters(final BoolQuery.Builder queryBuilder, final QueryParameters queryParameters) {
         final Boolean isSjp = queryParameters.isSjp();
         final Boolean isMagistrateCourt = queryParameters.isMagistrateCourt();
         final Boolean isCrownCourt = queryParameters.isCrownCourt();
