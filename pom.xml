@@ -10,7 +10,7 @@
 
     <groupId>uk.gov.moj.cpp.unifiedsearch.query</groupId>
     <artifactId>unifiedsearchquery-parent</artifactId>
-    <version>17.103.3-DD-41592-SNAPSHOT</version>
+    <version>17.103.3-DD-41592-DTSPO-28739-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Unifiedsearch Query Context - Parent Module</name>
@@ -29,7 +29,7 @@
             **/uk/gov/moj/cpp/unifiedsearch/query/api/domain/response/indexdoc2apiresponse/Case.java
         </sonar.cpd.exclusions>
         <mvn.site.url>file://${project.build.directory}/site</mvn.site.url>
-        <usersgroups.version>17.0.41</usersgroups.version>
+        <usersgroups.version>17.104.47</usersgroups.version>
         <cpp-platform-data-utils.version>8.0.17</cpp-platform-data-utils.version>
         <elasticsearch-maven-plugin.version>6.13</elasticsearch-maven-plugin.version>
         <elasticsearch.embedded.version>9.2.2</elasticsearch.embedded.version>
