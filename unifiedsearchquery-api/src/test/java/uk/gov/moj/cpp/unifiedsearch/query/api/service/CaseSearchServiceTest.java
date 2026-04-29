@@ -8,6 +8,8 @@ import static org.hamcrest.core.IsNull.notNullValue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.justice.services.messaging.JsonObjects.createArrayBuilder;
+import static uk.gov.justice.services.messaging.JsonObjects.createObjectBuilder;
 import static uk.gov.moj.cpp.unifiedsearch.query.api.service.CaseSearchService.APPOINTMENT_DATE;
 import static uk.gov.moj.cpp.unifiedsearch.query.api.service.CaseSearchService.CASE_REFERENCE;
 import static uk.gov.moj.cpp.unifiedsearch.query.api.service.CaseSearchService.COURT_PROCEEDINGS_INITIATED;
@@ -28,7 +30,6 @@ import uk.gov.moj.cpp.unifiedsearch.query.common.domain.defendant.ProbationDefen
 
 import java.util.UUID;
 
-import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonNumber;
 import javax.json.JsonObject;
@@ -101,21 +102,21 @@ public class CaseSearchServiceTest {
     public void shouldReturnDefendantDetails() {
 
         final QueryParameters queryParameters = mock(QueryParameters.class);
-        final JsonObject party = Json.createObjectBuilder().add("defendantId", UUID.randomUUID().toString()).build();
-        final JsonArray parties = Json.createArrayBuilder().add(party).build();
-        final JsonObject case1 = Json.createObjectBuilder()
+        final JsonObject party = createObjectBuilder().add("defendantId", UUID.randomUUID().toString()).build();
+        final JsonArray parties = createArrayBuilder().add(party).build();
+        final JsonObject case1 = createObjectBuilder()
                 .add(PROSECUTION_CASE_ID, UUID.randomUUID().toString())
                 .add(CASE_REFERENCE, "caseReference")
                 .add(DEFENDANTS, parties)
                 .add(STATUS, "ACTIVE")
                 .build();
-        final JsonObject case2 = Json.createObjectBuilder()
+        final JsonObject case2 = createObjectBuilder()
                 .add(PROSECUTION_CASE_ID, UUID.randomUUID().toString())
                 .add(CASE_REFERENCE, "caseReference")
                 .add(DEFENDANTS, parties)
                 .add(STATUS, "INACTIVE")
                 .build();
-        final JsonArray cases = Json.createArrayBuilder().add(case1).add(case2).build();
+        final JsonArray cases = createArrayBuilder().add(case1).add(case2).build();
 
         when(unifiedSearchQueryBuilderService.builder(queryParameters)).thenReturn(boolQueryBuilder);
         when(unifiedSearchService.search(boolQueryBuilder,
@@ -190,15 +191,15 @@ public class CaseSearchServiceTest {
     public void shouldReturnSortedSearchCasesResultForDefendantSearch() {
         final QueryParameters queryParameters = mock(QueryParameters.class);
         final FieldSortBuilder fieldSortBuilder = fieldSort(COURT_PROCEEDINGS_INITIATED).order(ASC);
-        final JsonObject party = Json.createObjectBuilder().add("defendantId", UUID.randomUUID().toString()).build();
-        final JsonArray parties = Json.createArrayBuilder().add(party).build();
+        final JsonObject party = createObjectBuilder().add("defendantId", UUID.randomUUID().toString()).build();
+        final JsonArray parties = createArrayBuilder().add(party).build();
 
-        final JsonObject case1 = Json.createObjectBuilder()
+        final JsonObject case1 = createObjectBuilder()
                 .add(PROSECUTION_CASE_ID, UUID.randomUUID().toString())
                 .add(CASE_REFERENCE, "caseReference")
                 .add(DEFENDANTS, parties)
                 .build();
-        final JsonArray cases = Json.createArrayBuilder().add(case1).build();
+        final JsonArray cases = createArrayBuilder().add(case1).build();
         when(unifiedSearchQueryBuilderService.builder(queryParameters)).thenReturn(boolQueryBuilder);
 
         when(unifiedSearchService.search(boolQueryBuilder,
