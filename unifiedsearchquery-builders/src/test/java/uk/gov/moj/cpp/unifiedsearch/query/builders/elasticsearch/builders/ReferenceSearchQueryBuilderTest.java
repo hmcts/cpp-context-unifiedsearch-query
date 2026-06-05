@@ -12,7 +12,7 @@ import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.NestedQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.TermQueryBuilder;
+import org.elasticsearch.index.query.RegexpQueryBuilder;
 import org.junit.jupiter.api.Test;
 
 public class ReferenceSearchQueryBuilderTest {
@@ -38,12 +38,12 @@ public class ReferenceSearchQueryBuilderTest {
 
         final QueryBuilder firstShould = actualBoolQueryBuilder.should().get(0);
 
-        assertThat(firstShould, instanceOf(TermQueryBuilder.class));
+        assertThat(firstShould, instanceOf(RegexpQueryBuilder.class));
 
-        final TermQueryBuilder firstTermShould = (TermQueryBuilder) firstShould;
-        assertThat(firstTermShould.getName(), is("term"));
-        assertThat(firstTermShould.fieldName(), is("caseReference"));
-        assertThat(firstTermShould.value(), is(caseReference));
+        final RegexpQueryBuilder firstRegexpShould = (RegexpQueryBuilder) firstShould;
+        assertThat(firstRegexpShould.getName(), is("regexp"));
+        assertThat(firstRegexpShould.fieldName(), is("caseReference"));
+        assertThat(firstRegexpShould.value(), is(" *" + caseReference + " *"));
 
         final QueryBuilder secondShould = actualBoolQueryBuilder.should().get(1);
         assertThat(secondShould, instanceOf(NestedQueryBuilder.class));
@@ -55,11 +55,11 @@ public class ReferenceSearchQueryBuilderTest {
         assertThat(innedBoolQueryBuilder.should(), hasSize(0));
         assertThat(innedBoolQueryBuilder.must(), hasSize(1));
         final QueryBuilder firstMust = innedBoolQueryBuilder.must().get(0);
-        assertThat(firstMust, instanceOf(TermQueryBuilder.class));
-        final TermQueryBuilder actualNestedTermQueryBuilder = (TermQueryBuilder) firstMust;
-        assertThat(actualNestedTermQueryBuilder.getName(), is("term"));
-        assertThat(actualNestedTermQueryBuilder.fieldName(), is("applications.applicationReference"));
-        assertThat(actualNestedTermQueryBuilder.value(), is(caseReference));
+        assertThat(firstMust, instanceOf(RegexpQueryBuilder.class));
+        final RegexpQueryBuilder actualNestedRegexpQueryBuilder = (RegexpQueryBuilder) firstMust;
+        assertThat(actualNestedRegexpQueryBuilder.getName(), is("regexp"));
+        assertThat(actualNestedRegexpQueryBuilder.fieldName(), is("applications.applicationReference"));
+        assertThat(actualNestedRegexpQueryBuilder.value(), is(" *" + caseReference + " *"));
 
     }
 
@@ -82,12 +82,12 @@ public class ReferenceSearchQueryBuilderTest {
 
         final QueryBuilder firstShould = actualBoolQueryBuilder.should().get(0);
 
-        assertThat(firstShould, instanceOf(TermQueryBuilder.class));
+        assertThat(firstShould, instanceOf(RegexpQueryBuilder.class));
 
-        final TermQueryBuilder firstTermShould = (TermQueryBuilder) firstShould;
-        assertThat(firstTermShould.getName(), is("term"));
-        assertThat(firstTermShould.fieldName(), is("caseReference"));
-        assertThat(firstTermShould.value(), is(caseReference));
+        final RegexpQueryBuilder firstRegexpShould = (RegexpQueryBuilder) firstShould;
+        assertThat(firstRegexpShould.getName(), is("regexp"));
+        assertThat(firstRegexpShould.fieldName(), is("caseReference"));
+        assertThat(firstRegexpShould.value(), is(" *" + caseReference + " *"));
 
         final QueryBuilder secondShould = actualBoolQueryBuilder.should().get(1);
         assertThat(secondShould, instanceOf(NestedQueryBuilder.class));
@@ -100,11 +100,11 @@ public class ReferenceSearchQueryBuilderTest {
         assertThat(innedBoolQueryBuilder.must(), hasSize(2));
 
         final QueryBuilder firstMust = innedBoolQueryBuilder.must().get(0);
-        assertThat(firstMust, instanceOf(TermQueryBuilder.class));
-        final TermQueryBuilder actualNestedTermQueryBuilder = (TermQueryBuilder) firstMust;
-        assertThat(actualNestedTermQueryBuilder.getName(), is("term"));
-        assertThat(actualNestedTermQueryBuilder.fieldName(), is("applications.applicationReference"));
-        assertThat(actualNestedTermQueryBuilder.value(), is(caseReference));
+        assertThat(firstMust, instanceOf(RegexpQueryBuilder.class));
+        final RegexpQueryBuilder actualNestedRegexpQueryBuilder = (RegexpQueryBuilder) firstMust;
+        assertThat(actualNestedRegexpQueryBuilder.getName(), is("regexp"));
+        assertThat(actualNestedRegexpQueryBuilder.fieldName(), is("applications.applicationReference"));
+        assertThat(actualNestedRegexpQueryBuilder.value(), is(" *" + caseReference + " *"));
 
         final QueryBuilder secondMust = innedBoolQueryBuilder.must().get(1);
 

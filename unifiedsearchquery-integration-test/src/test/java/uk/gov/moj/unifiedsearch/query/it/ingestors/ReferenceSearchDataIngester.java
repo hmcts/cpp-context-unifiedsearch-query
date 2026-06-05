@@ -27,9 +27,9 @@ import com.google.common.collect.ImmutableList;
 
 public class ReferenceSearchDataIngester {
 
-    public static final String TFL_CASE_REFERENCE = "TFL1234567";
-    public static final String TFL_CASE2_REFERENCE = "TFL987654321";
-    public static final String TVL_CASE_REFERENCE = "TVL1234567";
+    public static final String TFL_CASE_REFERENCE = "    TFL1234567 ";
+    public static final String TFL_CASE2_REFERENCE = "TFL987654321  ";
+    public static final String TVL_CASE_REFERENCE = "  TVL1234567";
     public static final String TVL_CASE_2_REFERENCE = "TVL2345678";
     public static final String TVL_CASE_3_REFERENCE = "TVL3456789";
     public static final String APP_REFERENCE_PREFIX = "APPUSRS000";
