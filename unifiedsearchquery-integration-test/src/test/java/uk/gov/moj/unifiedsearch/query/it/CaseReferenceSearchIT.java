@@ -70,7 +70,7 @@ public class CaseReferenceSearchIT {
 
         final CaseDocument secondCaseDocument = referenceSearchDataHelper.getIndexDocumentAt(1);
 
-        final Map<String, String> parameters = of(CASE_REFERENCE, secondCaseDocument.getCaseReference());
+        final Map<String, String> parameters = of(CASE_REFERENCE, secondCaseDocument.getCaseReference().trim());
 
         final CaseSearchResponse caseSearchResponse = searchApiClient.searchCases(parameters);
 
@@ -85,7 +85,7 @@ public class CaseReferenceSearchIT {
 
         final CaseDocument secondCaseDocument = referenceSearchDataHelper.getIndexDocumentAt(1);
 
-        final Map<String, String> parameters = of(CASE_REFERENCE, secondCaseDocument.getCaseReference().toLowerCase());
+        final Map<String, String> parameters = of(CASE_REFERENCE, secondCaseDocument.getCaseReference().toLowerCase().trim());
 
         final CaseSearchResponse caseSearchResponse = searchApiClient.searchCases(parameters);
 
@@ -130,7 +130,7 @@ public class CaseReferenceSearchIT {
     public void shouldReturnSearchResponseWhenSearchingByStandaloneApplicationReference() throws IOException {
 
         final CaseDocument standaloneApplicationCaseDocument = referenceSearchDataHelper.getIndexDocumentAt(2);
-        final String standaloneApplicationReference = standaloneApplicationCaseDocument.getApplications().get(0).getApplicationReference();
+        final String standaloneApplicationReference = standaloneApplicationCaseDocument.getApplications().get(0).getApplicationReference().trim();
         final Map<String, String> parameters = of(CASE_REFERENCE, standaloneApplicationReference);
 
         final CaseSearchResponse caseSearchResponse = searchApiClient.searchCases(parameters);

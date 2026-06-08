@@ -13,23 +13,25 @@ import java.util.List;
 
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.TermQueryBuilder;
+import org.elasticsearch.index.query.RegexpQueryBuilder;
 
 public class ReferenceSearchQueryBuilder implements ElasticSearchQueryBuilder {
 
 
     @Override
     public QueryBuilder getQueryBuilderBy(final Object... queryParam) {
-        final Object caseReferenceValue = queryParam[0];
+        final String caseReferenceValue = queryParam[0].toString().trim();
         final List<QueryBuilder> applicationFilters = (List<QueryBuilder>) queryParam[1];
 
+        final String regexValue = " *" + caseReferenceValue + " *";
+
         final BoolQueryBuilder applicationInnerBoolWrapper = boolQuery()
-                .must(new TermQueryBuilder(APPLICATION_REFERENCE_PATH, caseReferenceValue));
+                .must(new RegexpQueryBuilder(APPLICATION_REFERENCE_PATH, regexValue));
 
         applicationFilters.forEach(applicationInnerBoolWrapper::must);
 
         return boolQuery()
-                .should(new TermQueryBuilder(CASE_REFERENCE, caseReferenceValue))
+                .should(new RegexpQueryBuilder(CASE_REFERENCE, regexValue))
                 .should(nestedQuery(APPLICATIONS_NESTED_PATH, applicationInnerBoolWrapper, Avg));
     }
 }
