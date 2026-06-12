@@ -203,4 +203,19 @@ public class CaseReferenceSearchIT {
         final Case firstCase = caseSearchResponse.getCases().get(0);
         assertCase(firstCase, secondCaseDocument);
     }
+
+    @Test
+    public void shouldReturnSearchResponseWhenSearchingByCaseReferenceWithPrefixedSpaces() throws IOException {
+
+        final CaseDocument caseDocument = referenceSearchDataHelper.getIndexDocumentAt(9);
+
+        final Map<String, String> parameters = of(CASE_REFERENCE, caseDocument.getCaseReference().trim());
+
+        final CaseSearchResponse caseSearchResponse = searchApiClient.searchCases(parameters);
+
+        assertThat(caseSearchResponse.getTotalResults(), is(1L));
+        assertThat(caseSearchResponse.getCases(), hasSize(1));
+        final Case firstCase = caseSearchResponse.getCases().get(0);
+        assertCase(firstCase, caseDocument);
+    }
 }

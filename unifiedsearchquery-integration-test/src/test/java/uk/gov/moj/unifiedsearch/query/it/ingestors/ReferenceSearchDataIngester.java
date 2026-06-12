@@ -27,13 +27,14 @@ import com.google.common.collect.ImmutableList;
 
 public class ReferenceSearchDataIngester {
 
-    public static final String TFL_CASE_REFERENCE = "    TFL1234567 ";
-    public static final String TFL_CASE2_REFERENCE = "TFL987654321  ";
-    public static final String TVL_CASE_REFERENCE = "  TVL1234567";
+    public static final String TFL_CASE_REFERENCE = "TFL1234567";
+    public static final String TFL_CASE2_REFERENCE = "TFL987654321";
+    public static final String TVL_CASE_REFERENCE = "TVL1234567";
     public static final String TVL_CASE_2_REFERENCE = "TVL2345678";
     public static final String TVL_CASE_3_REFERENCE = "TVL3456789";
     public static final String APP_REFERENCE_PREFIX = "APPUSRS000";
     public static final String TFL_CASE8_REFERENCE = "TFL987654322";
+    public static final String CASE9_REFERENCE = "    AAC987654315 ";
     private final ElasticSearchIndexIngestorUtil elasticSearchIndexIngestorUtil = new ElasticSearchIndexIngestorUtil();
     private static final AtomicInteger applicationReferenceSuffix = new AtomicInteger();
 
@@ -50,7 +51,7 @@ public class ReferenceSearchDataIngester {
 
 
     private List<CaseDocument> caseListForReferenceSearch() {
-        final List<CaseDocument.Builder> caseBuilderList = defaultCasesAsBuilderList(9);
+        final List<CaseDocument.Builder> caseBuilderList = defaultCasesAsBuilderList(10);
 
         caseBuilderList.get(0).withCaseReference(TFL_CASE_REFERENCE).withProsecutingAuthority("TFL").
                 withParties(ImmutableList.of(createPartyBuilder())).
@@ -91,6 +92,10 @@ public class ReferenceSearchDataIngester {
         caseBuilderList.get(8).withCaseReference(TFL_CASE8_REFERENCE).withProsecutingAuthority("CASE8").withParties(of(createPartyBuilder()))
                 .withHearings(of(defaultHearingAsBuilder().withHearingDays(of(defaultHearingDayDocumentAsBuilder().withSittingDay("2021-03-22T09:00:00").build(), createHearingDayDocument())),
                         defaultHearingAsBuilder().withHearingDays(of(createHearingDayDocument(), createHearingDayDocument()))));
+
+        caseBuilderList.get(9).withCaseReference(CASE9_REFERENCE).withProsecutingAuthority("CPS").
+                withParties(ImmutableList.of(createPartyBuilder())).
+                withApplications(singletonList(createApplicationBuilder()));
 
         return caseBuilderList.stream()
                 .map(CaseDocument.Builder::build)
