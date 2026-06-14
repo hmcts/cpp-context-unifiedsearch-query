@@ -20,7 +20,7 @@ public class ReferenceSearchQueryBuilder implements ElasticSearchQueryBuilder {
 
     @Override
     public QueryBuilder getQueryBuilderBy(final Object... queryParam) {
-        final String caseReferenceValue = queryParam[0].toString().trim();
+        final String caseReferenceValue = queryParam[0].toString();
         final List<QueryBuilder> applicationFilters = (List<QueryBuilder>) queryParam[1];
 
         final String regexValue = " *" + caseReferenceValue + " *";

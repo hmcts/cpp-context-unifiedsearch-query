@@ -209,7 +209,7 @@ public class CaseReferenceSearchIT {
 
         final CaseDocument caseDocument = referenceSearchDataHelper.getIndexDocumentAt(9);
 
-        final Map<String, String> parameters = of(CASE_REFERENCE, caseDocument.getCaseReference().trim());
+        final Map<String, String> parameters = of(CASE_REFERENCE, caseDocument.getCaseReference());
 
         final CaseSearchResponse caseSearchResponse = searchApiClient.searchCases(parameters);
 
