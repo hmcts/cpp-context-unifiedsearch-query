@@ -93,7 +93,7 @@ public class ReferenceSearchDataIngester {
                 .withHearings(of(defaultHearingAsBuilder().withHearingDays(of(defaultHearingDayDocumentAsBuilder().withSittingDay("2021-03-22T09:00:00").build(), createHearingDayDocument())),
                         defaultHearingAsBuilder().withHearingDays(of(createHearingDayDocument(), createHearingDayDocument()))));
 
-        caseBuilderList.get(9).withCaseReference(CASE9_REFERENCE).withProsecutingAuthority("CPS").
+        caseBuilderList.get(9).withCaseReference(CASE9_REFERENCE).withProsecutingAuthority("CASE9").
                 withParties(ImmutableList.of(createPartyBuilder())).
                 withApplications(singletonList(createApplicationBuilder()));
 
