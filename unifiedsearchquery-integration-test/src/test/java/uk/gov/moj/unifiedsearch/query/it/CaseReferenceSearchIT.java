@@ -20,6 +20,7 @@ import uk.gov.moj.unifiedsearch.query.it.ingestors.ReferenceSearchDataIngester;
 import uk.gov.moj.unifiedsearch.query.it.util.SearchApiClient;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -32,6 +33,7 @@ public class CaseReferenceSearchIT {
 
     private static final ReferenceSearchDataIngester referenceSearchDataHelper = new ReferenceSearchDataIngester();
     private static final String CASE_REFERENCE = "caseReference";
+    private static final String PNC_ID = "pncId";
     private static final String SORT_ASC = "asc";
     private static final String SORT_DESC = "desc";
     private static final String SORT_BY_APPOINTMENT_DATE = "sortByAppointmentDate";
@@ -202,5 +204,43 @@ public class CaseReferenceSearchIT {
         assertThat(caseSearchResponse.getCases(), hasSize(1));
         final Case firstCase = caseSearchResponse.getCases().get(0);
         assertCase(firstCase, secondCaseDocument);
+    }
+
+    @Test
+    public void shouldReturnSearchResponseWhenSearchingByPncId() throws IOException {
+        final CaseDocument firstCaseDocument = referenceSearchDataHelper.getIndexDocumentAt(9);
+        final String pncId = firstCaseDocument.getParties().get(0).getPncId();
+
+        final Map<String, String> parameters = of(PNC_ID, pncId);
+
+        final CaseSearchResponse caseSearchResponse = searchApiClient.searchCases(parameters);
+
+        assertCases(caseSearchResponse, singletonList(firstCaseDocument));
+    }
+
+    @Test
+    public void shouldReturnMultipleSearchResponsesWhenSearchingByPncId() throws IOException {
+        final CaseDocument firstCaseDocument = referenceSearchDataHelper.getIndexDocumentAt(10);
+        final CaseDocument secondCaseDocument = referenceSearchDataHelper.getIndexDocumentAt(11);
+        final String pncId = firstCaseDocument.getParties().get(0).getPncId();
+
+        final Map<String, String> parameters = of(PNC_ID, pncId);
+
+        final CaseSearchResponse caseSearchResponse = searchApiClient.searchCases(parameters);
+
+        assertCases(caseSearchResponse, List.of(firstCaseDocument, secondCaseDocument));
+    }
+
+    @Test
+    public void shouldReturnResponsesWhenSearchingByPncIdWithShortYearForm() throws IOException {
+        final CaseDocument firstCaseDocument = referenceSearchDataHelper.getIndexDocumentAt(10);
+        final CaseDocument secondCaseDocument = referenceSearchDataHelper.getIndexDocumentAt(11);
+        final String pncId = firstCaseDocument.getParties().get(0).getPncId().substring(2);
+
+        final Map<String, String> parameters = of(PNC_ID, pncId);
+
+        final CaseSearchResponse caseSearchResponse = searchApiClient.searchCases(parameters);
+
+        assertCases(caseSearchResponse, List.of(firstCaseDocument, secondCaseDocument));
     }
 }

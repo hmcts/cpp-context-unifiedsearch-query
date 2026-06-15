@@ -32,6 +32,9 @@ public class ReferenceSearchDataIngester {
     public static final String TVL_CASE_REFERENCE = "TVL1234567";
     public static final String TVL_CASE_2_REFERENCE = "TVL2345678";
     public static final String TVL_CASE_3_REFERENCE = "TVL3456789";
+    public static final String TVL_CASE_4_REFERENCE = "TVL3456790";
+    public static final String TVL_CASE_5_REFERENCE = "TVL3456791";
+    public static final String TVL_CASE_6_REFERENCE = "TVL3456792";
     public static final String APP_REFERENCE_PREFIX = "APPUSRS000";
     public static final String TFL_CASE8_REFERENCE = "TFL987654322";
     private final ElasticSearchIndexIngestorUtil elasticSearchIndexIngestorUtil = new ElasticSearchIndexIngestorUtil();
@@ -50,7 +53,7 @@ public class ReferenceSearchDataIngester {
 
 
     private List<CaseDocument> caseListForReferenceSearch() {
-        final List<CaseDocument.Builder> caseBuilderList = defaultCasesAsBuilderList(9);
+        final List<CaseDocument.Builder> caseBuilderList = defaultCasesAsBuilderList(12);
 
         caseBuilderList.get(0).withCaseReference(TFL_CASE_REFERENCE).withProsecutingAuthority("TFL").
                 withParties(ImmutableList.of(createPartyBuilder())).
@@ -91,6 +94,11 @@ public class ReferenceSearchDataIngester {
         caseBuilderList.get(8).withCaseReference(TFL_CASE8_REFERENCE).withProsecutingAuthority("CASE8").withParties(of(createPartyBuilder()))
                 .withHearings(of(defaultHearingAsBuilder().withHearingDays(of(defaultHearingDayDocumentAsBuilder().withSittingDay("2021-03-22T09:00:00").build(), createHearingDayDocument())),
                         defaultHearingAsBuilder().withHearingDays(of(createHearingDayDocument(), createHearingDayDocument()))));
+
+        // Case with PNC ID of varying formats
+        caseBuilderList.get(9).withCaseReference(TVL_CASE_4_REFERENCE).withProsecutingAuthority("TEST").withParties(of(createPartyBuilder().withPncId("20171234567Q")));
+        caseBuilderList.get(10).withCaseReference(TVL_CASE_5_REFERENCE).withProsecutingAuthority("TEST").withParties(of(createPartyBuilder().withPncId("20191234567T")));
+        caseBuilderList.get(11).withCaseReference(TVL_CASE_6_REFERENCE).withProsecutingAuthority("TEST").withParties(of(createPartyBuilder().withPncId("2019/1234567T")));
 
         return caseBuilderList.stream()
                 .map(CaseDocument.Builder::build)
