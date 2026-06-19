@@ -23,8 +23,8 @@ public class PncIdQueryBuilderTest {
             // Values that are obviously not a PNC ID.
             "123456", "TEST", "SJ123456789",
             // Values which are almost valid PNC IDs.
-            "21234567T", "2012345678T", "211234567TQ",
-            "2011234567T", "201712345678T", "201234567TQ",
+            "21234567T", "2012345678T", "211234567TQ", "171234567I", "171234567O", "171234567S",
+            "2011234567T", "201712345678T", "201234567TQ", "20171234567I", "20171234567O", "20171234567S",
     })
     public void shouldQueryExactMatchForUnrecognisedPncId(final String pncId) {
         final QueryBuilder queryBuilder = pncIdQueryBuilder.getQueryBuilderBy(pncId);
