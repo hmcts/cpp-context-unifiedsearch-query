@@ -18,7 +18,7 @@ import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
 public class PncIdQueryBuilder implements ElasticSearchQueryBuilder {
 
     private static final Pattern PNC_ID_PATTERN = Pattern.compile(
-            "^(\\d{2}(\\d{2})?)[/',.\\-_]?([A-Z0-9]{7}[A-Z])$",
+            "^(\\d{2}(\\d{2})?)[/',.\\-_]?(\\d{7}[A-HJ-NP-RT-Z])$",
             Pattern.CASE_INSENSITIVE);
 
     private static final String[] YEAR_DELIMITERS = { "", "/", "'", "-", "_", "." };
