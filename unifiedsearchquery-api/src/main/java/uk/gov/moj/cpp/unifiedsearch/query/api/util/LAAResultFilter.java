@@ -1,9 +1,11 @@
 package uk.gov.moj.cpp.unifiedsearch.query.api.util;
 
+import static uk.gov.justice.services.messaging.JsonObjects.createArrayBuilder;
+import static uk.gov.justice.services.messaging.JsonObjects.createObjectBuilder;
+
 import java.util.Map;
 import java.util.function.Predicate;
 
-import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
@@ -19,31 +21,32 @@ public class LAAResultFilter {
     private static final String EMPTY_STRING = "";
 
 
-    private Predicate<JsonObject> validDefendantPredicate = (def ->  {
-        final boolean isValidPersonDefendant =  def.containsKey(DEFENDANT_LAST_NAME) &&
+    private Predicate<JsonObject> validDefendantPredicate = (def -> {
+        final boolean isValidPersonDefendant = def.containsKey(DEFENDANT_LAST_NAME) &&
                 !def.getString(DEFENDANT_LAST_NAME, EMPTY_STRING).isEmpty();
         final boolean isValidOrganisationDefendant = def.containsKey(ORGANISATION_NAME) &&
                 !def.getString(ORGANISATION_NAME, EMPTY_STRING).isEmpty();
-        return  isValidPersonDefendant || isValidOrganisationDefendant;
+        return isValidPersonDefendant || isValidOrganisationDefendant;
 
     });
-    public JsonObject filter(final JsonObject input) {
-        final JsonObjectBuilder outputBuilder = Json.createObjectBuilder();
-        input.entrySet().stream()
-                .filter(e->!e.getKey().equalsIgnoreCase(CASES))
-                .forEach(e -> outputBuilder.add(e.getKey(),e.getValue()));
 
-        final JsonArrayBuilder caseArrayBuilder = Json.createArrayBuilder();
+    public JsonObject filter(final JsonObject input) {
+        final JsonObjectBuilder outputBuilder = createObjectBuilder();
+        input.entrySet().stream()
+                .filter(e -> !e.getKey().equalsIgnoreCase(CASES))
+                .forEach(e -> outputBuilder.add(e.getKey(), e.getValue()));
+
+        final JsonArrayBuilder caseArrayBuilder = createArrayBuilder();
         input.getJsonArray(CASES).stream()
-                .map(e -> (JsonObject)e)
-                .forEach(e-> {
-                    final JsonObjectBuilder caseBuilder = Json.createObjectBuilder();
+                .map(e -> (JsonObject) e)
+                .forEach(e -> {
+                    final JsonObjectBuilder caseBuilder = createObjectBuilder();
                     e.entrySet().stream()
                             .forEach(el -> {
                                 if (isDefendantSummary(el)) {
-                                    caseBuilder.add(el.getKey(),getValidDefendantSummaryArrayObject(e));
+                                    caseBuilder.add(el.getKey(), getValidDefendantSummaryArrayObject(e));
                                 } else {
-                                    caseBuilder.add(el.getKey(),el.getValue());
+                                    caseBuilder.add(el.getKey(), el.getValue());
                                 }
                             });
                     caseArrayBuilder.add(caseBuilder);
@@ -55,9 +58,9 @@ public class LAAResultFilter {
     private JsonArrayBuilder getValidDefendantSummaryArrayObject(final JsonObject el) {
 
         final JsonArray defendantSummaries = el.getJsonArray(DEFENDANT_SUMMARY);
-        final JsonArrayBuilder defendantSummariesBuilder = Json.createArrayBuilder();
+        final JsonArrayBuilder defendantSummariesBuilder = createArrayBuilder();
         defendantSummaries.stream()
-                .map(e -> (JsonObject)e)
+                .map(e -> (JsonObject) e)
                 .filter(validDefendantPredicate)
                 .forEach(defendantSummariesBuilder::add);
         return defendantSummariesBuilder;

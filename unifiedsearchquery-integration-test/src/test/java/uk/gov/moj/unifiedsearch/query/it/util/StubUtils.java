@@ -11,6 +11,7 @@ import static java.util.UUID.randomUUID;
 import static org.apache.http.HttpStatus.SC_OK;
 import static uk.gov.justice.service.wiremock.testutil.InternalEndpointMockUtils.stubPingFor;
 import static uk.gov.justice.services.common.http.HeaderConstants.ID;
+import static uk.gov.justice.services.messaging.JsonObjects.createObjectBuilder;
 import static uk.gov.justice.services.test.utils.core.http.RequestParamsBuilder.requestParams;
 import static uk.gov.justice.services.test.utils.core.matchers.ResponseStatusMatcher.status;
 import static uk.gov.moj.cpp.platform.data.utils.testutils.FileUtil.getPayload;
@@ -23,7 +24,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import javax.json.Json;
 import javax.ws.rs.core.Response;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
@@ -58,7 +58,7 @@ public class StubUtils {
 
     public static void stubEnableAllCapabilities() {
         final String stubUrl = format("/authorisation-service-server/rest/capabilities/%s", ".*");
-        final String responsePayload = Json.createObjectBuilder().add("enabled", true).build().toString();
+        final String responsePayload = createObjectBuilder().add("enabled", true).build().toString();
 
         stubPingFor("authorisation-service-server");
 

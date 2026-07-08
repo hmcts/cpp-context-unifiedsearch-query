@@ -4,6 +4,8 @@ import static java.util.Optional.empty;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
+import static uk.gov.justice.services.messaging.JsonObjects.createArrayBuilder;
+import static uk.gov.justice.services.messaging.JsonObjects.createObjectBuilder;
 import static uk.gov.moj.cpp.unifiedsearch.query.common.constant.CaseSearchConstants.CRIME_CASE_INDEX_NAME;
 
 import uk.gov.justice.services.unifiedsearch.UnifiedSearchName;
@@ -20,7 +22,6 @@ import java.util.Optional;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
@@ -97,9 +98,9 @@ public class CaseSearchService implements BaseCaseSearchService {
                 queryParameters.getStartFrom(),
                 null);
 
-        final JsonObjectBuilder filteredResults = Json.createObjectBuilder();
+        final JsonObjectBuilder filteredResults = createObjectBuilder();
         filteredResults.add(TOTAL_RESULTS, result.getJsonNumber(TOTAL_RESULTS));
-        final JsonArrayBuilder filteredCases = Json.createArrayBuilder();
+        final JsonArrayBuilder filteredCases = createArrayBuilder();
 
         result.getJsonArray(RESULT_HIT_NODE_NAME).stream()
                 .filter(jsonValue -> !((JsonObject) jsonValue).getString(STATUS).equals(INACTIVE))
@@ -139,9 +140,9 @@ public class CaseSearchService implements BaseCaseSearchService {
         final JsonArray cases = result.getJsonArray(RESULT_HIT_NODE_NAME);
 
         final List<String> partyIds = getRequiredDefendantIds(parties);
-        final JsonObjectBuilder filteredResults = Json.createObjectBuilder();
+        final JsonObjectBuilder filteredResults = createObjectBuilder();
         filteredResults.add(TOTAL_RESULTS, result.getJsonNumber(TOTAL_RESULTS));
-        final JsonArrayBuilder filteredCases = Json.createArrayBuilder();
+        final JsonArrayBuilder filteredCases = createArrayBuilder();
         for (int j = 0; j < cases.size(); j++) {
             createCase(cases, partyIds, filteredCases, j);
         }
@@ -149,7 +150,7 @@ public class CaseSearchService implements BaseCaseSearchService {
     }
 
     private void createCase(JsonArray cases, List<String> partyIds, JsonArrayBuilder filteredCases, int j) {
-        final JsonObjectBuilder filteredCase = Json.createObjectBuilder();
+        final JsonObjectBuilder filteredCase = createObjectBuilder();
         final JsonObject caseResult = (JsonObject) cases.get(j);
         filteredCase.add(CASE_REFERENCE, caseResult.getString(CASE_REFERENCE, EMPTY));
         filteredCase.add(PROSECUTION_CASE_ID, caseResult.get(PROSECUTION_CASE_ID));
@@ -159,7 +160,7 @@ public class CaseSearchService implements BaseCaseSearchService {
 
     private void createDefendants(List<String> partyIds, JsonObjectBuilder filteredCase, JsonObject caseResult) {
         final JsonArray defendants = caseResult.getJsonArray(DEFENDANTS);
-        final JsonArrayBuilder filteredDefendants = Json.createArrayBuilder();
+        final JsonArrayBuilder filteredDefendants = createArrayBuilder();
         for (int k = 0; k < defendants.size(); k++) {
             final JsonObject defendant = (JsonObject) defendants.get(k);
             if (isDefendantToBeIncludedInResult(defendant.getString(DEFENDANT_ID), partyIds)) {
