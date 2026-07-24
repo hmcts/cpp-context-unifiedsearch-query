@@ -86,10 +86,12 @@ public class PageSizeAndStartFromQueryIT {
     }
 
     @Test
-    public void shouldReturnNothingWhenPageSizeIs0() throws IOException {
+    public void shouldUseDefaultPageSizeWhenPageSizeIs0() throws IOException {
+        // pageSize=0 (like an absent pageSize) means "use the default page size (10)",
+        // so all 6 matching cases are returned rather than none.
         final List<Case> caseListResults = searchByPageSizeAndStartFrom(0, 0);
 
-        assertThat(caseListResults, hasSize(0));
+        assertThat(caseListResults, hasSize(6));
     }
 
 

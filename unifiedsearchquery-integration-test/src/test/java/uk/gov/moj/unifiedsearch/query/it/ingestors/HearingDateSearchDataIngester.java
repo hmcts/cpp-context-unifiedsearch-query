@@ -6,8 +6,11 @@ import static java.util.stream.Collectors.toList;
 import static uk.gov.moj.cpp.unifiedsearch.test.util.ingest.mothers.CaseDocumentMother.defaultCasesAsBuilderList;
 import static uk.gov.moj.cpp.unifiedsearch.test.util.ingest.mothers.HearingDayDocumentMother.hearingDays;
 import static uk.gov.moj.cpp.unifiedsearch.test.util.ingest.mothers.HearingDocumentMother.defaultHearingAsBuilder;
+import static uk.gov.moj.cpp.unifiedsearch.test.util.ingest.mothers.OffenceDocumentMother.defaultOffenceDocument;
 import static uk.gov.moj.cpp.unifiedsearch.test.util.ingest.mothers.PartyDocumentMother.defaultPartyAsBuilder;
+import static uk.gov.moj.cpp.unifiedsearch.test.util.ingest.mothers.RepresentationOrderDocumentMother.defaultRepresentationOrder;
 
+import uk.gov.moj.cpp.unifiedsearch.test.util.constant.PartyType;
 import uk.gov.moj.cpp.unifiedsearch.test.util.ingest.ElasticSearchIndexIngestorUtil;
 import uk.gov.moj.cpp.unifiedsearch.test.util.ingest.document.CaseDocument;
 import uk.gov.moj.cpp.unifiedsearch.test.util.ingest.document.HearingDocument;
@@ -51,14 +54,14 @@ public class HearingDateSearchDataIngester {
         caseBuilderList.get(0).withParties(asList(
                 createParty(PARTY_POSTCODE_CR0_2AB, "", "", "", "last1"),
                 createParty("RH16 2BW", "", "", "", "last2"),
-                createParty("SL12 3AZ", "MOJ", "Joe", "Sam", "Doe")));
+                createDefendantParty("SL12 3AZ", "MOJ", "Joe", "Sam", "Doe")));
         caseBuilderList.get(1).withHearings(singletonList(hearingDocumentBuilder2));
         caseBuilderList.get(2).withHearings(singletonList(hearingDocumentBuilder5));
         caseBuilderList.get(3).withHearings(asList(hearingDocumentBuilder3, hearingDocumentBuilder1));
         caseBuilderList.get(3).withParties(asList(
                 createParty(PARTY_POSTCODE_CR0_2AB,"", "", "", "last3"),
                 createParty("RH16 2BW","org1", "", "", ""),
-                createParty("SL12 3AZ", "MOJ", "Joe", "Sam", "Doe")));
+                createDefendantParty("SL12 3AZ", "MOJ", "Joe", "Sam", "Doe")));
 
         caseBuilderList.get(4).withHearings(asList(hearingDocumentBuilder5, hearingDocumentBuilder2));
 
@@ -80,6 +83,22 @@ public class HearingDateSearchDataIngester {
                 .withMiddleName(middleName)
                 .withLastName(lastName);
         return partyBuilder;
+    }
+
+    /**
+     * A searchable defendant party. {@code defaultPartyAsBuilder()} randomly makes a party a DEFENDANT (with
+     * offences) or an APPLICANT (no offences); the LAA "defendantName" search requires the matched party to have
+     * offences ({@code parties.offences} EXISTS), so a randomly-APPLICANT "Joe" party matched only intermittently —
+     * that was the flake. Pin the searched party to a complete DEFENDANT (type + offences + ASN + representation
+     * order) so it is deterministically matched, and so the probation-details assertions have the offences they read.
+     */
+    private static PartyDocument.Builder createDefendantParty(final String postcode, final String orgName, final String firstName, final String middleName, final String lastName) {
+        return createParty(postcode, orgName, firstName, middleName, lastName)
+                .withPartyType(PartyType.DEFENDANT.name())
+                .withArrestSummonsNumber("ASN 1234")
+                .withOffences(asList(defaultOffenceDocument()))
+                .withProceedingsConcluded(false)
+                .withRepresentationOrder(defaultRepresentationOrder());
     }
 
     public CaseDocument getIndexDocumentAt(int index) {

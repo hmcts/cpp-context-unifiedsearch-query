@@ -10,7 +10,7 @@ import uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.ElasticSearchQu
 import java.util.List;
 import java.util.Map;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;

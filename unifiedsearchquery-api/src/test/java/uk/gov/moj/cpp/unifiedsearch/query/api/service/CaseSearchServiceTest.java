@@ -30,9 +30,9 @@ import uk.gov.moj.cpp.unifiedsearch.query.common.domain.defendant.ProbationDefen
 
 import java.util.UUID;
 
-import javax.json.JsonArray;
-import javax.json.JsonNumber;
-import javax.json.JsonObject;
+import jakarta.json.JsonArray;
+import jakarta.json.JsonNumber;
+import jakarta.json.JsonObject;
 
 import co.elastic.clients.elasticsearch._types.SortOptions;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;

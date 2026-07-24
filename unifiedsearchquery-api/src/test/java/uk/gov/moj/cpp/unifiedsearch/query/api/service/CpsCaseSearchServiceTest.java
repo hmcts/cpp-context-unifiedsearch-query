@@ -19,7 +19,7 @@ import uk.gov.moj.cpp.unifiedsearch.query.common.constant.CpsCaseSortBy;
 import uk.gov.moj.cpp.unifiedsearch.query.common.domain.CpsQueryParameters;
 import uk.gov.moj.cpp.unifiedsearch.query.common.domain.response.cps.Case;
 
-import javax.json.JsonObject;
+import jakarta.json.JsonObject;
 
 import co.elastic.clients.elasticsearch._types.SortOptions;
 import co.elastic.clients.elasticsearch._types.SortOrder;

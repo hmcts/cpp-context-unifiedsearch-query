@@ -70,7 +70,7 @@ public enum CpsCaseSortBy {
     }
 
     public static CpsCaseSortBy findByKeyNameOrDefault(final String keyName) {
-        return lookUp.putIfAbsent(keyName, URN);
+        return lookUp.computeIfAbsent(keyName, key -> URN);
     }
 
     public Optional<Query> getNestedFilter() {

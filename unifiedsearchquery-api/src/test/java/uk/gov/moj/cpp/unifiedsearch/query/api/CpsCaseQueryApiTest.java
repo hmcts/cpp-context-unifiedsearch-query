@@ -20,7 +20,7 @@ import uk.gov.moj.cpp.unifiedsearch.query.api.response.SearchResponseEnvelopeGen
 import uk.gov.moj.cpp.unifiedsearch.query.api.service.CpsCaseSearchService;
 import uk.gov.moj.cpp.unifiedsearch.query.common.domain.CpsQueryParameters;
 
-import javax.json.JsonObject;
+import jakarta.json.JsonObject;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

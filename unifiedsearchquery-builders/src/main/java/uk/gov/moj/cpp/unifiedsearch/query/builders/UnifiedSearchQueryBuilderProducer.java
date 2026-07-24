@@ -9,11 +9,11 @@ import uk.gov.justice.services.unifiedsearch.UnifiedSearchName;
 import uk.gov.moj.cpp.unifiedsearch.query.builders.service.CaseQueryBuilderService;
 import uk.gov.moj.cpp.unifiedsearch.query.builders.service.CpsCaseQueryBuilderService;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.InjectionException;
-import javax.enterprise.inject.Produces;
-import javax.enterprise.inject.spi.InjectionPoint;
-import javax.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.InjectionException;
+import jakarta.enterprise.inject.Produces;
+import jakarta.enterprise.inject.spi.InjectionPoint;
+import jakarta.inject.Inject;
 
 @ApplicationScoped
 class UnifiedSearchQueryBuilderProducer {

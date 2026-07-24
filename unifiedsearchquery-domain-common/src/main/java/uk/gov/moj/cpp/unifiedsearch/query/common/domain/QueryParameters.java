@@ -3,7 +3,8 @@ package uk.gov.moj.cpp.unifiedsearch.query.common.domain;
 
 public class QueryParameters {
 
-    private int pageSize = 10;
+    private static final int DEFAULT_PAGE_SIZE = 10;
+    private int pageSize = DEFAULT_PAGE_SIZE;
 
     private int startFrom;
 
@@ -134,7 +135,10 @@ public class QueryParameters {
     }
 
     public int getPageSize() {
-        return pageSize;
+        // The framework materialises an absent pageSize query param as 0; treat 0 as
+        // "use the default page size". Negative values stay invalid and are rejected by
+        // QueryApiPreConditions.
+        return pageSize == 0 ? DEFAULT_PAGE_SIZE : pageSize;
     }
 
     public int getStartFrom() {

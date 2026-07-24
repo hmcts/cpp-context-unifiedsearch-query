@@ -5,7 +5,7 @@ import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.jboss.resteasy.util.HttpResponseCodes.SC_OK;
+import static org.apache.http.HttpStatus.SC_OK;
 import static uk.gov.justice.services.test.utils.common.host.TestHostProvider.getHost;
 
 import uk.gov.justice.services.common.http.HeaderConstants;
@@ -14,8 +14,8 @@ import uk.gov.moj.cpp.unifiedsearch.query.common.domain.response.cps.CaseSearchR
 import java.io.IOException;
 import java.util.Map;
 
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.Response;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;

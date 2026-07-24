@@ -21,8 +21,8 @@ import uk.gov.moj.cpp.unifiedsearch.query.api.util.ApplicationTypeFilter;
 import uk.gov.moj.cpp.unifiedsearch.query.common.domain.QueryParameters;
 import uk.gov.moj.cpp.unifiedsearch.query.common.domain.builders.QueryParametersBuilder;
 
-import javax.inject.Inject;
-import javax.json.JsonObject;
+import jakarta.inject.Inject;
+import jakarta.json.JsonObject;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

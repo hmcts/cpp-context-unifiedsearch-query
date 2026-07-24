@@ -40,7 +40,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import com.google.common.collect.ImmutableMap;

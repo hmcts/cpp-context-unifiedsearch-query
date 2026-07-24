@@ -17,9 +17,9 @@ import uk.gov.moj.cpp.unifiedsearch.query.common.domain.PermissionList;
 
 import java.util.List;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.json.JsonObject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.json.JsonObject;
 
 
 @ApplicationScoped
