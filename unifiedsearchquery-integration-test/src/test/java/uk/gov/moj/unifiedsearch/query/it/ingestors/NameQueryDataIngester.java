@@ -1,6 +1,7 @@
 package uk.gov.moj.unifiedsearch.query.it.ingestors;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toList;
 import static uk.gov.moj.cpp.unifiedsearch.test.util.ingest.mothers.CaseDocumentMother.defaultCasesAsBuilderList;
@@ -29,20 +30,26 @@ public class NameQueryDataIngester {
 
         final List<CaseDocument.Builder> caseBuilderList = defaultCasesAsBuilderList(10);
 
-        final PartyDocument.Builder markSpencerBuilder = defaultPartyAsBuilder().withFirstName("Mark").withLastName("Spencer").withMiddleName(null).withOrganisationName(null);
-        final PartyDocument.Builder spencerMarkBuilder = defaultPartyAsBuilder().withFirstName("Spencer").withMiddleName(null).withOrganisationName(null).withLastName("Mark");
+        // NOTE: withAliases(emptyList()) is essential. defaultPartyAsBuilder() attaches 0-2 RANDOM aliases
+        // whose last name is drawn from a pool that includes "Spencer" (RandomNames.LAST_NAMES), and this
+        // search matches parties.aliases.lastName (see LastOrOrganisationNameLeafQueryBuilder). A random
+        // "Spencer" alias intermittently added one extra hit ("spencer" -> 10 vs the expected 9), a genuine
+        // flake. Pinning aliases to empty makes the match set deterministic (the org-name builders below
+        // never flaked precisely because they use a bare Builder with no aliases).
+        final PartyDocument.Builder markSpencerBuilder = defaultPartyAsBuilder().withFirstName("Mark").withLastName("Spencer").withMiddleName(null).withOrganisationName(null).withAliases(emptyList());
+        final PartyDocument.Builder spencerMarkBuilder = defaultPartyAsBuilder().withFirstName("Spencer").withMiddleName(null).withOrganisationName(null).withLastName("Mark").withAliases(emptyList());
 
-        final PartyDocument.Builder marksSpencersBuilder = defaultPartyAsBuilder().withFirstName("Marks").withMiddleName(null).withOrganisationName(null).withLastName("Spencers");
-        final PartyDocument.Builder spencersMarksBuilder = defaultPartyAsBuilder().withFirstName("Spencers").withLastName("Marks").withMiddleName(null).withOrganisationName(null);
+        final PartyDocument.Builder marksSpencersBuilder = defaultPartyAsBuilder().withFirstName("Marks").withMiddleName(null).withOrganisationName(null).withLastName("Spencers").withAliases(emptyList());
+        final PartyDocument.Builder spencersMarksBuilder = defaultPartyAsBuilder().withFirstName("Spencers").withLastName("Marks").withMiddleName(null).withOrganisationName(null).withAliases(emptyList());
 
-        final PartyDocument.Builder markSpencersBuilder = defaultPartyAsBuilder().withFirstName("Mark").withLastName("Spencers").withMiddleName(null).withOrganisationName(null);
-        final PartyDocument.Builder spencersMarkBuilder = defaultPartyAsBuilder().withFirstName("Spencers").withMiddleName(null).withOrganisationName(null).withLastName("Mark");
+        final PartyDocument.Builder markSpencersBuilder = defaultPartyAsBuilder().withFirstName("Mark").withLastName("Spencers").withMiddleName(null).withOrganisationName(null).withAliases(emptyList());
+        final PartyDocument.Builder spencersMarkBuilder = defaultPartyAsBuilder().withFirstName("Spencers").withMiddleName(null).withOrganisationName(null).withLastName("Mark").withAliases(emptyList());
 
-        final PartyDocument.Builder marksSpencerBuilder = defaultPartyAsBuilder().withFirstName("Marks").withLastName("Spencer").withMiddleName(null).withOrganisationName(null);
-        final PartyDocument.Builder spencerMarksBuilder = defaultPartyAsBuilder().withFirstName("Spencer").withMiddleName(null).withOrganisationName(null).withLastName("Marks");
+        final PartyDocument.Builder marksSpencerBuilder = defaultPartyAsBuilder().withFirstName("Marks").withLastName("Spencer").withMiddleName(null).withOrganisationName(null).withAliases(emptyList());
+        final PartyDocument.Builder spencerMarksBuilder = defaultPartyAsBuilder().withFirstName("Spencer").withMiddleName(null).withOrganisationName(null).withLastName("Marks").withAliases(emptyList());
 
-        final PartyDocument.Builder markAndSpencerBuilder = defaultPartyAsBuilder().withFirstName("x").withLastName("Mark And Spencer").withMiddleName(null).withOrganisationName(null);
-        final PartyDocument.Builder marksAndSpencersBuilder = defaultPartyAsBuilder().withFirstName("x").withLastName("Marks And Spencers").withMiddleName(null).withOrganisationName(null);
+        final PartyDocument.Builder markAndSpencerBuilder = defaultPartyAsBuilder().withFirstName("x").withLastName("Mark And Spencer").withMiddleName(null).withOrganisationName(null).withAliases(emptyList());
+        final PartyDocument.Builder marksAndSpencersBuilder = defaultPartyAsBuilder().withFirstName("x").withLastName("Marks And Spencers").withMiddleName(null).withOrganisationName(null).withAliases(emptyList());
 
 
         // Note the party names are added here in the order of expected relevance/order from the query:
