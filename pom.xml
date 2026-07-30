@@ -5,7 +5,7 @@
     <parent>
         <groupId>uk.gov.moj.cpp.common</groupId>
         <artifactId>service-parent-pom</artifactId>
-        <version>25.104.0-M8</version>
+        <version>25.104.0-M9</version>
     </parent>
 
     <groupId>uk.gov.moj.cpp.unifiedsearch.query</groupId>
@@ -32,7 +32,7 @@
         <usersgroups.version>17.104.48</usersgroups.version>
         <cpp-platform-data-utils.version>8.0.17</cpp-platform-data-utils.version>
         <elasticsearch-maven-plugin.version>6.13</elasticsearch-maven-plugin.version>
-        <elasticsearch.embedded.version>9.2.2</elasticsearch.embedded.version>
+        <elasticsearch.embedded.version>9.3.3</elasticsearch.embedded.version>
         <jgitflow.maven.developBranchName>main</jgitflow.maven.developBranchName>
     </properties>
 
