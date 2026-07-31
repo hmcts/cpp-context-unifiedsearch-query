@@ -18,8 +18,8 @@ import uk.gov.moj.cpp.unifiedsearch.query.common.domain.QueryParameters;
 
 import java.util.List;
 
-import javax.inject.Inject;
-import javax.json.JsonObject;
+import jakarta.inject.Inject;
+import jakarta.json.JsonObject;
 
 @ServiceComponent(QUERY_API)
 public class CaseQueryApi {

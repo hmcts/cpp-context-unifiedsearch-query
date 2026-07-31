@@ -1,57 +1,64 @@
 package uk.gov.moj.cpp.unifiedsearch.query.api.service;
 
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.Optional.empty;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-import static org.elasticsearch.search.sort.SortBuilders.fieldSort;
-import static org.elasticsearch.search.sort.SortOrder.fromString;
 
 import java.util.Optional;
 
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.search.sort.FieldSortBuilder;
-import org.elasticsearch.search.sort.NestedSortBuilder;
-import org.elasticsearch.search.sort.SortOrder;
+import co.elastic.clients.elasticsearch._types.FieldSort;
+import co.elastic.clients.elasticsearch._types.SortOptions;
+import co.elastic.clients.elasticsearch._types.SortOrder;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+
 
 public interface BaseCaseSearchService {
 
-    default Optional<FieldSortBuilder> createFieldSort(final String sortOrder, final String sortFieldName, final String sortNestedPath) {
+    default Optional<SortOptions> createFieldSort(final String sortOrder, final String sortFieldName, final String sortNestedPath) {
         return createFieldSort(sortOrder, sortFieldName, sortNestedPath, null, null);
     }
 
-    default Optional<FieldSortBuilder> createFieldSort(final String sortOrder,
-                                                       final String sortFieldName,
-                                                       final String sortNestedPath,
-                                                       final QueryBuilder nestedFilter,
-                                                       final Integer nestedMaxChildren) {
+    default Optional<SortOptions> createFieldSort(final String sortOrder,
+                                                  final String sortFieldName,
+                                                  final String sortNestedPath,
+                                                  final Query nestedFilter,
+                                                  final Integer nestedMaxChildren) {
 
-        if (nonNull(sortOrder)) {
-            final SortOrder esSortOrder = fromString(sortOrder);
-            final FieldSortBuilder fieldSortBuilder = fieldSort(sortFieldName)
-                    .missing("_last")
-                    .order(esSortOrder);
-
-            if (isNotEmpty(sortNestedPath)) {
-                final NestedSortBuilder nestedSortBuilder = new NestedSortBuilder(sortNestedPath);
-                setNestedFilter(nestedFilter, nestedMaxChildren, nestedSortBuilder);
-
-                fieldSortBuilder.setNestedSort(nestedSortBuilder);
-            }
-
-
-            return Optional.of(fieldSortBuilder);
+        if (isNull(sortOrder)){
+            return empty();
         }
 
 
-        return empty();
-    }
+        final SortOrder esSortOrder = SortOrder.valueOf(uk.gov.moj.cpp.unifiedsearch.query.common.constant.SortOrder.valueOf(sortOrder).getOrder());
 
-    default void setNestedFilter(final QueryBuilder nestedFilter, final Integer nestedMaxChildren, final NestedSortBuilder nestedSortBuilder) {
-        if (nestedFilter != null) {
-            nestedSortBuilder.setFilter(nestedFilter);
-            if (nestedMaxChildren != null) {
-                nestedSortBuilder.setMaxChildren(nestedMaxChildren);
-            }
-        }
+        return Optional.of(
+                SortOptions.of(s -> s
+                        .field(f -> {
+                            f.field(sortFieldName)
+                                    .order(esSortOrder)
+                                    .missing("_last");
+
+                            if (sortNestedPath != null && !sortNestedPath.isEmpty()) {
+                                f.nested(n -> {
+                                    n.path(sortNestedPath);
+
+                                    if (nestedFilter != null) {
+                                        n.filter(nestedFilter);
+                                    }
+
+                                    if (nestedMaxChildren != null) {
+                                        n.maxChildren(nestedMaxChildren);
+                                    }
+
+                                    return n;
+                                });
+                            }
+
+                            return f;
+                        })
+                )
+        );
+
     }
 }

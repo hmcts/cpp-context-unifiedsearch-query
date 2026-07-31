@@ -17,8 +17,8 @@ import uk.gov.moj.cpp.unifiedsearch.query.api.service.CaseSearchService;
 import uk.gov.moj.cpp.unifiedsearch.query.common.domain.DefendantDetailsQueryParameters;
 import uk.gov.moj.cpp.unifiedsearch.query.common.domain.QueryParameters;
 
-import javax.inject.Inject;
-import javax.json.JsonObject;
+import jakarta.inject.Inject;
+import jakarta.json.JsonObject;
 
 @ServiceComponent(QUERY_API)
 public class DefendantDetailsQueryApi {

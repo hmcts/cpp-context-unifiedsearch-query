@@ -20,8 +20,8 @@ import uk.gov.moj.cpp.unifiedsearch.query.api.response.SearchResponseEnvelopeGen
 import uk.gov.moj.cpp.unifiedsearch.query.api.service.CpsCaseSearchService;
 import uk.gov.moj.cpp.unifiedsearch.query.common.domain.CpsQueryParameters;
 
-import javax.inject.Inject;
-import javax.json.JsonObject;
+import jakarta.inject.Inject;
+import jakarta.json.JsonObject;
 
 @ServiceComponent(QUERY_API)
 public class CpsCaseQueryApi {

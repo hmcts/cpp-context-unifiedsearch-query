@@ -13,8 +13,8 @@ import uk.gov.justice.services.unifiedsearch.UnifiedSearchName;
 import uk.gov.moj.cpp.unifiedsearch.query.builders.service.CaseQueryBuilderService;
 import uk.gov.moj.cpp.unifiedsearch.query.builders.service.CpsCaseQueryBuilderService;
 
-import javax.enterprise.inject.InjectionException;
-import javax.enterprise.inject.spi.InjectionPoint;
+import jakarta.enterprise.inject.InjectionException;
+import jakarta.enterprise.inject.spi.InjectionPoint;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

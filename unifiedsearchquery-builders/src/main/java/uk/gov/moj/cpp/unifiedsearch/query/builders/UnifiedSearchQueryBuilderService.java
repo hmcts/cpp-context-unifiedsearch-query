@@ -1,8 +1,8 @@
 package uk.gov.moj.cpp.unifiedsearch.query.builders;
 
-import org.elasticsearch.index.query.QueryBuilder;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 
 public interface UnifiedSearchQueryBuilderService<T> {
 
-    QueryBuilder builder(final T queryParameters);
+    Query.Builder builder(final T queryParameters);
 }

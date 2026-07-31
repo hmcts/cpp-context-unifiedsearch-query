@@ -8,9 +8,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static uk.gov.moj.cpp.unifiedsearch.query.common.constant.CaseSearchConstants.IS_MAGISTRATE_COURT;
 import static uk.gov.moj.cpp.unifiedsearch.query.common.constant.CaseSearchConstants.IS_SJP;
 
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.TermQueryBuilder;
+import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import co.elastic.clients.elasticsearch._types.query_dsl.TermQuery;
 import org.junit.jupiter.api.Test;
 
 public class JurisdictionTypeQueryBuilderTest {
@@ -22,24 +22,18 @@ public class JurisdictionTypeQueryBuilderTest {
         final String isSjp = "true";
         final String isMagistrateCourt = "false";
         final String isCrownCourt = "false";
-        final QueryBuilder queryBuilder = jurisdictionTypeQueryBuilder.getQueryBuilderBy(isSjp, isMagistrateCourt, isCrownCourt)    ;
+        final Query query = jurisdictionTypeQueryBuilder.getQueryBuilderBy(isSjp, isMagistrateCourt, isCrownCourt)    ;
 
-        assertThat(queryBuilder, is(notNullValue()));
-        assertThat(queryBuilder, instanceOf((BoolQueryBuilder.class)));
+        assertThat(query, is(notNullValue()));
 
-        final BoolQueryBuilder actualBoolQueryBuilder = (BoolQueryBuilder) queryBuilder;
-        assertThat(actualBoolQueryBuilder.getName(), is("bool"));
+        final BoolQuery actualBoolQueryBuilder = query.bool();
         assertThat(actualBoolQueryBuilder.must(), hasSize(0));
         assertThat(actualBoolQueryBuilder.should(), hasSize(1));
 
-        final QueryBuilder firstShouldClause = actualBoolQueryBuilder.should().get(0);
-
-        assertThat(firstShouldClause, instanceOf(TermQueryBuilder.class));
-
-        final TermQueryBuilder firstTerm = (TermQueryBuilder) firstShouldClause;
-        assertThat(firstTerm.getName(), is("term"));
-        assertThat(firstTerm.fieldName(), is(IS_SJP));
-        assertThat(firstTerm.value(), is(true));
+        final Query firstShouldClause = actualBoolQueryBuilder.should().get(0);
+        final TermQuery firstTerm = firstShouldClause.term();
+        assertThat(firstTerm.field(), is(IS_SJP));
+        assertThat(firstTerm.value().booleanValue(), is(true));
     }
 
     @Test
@@ -49,30 +43,24 @@ public class JurisdictionTypeQueryBuilderTest {
         final String isSjp = "true";
         final String isMagistrateCourt = "true";
         final String isCrownCourt = "false";
-        final QueryBuilder queryBuilder = jurisdictionTypeQueryBuilder.getQueryBuilderBy(isSjp, isMagistrateCourt, isCrownCourt)    ;
+        final Query query = jurisdictionTypeQueryBuilder.getQueryBuilderBy(isSjp, isMagistrateCourt, isCrownCourt)    ;
 
-        assertThat(queryBuilder, is(notNullValue()));
-        assertThat(queryBuilder, instanceOf((BoolQueryBuilder.class)));
+        assertThat(query, is(notNullValue()));
 
-        final BoolQueryBuilder actualBoolQueryBuilder = (BoolQueryBuilder) queryBuilder;
-        assertThat(actualBoolQueryBuilder.getName(), is("bool"));
+        final BoolQuery actualBoolQueryBuilder = query.bool();
         assertThat(actualBoolQueryBuilder.must(), hasSize(0));
         assertThat(actualBoolQueryBuilder.should(), hasSize(2));
 
-        final QueryBuilder firstShouldClause = actualBoolQueryBuilder.should().get(0);
-        final QueryBuilder secondShouldClause = actualBoolQueryBuilder.should().get(1);
+        final Query firstShouldClause = actualBoolQueryBuilder.should().get(0);
+        final Query secondShouldClause = actualBoolQueryBuilder.should().get(1);
 
-        assertThat(firstShouldClause, instanceOf(TermQueryBuilder.class));
-        assertThat(secondShouldClause, instanceOf(TermQueryBuilder.class));
 
-        final TermQueryBuilder firstTerm = (TermQueryBuilder) firstShouldClause;
-        assertThat(firstTerm.getName(), is("term"));
-        assertThat(firstTerm.fieldName(), is(IS_SJP));
-        assertThat(firstTerm.value(), is(true));
+        final TermQuery firstTerm =  firstShouldClause.term();
+        assertThat(firstTerm.field(), is(IS_SJP));
+        assertThat(firstTerm.value().booleanValue(), is(true));
 
-        final TermQueryBuilder secondTerm = (TermQueryBuilder) secondShouldClause;
-        assertThat(secondTerm.getName(), is("term"));
-        assertThat(secondTerm.fieldName(), is(IS_MAGISTRATE_COURT));
-        assertThat(secondTerm.value(), is(true));
+        final TermQuery secondTerm = secondShouldClause.term();
+        assertThat(secondTerm.field(), is(IS_MAGISTRATE_COURT));
+        assertThat(secondTerm.value().booleanValue(), is(true));
     }
 }

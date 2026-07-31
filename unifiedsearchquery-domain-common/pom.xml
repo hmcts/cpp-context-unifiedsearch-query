@@ -3,7 +3,7 @@
     <parent>
         <artifactId>unifiedsearchquery-parent</artifactId>
         <groupId>uk.gov.moj.cpp.unifiedsearch.query</groupId>
-        <version>17.104.2-SNAPSHOT</version>
+        <version>25.104.0-M1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -15,8 +15,8 @@
             <artifactId>unifiedsearch-client</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.elasticsearch</groupId>
-            <artifactId>elasticsearch</artifactId>
+            <groupId>co.elastic.clients</groupId>
+            <artifactId>elasticsearch-java</artifactId>
         </dependency>
 
         <dependency>

@@ -1,18 +1,22 @@
 package uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.builders;
 
-import static org.elasticsearch.index.query.Operator.AND;
-import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
+
+
+import static uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.ElasticSearchQueryBuilder.matchQuery;
 
 import uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.ElasticSearchQueryBuilder;
 
-import org.elasticsearch.index.query.QueryBuilder;
+import co.elastic.clients.elasticsearch._types.query_dsl.Operator;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 
 public class AddressQueryBuilder implements ElasticSearchQueryBuilder {
 
     private static final String ADDRESS_LINES = "parties.addressLines";
 
     @Override
-    public QueryBuilder getQueryBuilderBy(final Object... queryParams) {
-        return matchQuery(ADDRESS_LINES, queryParams[0]).operator(AND);
+    public Query getQueryBuilderBy(final Object... queryParams) {
+        Query.Builder builder = new Query.Builder();
+        builder.match(matchQuery(ADDRESS_LINES, String.valueOf(queryParams[0])).operator(Operator.And).build());
+        return builder.build();
     }
 }

@@ -1,41 +1,41 @@
 package uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.builders;
 
 import static java.lang.String.valueOf;
-import static org.elasticsearch.index.query.QueryBuilders.disMaxQuery;
+import static uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.ElasticSearchQueryBuilder.convertBuilder;
 
 import uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.ElasticSearchQueryBuilder;
 
 import java.util.List;
 
-import org.elasticsearch.index.query.DisMaxQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
+import co.elastic.clients.elasticsearch._types.query_dsl.DisMaxQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 
 public class NameSearchQueryBuilder implements ElasticSearchQueryBuilder {
 
 
     @Override
-    public QueryBuilder getQueryBuilderBy(final Object... nameQueryParam) {
+    public Query getQueryBuilderBy(final Object... nameQueryParam) {
 
         NameLeafQueryBuilder nameLeafQueryBuilder;
         if (nameQueryParam.length > 2) {
-            nameLeafQueryBuilder = new NameLeafQueryBuilder(valueOf(nameQueryParam[0]), valueOf(nameQueryParam[1]), (List<QueryBuilder>) nameQueryParam[2]);
+            nameLeafQueryBuilder = new NameLeafQueryBuilder(valueOf(nameQueryParam[0]), valueOf(nameQueryParam[1]), (List<Query>) nameQueryParam[2]);
         } else {
-            nameLeafQueryBuilder = new NameLeafQueryBuilder(valueOf(nameQueryParam[0]), (List<QueryBuilder>) nameQueryParam[1]);
+            nameLeafQueryBuilder = new NameLeafQueryBuilder(valueOf(nameQueryParam[0]), (List<Query>) nameQueryParam[1]);
         }
 
         return namesQueryCompositeBuilder(nameLeafQueryBuilder);
     }
 
-    private QueryBuilder namesQueryCompositeBuilder(final NameLeafQueryBuilder nameLeafQueryBuilder) {
-        final DisMaxQueryBuilder disMaxQueryBuilder = disMaxQuery();
+    private Query namesQueryCompositeBuilder(final NameLeafQueryBuilder nameLeafQueryBuilder) {
+        final DisMaxQuery.Builder disMaxQueryBuilder = new DisMaxQuery.Builder();
 
-        disMaxQueryBuilder.add(nameLeafQueryBuilder.nestedPartiesBuilder());
+        disMaxQueryBuilder.queries(nameLeafQueryBuilder.nestedPartiesBuilder().build());
 
-        disMaxQueryBuilder.add(nameLeafQueryBuilder.nestedPartyAliasesBuilder());
+        disMaxQueryBuilder.queries(nameLeafQueryBuilder.nestedPartyAliasesBuilder().build());
 
-        disMaxQueryBuilder.tieBreaker(0.0F);
+        disMaxQueryBuilder.tieBreaker(0.0);
         disMaxQueryBuilder.boost(1.2F);
 
-        return disMaxQueryBuilder;
+        return convertBuilder(disMaxQueryBuilder).build();
     }
 }

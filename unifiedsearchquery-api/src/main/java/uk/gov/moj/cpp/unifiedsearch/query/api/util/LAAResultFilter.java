@@ -6,11 +6,11 @@ import static uk.gov.justice.services.messaging.JsonObjects.createObjectBuilder;
 import java.util.Map;
 import java.util.function.Predicate;
 
-import javax.json.JsonArray;
-import javax.json.JsonArrayBuilder;
-import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
-import javax.json.JsonValue;
+import jakarta.json.JsonArray;
+import jakarta.json.JsonArrayBuilder;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonObjectBuilder;
+import jakarta.json.JsonValue;
 
 public class LAAResultFilter {
 

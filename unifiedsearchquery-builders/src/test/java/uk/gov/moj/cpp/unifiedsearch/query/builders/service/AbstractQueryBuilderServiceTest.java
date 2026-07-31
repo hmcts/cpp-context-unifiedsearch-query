@@ -1,36 +1,35 @@
 package uk.gov.moj.cpp.unifiedsearch.query.builders.service;
 
 import static com.jayway.jsonassert.impl.matcher.IsCollectionWithSize.hasSize;
-import static org.apache.lucene.search.join.ScoreMode.Avg;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.IsInstanceOf.instanceOf;
 
 import java.util.List;
 
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.NestedQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
+import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.ChildScoreMode;
+import co.elastic.clients.elasticsearch._types.query_dsl.NestedQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 
 public abstract class AbstractQueryBuilderServiceTest {
 
-    protected void checkNestedFilter(final QueryBuilder resultQueryBuilder) {
-        assertThat(resultQueryBuilder, instanceOf(BoolQueryBuilder.class));
-        final BoolQueryBuilder resultQueryBuilderAsBool = (BoolQueryBuilder) resultQueryBuilder;
+    protected void checkNestedFilter(final Query resultQuery) {
+
+        final BoolQuery resultQueryBuilderAsBool = resultQuery.bool();
         assertThat(resultQueryBuilderAsBool.filter(), hasSize(0));
         assertThat(resultQueryBuilderAsBool.should(), hasSize(0));
         assertThat(resultQueryBuilderAsBool.mustNot(), hasSize(0));
-        final List<QueryBuilder> must = resultQueryBuilderAsBool.must();
+        final List<Query> must = resultQueryBuilderAsBool.must();
         assertThat(must, hasSize(1));
 
-        final QueryBuilder firstMust = resultQueryBuilderAsBool.must().get(0);
-        assertThat(firstMust, instanceOf(NestedQueryBuilder.class));
-        final NestedQueryBuilder nestedQueryBuilder = (NestedQueryBuilder) firstMust;
-        assertThat(nestedQueryBuilder.getName(), is("nested"));
-        assertThat(nestedQueryBuilder.scoreMode(), is(Avg));
-        final QueryBuilder innerQueryBuilder = nestedQueryBuilder.query();
-        assertThat(innerQueryBuilder, instanceOf(BoolQueryBuilder.class));
-        final BoolQueryBuilder innerBoolQueryBuilder = (BoolQueryBuilder) innerQueryBuilder;
+        final Query firstMust = resultQueryBuilderAsBool.must().get(0);
+        assertThat(firstMust.nested(), notNullValue());
+        final NestedQuery nestedQueryBuilder = firstMust.nested();
+        assertThat(nestedQueryBuilder.scoreMode(), is(ChildScoreMode.Avg));
+        final Query innerQueryBuilder = nestedQueryBuilder.query();
+        assertThat(innerQueryBuilder.bool(), notNullValue());
+        final BoolQuery innerBoolQueryBuilder = innerQueryBuilder.bool();
 
         assertThat(innerBoolQueryBuilder.should(), hasSize(0));
         assertThat(innerBoolQueryBuilder.filter(), hasSize(0));
@@ -38,25 +37,25 @@ public abstract class AbstractQueryBuilderServiceTest {
         assertThat(innerBoolQueryBuilder.must(), hasSize(1));
     }
 
-    protected void checkExactMatchesNestedFilter(final QueryBuilder resultQueryBuilder,
+    protected void checkExactMatchesNestedFilter(final Query resultQuery,
                                                  final int mustSize, final int innerMust) {
-        assertThat(resultQueryBuilder, instanceOf(BoolQueryBuilder.class));
-        final BoolQueryBuilder resultQueryBuilderAsBool = (BoolQueryBuilder) resultQueryBuilder;
+        final BoolQuery resultQueryBuilderAsBool = resultQuery.bool();
+        assertThat(resultQueryBuilderAsBool, notNullValue());
+
         assertThat(resultQueryBuilderAsBool.filter(), hasSize(0));
         assertThat(resultQueryBuilderAsBool.should(), hasSize(0));
         assertThat(resultQueryBuilderAsBool.mustNot(), hasSize(0));
-        final List<QueryBuilder> must = resultQueryBuilderAsBool.must();
+        final List<Query> must = resultQueryBuilderAsBool.must();
         assertThat(must, hasSize(mustSize));
 
         if (mustSize > 0) {
-            final QueryBuilder firstMust = resultQueryBuilderAsBool.must().get(0);
-            assertThat(firstMust, instanceOf(QueryBuilder.class));
-            final NestedQueryBuilder nestedQueryBuilder = (NestedQueryBuilder) firstMust;
-            assertThat(nestedQueryBuilder.getName(), is("nested"));
-            assertThat(nestedQueryBuilder.scoreMode(), is(Avg));
-            final QueryBuilder innerQueryBuilder = nestedQueryBuilder.query();
-            assertThat(innerQueryBuilder, instanceOf(BoolQueryBuilder.class));
-            final BoolQueryBuilder innerBoolQueryBuilder = (BoolQueryBuilder) innerQueryBuilder;
+            final Query firstMust = resultQueryBuilderAsBool.must().get(0);
+            assertThat(firstMust, notNullValue());
+            final NestedQuery nestedQueryBuilder = firstMust.nested();
+            assertThat(nestedQueryBuilder.scoreMode(), is(ChildScoreMode.Avg));
+            final Query innerQueryBuilder = nestedQueryBuilder.query();
+            assertThat(innerQueryBuilder.bool(), notNullValue());
+            final BoolQuery innerBoolQueryBuilder = innerQueryBuilder.bool();
 
             assertThat(innerBoolQueryBuilder.should(), hasSize(0));
             assertThat(innerBoolQueryBuilder.filter(), hasSize(0));

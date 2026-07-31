@@ -6,7 +6,7 @@ import static uk.gov.justice.services.test.utils.core.matchers.ResponseStatusMat
 
 import uk.gov.justice.services.test.utils.core.http.RequestParams;
 
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
 
 public class WiremockTestHelper {
     private static final String HOST = System.getProperty("INTEGRATION_HOST_KEY", "localhost");

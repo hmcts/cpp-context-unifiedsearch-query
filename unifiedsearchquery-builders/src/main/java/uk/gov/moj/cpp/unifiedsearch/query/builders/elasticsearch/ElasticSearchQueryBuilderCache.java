@@ -102,9 +102,9 @@ import uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.builders.cps.Wi
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
+import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 @ApplicationScoped
 public class ElasticSearchQueryBuilderCache {
