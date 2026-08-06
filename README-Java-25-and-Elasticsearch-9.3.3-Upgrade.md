@@ -1,7 +1,7 @@
-# Java 25 / WildFly 40 / Elasticsearch 9.2.2 upgrade — guide for the unifiedsearch-query team
+# Java 25 / WildFly 40 / Elasticsearch 9.3.3 upgrade — guide for the unifiedsearch-query team
 
 This branch (`dev/java-25-es-9.2.2`, draft PR **#27**) upgrades unifiedsearch-query to the **25.104.x** line
-(Java 25 / WildFly 40 / Jakarta EE 11) **and** to **Elasticsearch 9.2.2**. It was prepared by the platform/framework
+(Java 25 / WildFly 40 / Jakarta EE 11) **and** to **Elasticsearch 9.3.3**. It was prepared by the platform/framework
 upgrade effort (ticket **PEG-3408**, mirroring the Java-17 ES 9.2 work in **DD-41592**) as a *proving* exercise.
 
 **The decision to accept, finish and release these changes is yours.** This document explains what we changed, the
@@ -11,12 +11,12 @@ decisions we made and why, the gotchas we hit, and exactly what you need to do t
 
 ## Why
 
-- Elasticsearch 9.2.2 is being rolled out on the Java-17 line; we needed to prove it also works on the Java-25 stack.
+- Elasticsearch 9.3.3 is being rolled out on the Java-17 line; we needed to prove it also works on the Java-25 stack.
 - Folded into the July 2026 security-hardening work (jackson `2.21.5` etc.).
 
 ## What changed (summary)
 
-- **Parent** → `service-parent-pom:25.104.0-M8-SNAPSHOT` (Java 25 / WildFly 40 / Jakarta EE 11).
+- **Parent** → `service-parent-pom:25.104.0-M9` (Java 25 / WildFly 40 / Jakarta EE 11).
 - **`javax.*` → `jakarta.*`** across all modules; `javax:javaee-api` → `jakarta.platform:jakarta.jakartaee-api`;
   `jakarta.xml.bind-api` override added to the RAML client-generator plugins; RESTEasy status-code constant fix in ITs.
 - **Elasticsearch client** migrated from `RestHighLevelClient` to `co.elastic.clients:elasticsearch-java` +
@@ -56,7 +56,7 @@ default (and is cached), which is what the method name promises.
 
 The `RestHighLevelClient` → `co.elastic` migration is in `cpp-platform-libraries` (shared by all search contexts),
 not in this repo. You inherit it via the platform version. `httpcore5` is pinned to `5.3.6` in the platform BOM
-(ES 9.2.2 pulls `5.2.1`, which clashes with `httpclient5 5.5.1` → `NoSuchMethodError` — only shows up in ITs).
+(ES 9.3.3 pulls `5.2.1`, which clashes with `httpclient5 5.5.1` → `NoSuchMethodError` — only shows up in ITs).
 
 ---
 
@@ -73,7 +73,7 @@ not in this repo. You inherit it via the platform version. `httpcore5` is pinned
 
 ## Test evidence
 
-- **Full-stack integration tests: 332 / 0 / 0** (3 skipped) against a live ES 9.2.2 container + WildFly 40 on JDK 25.
+- **Full-stack integration tests: 332 / 0 / 0** (3 skipped) against a live ES 9.3.3 container + WildFly 40 on JDK 25.
 - 202 unit / embedded-ES tests green; platform ES-client migration 92 tests green.
 
 ---
@@ -83,12 +83,12 @@ not in this repo. You inherit it via the platform version. `httpcore5` is pinned
 1. **Review decision #1** (`pageSize=0`) with whoever owns the API Tests, and decisions #2–#3.
 2. Wait for the **25.104.x framework/platform milestones to be released** to Artifactory (this PR is a **draft**
    because it currently references a `-SNAPSHOT` parent, so CI can't build it yet).
-3. Bump the **parent** from `25.104.0-M8-SNAPSHOT` to the released milestone; likewise any other SNAPSHOT platform deps.
+3. Bump the **parent** from `25.104.0-M8-SNAPSHOT` to `25.104.0-M9`; likewise any other SNAPSHOT platform deps.
 4. Run the build + ITs (`./runIntegrationTests.sh`) against a current local stack; expect the same green result.
 5. Set the project version per the release scheme, mark PR **#27** ready, and release.
 
 ## References
 
 - Draft PR: **#27** · Tickets: **PEG-3408**, **DD-41592**
-- Living upgrade page: *Elasticsearch 9.2.2 Upgrade — Java 25* (Confluence, space PETTA, page 1990251336)
+- Living upgrade page: *Elasticsearch 9.3.3 Upgrade — Java 25* (Confluence, space PETTA, page 1990251336)
 - AI-assistant notes for this repo: `CLAUDE.md` (same content, terser).
