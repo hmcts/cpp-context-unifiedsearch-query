@@ -1,8 +1,8 @@
 package uk.gov.moj.cpp.unifiedsearch.query.builders.service;
 
 import static com.jayway.jsonassert.impl.matcher.IsCollectionWithSize.hasSize;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -24,6 +24,15 @@ import static uk.gov.moj.cpp.unifiedsearch.query.common.constant.CpsCaseSearchCo
 import static uk.gov.moj.cpp.unifiedsearch.query.common.constant.CpsCaseSearchConstants.PROSECUTOR;
 import static uk.gov.moj.cpp.unifiedsearch.query.common.constant.CpsCaseSearchConstants.URN;
 
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.ElasticSearchQueryBuilder;
 import uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.ElasticSearchQueryBuilderCache;
 import uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.builders.DateOfBirthSearchQueryBuilder;
@@ -45,15 +54,6 @@ import uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.builders.cps.Pa
 import uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.builders.cps.ProsecutorSearchQueryBuilder;
 import uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.builders.cps.UrnSearchQueryBuilder;
 import uk.gov.moj.cpp.unifiedsearch.query.common.domain.CpsQueryParameters;
-
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 public class CpsCaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceTest {
@@ -104,7 +104,7 @@ public class CpsCaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceT
     private CourtHouseQueryBuilder courtHouseQueryBuilder;
 
     @Mock
-    private QueryBuilder queryBuilder;
+    private Query query;
 
     @Mock
     private ProsecutorSearchQueryBuilder prosecutorSearchQueryBuilder;
@@ -135,11 +135,12 @@ public class CpsCaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceT
         final CpsQueryParameters queryParameters = new CpsQueryParameters.CpsQueryParametersBuilder()
                 .build();
 
-        final QueryBuilder resultQueryBuilder = cpsCaseQueryBuilderService.builder(queryParameters);
+        final Query.Builder resultQueryBuilder = cpsCaseQueryBuilderService.builder(queryParameters);
+        final Query resultQuery = resultQueryBuilder.build();
+        final BoolQuery boolQuery = resultQuery.bool();
 
-        assertThat(resultQueryBuilder, instanceOf(BoolQueryBuilder.class));
-
-        assertThat(((BoolQueryBuilder) resultQueryBuilder).must(), hasSize(0));
+        assertThat(boolQuery, notNullValue());
+        assertThat(boolQuery.must(), hasSize(0));
     }
 
     @Test
@@ -151,11 +152,12 @@ public class CpsCaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceT
                 .withProsecutor("  ")
                 .build();
 
-        final QueryBuilder resultQueryBuilder = cpsCaseQueryBuilderService.builder(queryParameters);
+        final Query.Builder resultQueryBuilder = cpsCaseQueryBuilderService.builder(queryParameters);
+        final BoolQuery boolQuery = resultQueryBuilder.build().bool();
 
-        assertThat(resultQueryBuilder, instanceOf(BoolQueryBuilder.class));
+        assertThat(boolQuery, notNullValue());
 
-        assertThat(((BoolQueryBuilder) resultQueryBuilder).must(), hasSize(0));
+        assertThat(boolQuery.must(), hasSize(0));
 
         verifyNoMoreInteractions(urnSearchQueryBuilder);
     }
@@ -171,12 +173,13 @@ public class CpsCaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceT
         when(elasticSearchQueryBuilderCache.getQueryBuilderFromCacheBy(URN))
                 .thenReturn(urnSearchQueryBuilder);
         when(urnSearchQueryBuilder.getQueryBuilderBy(urn))
-                .thenReturn(queryBuilder);
+                .thenReturn(query);
 
-        final QueryBuilder resultQueryBuilder = cpsCaseQueryBuilderService.builder(queryParameters);
+        final Query.Builder resultQueryBuilder = cpsCaseQueryBuilderService.builder(queryParameters);
+        final BoolQuery boolQuery = resultQueryBuilder.build().bool();
 
-        assertThat(resultQueryBuilder, instanceOf(BoolQueryBuilder.class));
-        assertThat(((BoolQueryBuilder) resultQueryBuilder).filter(), hasSize(1));
+        assertThat(boolQuery, notNullValue());
+        assertThat(boolQuery.filter(), hasSize(1));
 
         verify(elasticSearchQueryBuilderCache).getQueryBuilderFromCacheBy(URN);
         verify(urnSearchQueryBuilder).getQueryBuilderBy(urn);
@@ -195,12 +198,13 @@ public class CpsCaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceT
         when(elasticSearchQueryBuilderCache.getQueryBuilderFromCacheBy(CASE_STATUS))
                 .thenReturn(caseStatusQueryBuilder);
         when(caseStatusQueryBuilder.getQueryBuilderBy(caseStatus))
-                .thenReturn(queryBuilder);
+                .thenReturn(query);
 
-        final QueryBuilder resultQueryBuilder = cpsCaseQueryBuilderService.builder(queryParameters);
+        final Query.Builder resultQueryBuilder = cpsCaseQueryBuilderService.builder(queryParameters);
+        final BoolQuery boolQuery = resultQueryBuilder.build().bool();
 
-        assertThat(resultQueryBuilder, instanceOf(BoolQueryBuilder.class));
-        assertThat(((BoolQueryBuilder) resultQueryBuilder).filter(), hasSize(1));
+        assertThat(boolQuery, notNullValue());
+        assertThat(boolQuery.filter(), hasSize(1));
 
         verify(elasticSearchQueryBuilderCache).getQueryBuilderFromCacheBy(CASE_STATUS);
         verify(caseStatusQueryBuilder).getQueryBuilderBy(caseStatus);
@@ -219,12 +223,13 @@ public class CpsCaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceT
         when(elasticSearchQueryBuilderCache.getQueryBuilderFromCacheBy(CASE_TYPE))
                 .thenReturn(caseTypeQueryBuilder);
         when(caseTypeQueryBuilder.getQueryBuilderBy(caseType))
-                .thenReturn(queryBuilder);
+                .thenReturn(query);
 
-        final QueryBuilder resultQueryBuilder = cpsCaseQueryBuilderService.builder(queryParameters);
+        final Query.Builder resultQueryBuilder = cpsCaseQueryBuilderService.builder(queryParameters);
+        final BoolQuery boolQuery = resultQueryBuilder.build().bool();
 
-        assertThat(resultQueryBuilder, instanceOf(BoolQueryBuilder.class));
-        assertThat(((BoolQueryBuilder) resultQueryBuilder).filter(), hasSize(1));
+        assertThat(boolQuery, notNullValue());
+        assertThat(boolQuery.filter(), hasSize(1));
 
         verify(elasticSearchQueryBuilderCache).getQueryBuilderFromCacheBy(CASE_TYPE);
         verify(caseTypeQueryBuilder).getQueryBuilderBy(caseType);
@@ -243,12 +248,13 @@ public class CpsCaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceT
         when(elasticSearchQueryBuilderCache.getQueryBuilderFromCacheBy(CPS_UNIT))
                 .thenReturn(cpsUnitQueryBuilder);
         when(cpsUnitQueryBuilder.getQueryBuilderBy(cpsUnit))
-                .thenReturn(queryBuilder);
+                .thenReturn(query);
 
-        final QueryBuilder resultQueryBuilder = cpsCaseQueryBuilderService.builder(queryParameters);
+        final Query.Builder resultQueryBuilder = cpsCaseQueryBuilderService.builder(queryParameters);
+        final BoolQuery boolQuery = resultQueryBuilder.build().bool();
 
-        assertThat(resultQueryBuilder, instanceOf(BoolQueryBuilder.class));
-        assertThat(((BoolQueryBuilder) resultQueryBuilder).filter(), hasSize(1));
+        assertThat(boolQuery, notNullValue());
+        assertThat(boolQuery.filter(), hasSize(1));
 
         verify(elasticSearchQueryBuilderCache).getQueryBuilderFromCacheBy(CPS_UNIT);
         verify(cpsUnitQueryBuilder).getQueryBuilderBy(cpsUnit);
@@ -267,12 +273,13 @@ public class CpsCaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceT
         when(elasticSearchQueryBuilderCache.getQueryBuilderFromCacheBy(CJS_AREA))
                 .thenReturn(cjsAreaQueryBuilder);
         when(cjsAreaQueryBuilder.getQueryBuilderBy(cjsArea))
-                .thenReturn(queryBuilder);
+                .thenReturn(query);
 
-        final QueryBuilder resultQueryBuilder = cpsCaseQueryBuilderService.builder(queryParameters);
+        final Query.Builder resultQueryBuilder = cpsCaseQueryBuilderService.builder(queryParameters);
+        final BoolQuery boolQuery = resultQueryBuilder.build().bool();
 
-        assertThat(resultQueryBuilder, instanceOf(BoolQueryBuilder.class));
-        assertThat(((BoolQueryBuilder) resultQueryBuilder).filter(), hasSize(1));
+        assertThat(boolQuery, notNullValue());
+        assertThat(boolQuery.filter(), hasSize(1));
 
         verify(elasticSearchQueryBuilderCache).getQueryBuilderFromCacheBy(CJS_AREA);
         verify(cjsAreaQueryBuilder).getQueryBuilderBy(cjsArea);
@@ -291,12 +298,12 @@ public class CpsCaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceT
         when(elasticSearchQueryBuilderCache.getQueryBuilderFromCacheBy(OPERATION_NAME))
                 .thenReturn(operationNameQueryBuilder);
         when(operationNameQueryBuilder.getQueryBuilderBy(operationName))
-                .thenReturn(queryBuilder);
+                .thenReturn(query);
 
-        final QueryBuilder resultQueryBuilder = cpsCaseQueryBuilderService.builder(queryParameters);
-
-        assertThat(resultQueryBuilder, instanceOf(BoolQueryBuilder.class));
-        assertThat(((BoolQueryBuilder) resultQueryBuilder).filter(), hasSize(1));
+        final Query.Builder resultQueryBuilder = cpsCaseQueryBuilderService.builder(queryParameters);
+        final BoolQuery boolQuery = resultQueryBuilder.build().bool();
+        assertThat(boolQuery, notNullValue());
+        assertThat(boolQuery.filter(), hasSize(1));
 
         verify(elasticSearchQueryBuilderCache).getQueryBuilderFromCacheBy(OPERATION_NAME);
         verify(operationNameQueryBuilder).getQueryBuilderBy(operationName);
@@ -315,12 +322,12 @@ public class CpsCaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceT
         when(elasticSearchQueryBuilderCache.getQueryBuilderFromCacheBy(PARALEGAL_OFFICER))
                 .thenReturn(paralegalOfficerQueryBuilder);
         when(paralegalOfficerQueryBuilder.getQueryBuilderBy(paralegalOfficer))
-                .thenReturn(queryBuilder);
+                .thenReturn(query);
 
-        final QueryBuilder resultQueryBuilder = cpsCaseQueryBuilderService.builder(queryParameters);
-
-        assertThat(resultQueryBuilder, instanceOf(BoolQueryBuilder.class));
-        assertThat(((BoolQueryBuilder) resultQueryBuilder).filter(), hasSize(1));
+        final Query.Builder resultQueryBuilder = cpsCaseQueryBuilderService.builder(queryParameters);
+        final Query resultQuery = resultQueryBuilder.build();
+        assertThat(resultQuery.bool(), notNullValue());
+        assertThat(resultQuery.bool().filter(), hasSize(1));
 
         verify(elasticSearchQueryBuilderCache).getQueryBuilderFromCacheBy(PARALEGAL_OFFICER);
         verify(paralegalOfficerQueryBuilder).getQueryBuilderBy(paralegalOfficer);
@@ -339,12 +346,13 @@ public class CpsCaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceT
         when(elasticSearchQueryBuilderCache.getQueryBuilderFromCacheBy(CROWN_ADVOCATE))
                 .thenReturn(crownAdvocateQueryBuilder);
         when(crownAdvocateQueryBuilder.getQueryBuilderBy(crownAdvocate))
-                .thenReturn(queryBuilder);
+                .thenReturn(query);
 
-        final QueryBuilder resultQueryBuilder = cpsCaseQueryBuilderService.builder(queryParameters);
-
-        assertThat(resultQueryBuilder, instanceOf(BoolQueryBuilder.class));
-        assertThat(((BoolQueryBuilder) resultQueryBuilder).filter(), hasSize(1));
+        final Query.Builder resultQueryBuilder = cpsCaseQueryBuilderService.builder(queryParameters);
+        final Query resultQuery = resultQueryBuilder.build();
+        final BoolQuery boolQuery = resultQuery.bool();
+        assertThat(boolQuery, notNullValue());
+        assertThat(boolQuery.filter(), hasSize(1));
 
         verify(elasticSearchQueryBuilderCache).getQueryBuilderFromCacheBy(CROWN_ADVOCATE);
         verify(crownAdvocateQueryBuilder).getQueryBuilderBy(crownAdvocate);
@@ -362,12 +370,14 @@ public class CpsCaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceT
         when(elasticSearchQueryBuilderCache.getQueryBuilderFromCacheBy(PROSECUTOR))
                 .thenReturn(prosecutorSearchQueryBuilder);
         when(prosecutorSearchQueryBuilder.getQueryBuilderBy(prosecutingAuthority))
-                .thenReturn(queryBuilder);
+                .thenReturn(query);
 
-        final QueryBuilder resultQueryBuilder = cpsCaseQueryBuilderService.builder(queryParameters);
+        final Query.Builder resultQueryBuilder = cpsCaseQueryBuilderService.builder(queryParameters);
+        final Query resultQuery = resultQueryBuilder.build();
+        final BoolQuery boolQuery = resultQuery.bool();
 
-        assertThat(resultQueryBuilder, instanceOf(BoolQueryBuilder.class));
-        assertThat(((BoolQueryBuilder) resultQueryBuilder).filter(), hasSize(1));
+        assertThat(boolQuery, notNullValue());
+        assertThat(boolQuery.filter(), hasSize(1));
 
         verify(elasticSearchQueryBuilderCache).getQueryBuilderFromCacheBy(PROSECUTOR);
         verify(prosecutorSearchQueryBuilder).getQueryBuilderBy(prosecutingAuthority);
@@ -387,11 +397,12 @@ public class CpsCaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceT
         when(elasticSearchQueryBuilderCache.getQueryBuilderFromCacheBy(HEARING_DATE_TIME))
                 .thenReturn(hearingDateTimeQueryBuilder);
         when(hearingDateTimeQueryBuilder.getQueryBuilderBy(hearingDateFrom, hearingDateTo))
-                .thenReturn(queryBuilder);
+                .thenReturn(query);
 
-        final QueryBuilder resultQueryBuilder = cpsCaseQueryBuilderService.builder(queryParameters);
+        final Query.Builder resultQueryBuilder = cpsCaseQueryBuilderService.builder(queryParameters);
 
-        checkNestedFilter(resultQueryBuilder);
+        final Query resultQuery = resultQueryBuilder.build();
+        checkNestedFilter(resultQuery);
 
 
         verify(elasticSearchQueryBuilderCache).getQueryBuilderFromCacheBy(HEARING_DATE_TIME);
@@ -414,11 +425,12 @@ public class CpsCaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceT
                 .thenReturn(hearingDateTimeQueryBuilder);
 
         when(hearingDateTimeQueryBuilder.getQueryBuilderBy(hearingDateFrom, hearingDateTo))
-                .thenReturn(queryBuilder);
+                .thenReturn(query);
 
-        final QueryBuilder resultQueryBuilder = cpsCaseQueryBuilderService.builder(queryParameters);
+        final Query.Builder resultQueryBuilder = cpsCaseQueryBuilderService.builder(queryParameters);
 
-        checkNestedFilter(resultQueryBuilder);
+        final Query resultQuery = resultQueryBuilder.build();
+        checkNestedFilter(resultQuery);
 
         verify(elasticSearchQueryBuilderCache).getQueryBuilderFromCacheBy(HEARING_DATE_TIME);
         verify(hearingDateTimeQueryBuilder).getQueryBuilderBy(hearingDateFrom, hearingDateTo);
@@ -433,9 +445,10 @@ public class CpsCaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceT
                 .withPartyTypes(partyTypes)
                 .build();
 
-        final QueryBuilder resultQueryBuilder = cpsCaseQueryBuilderService.builder(queryParameters);
+        final Query.Builder resultQueryBuilder = cpsCaseQueryBuilderService.builder(queryParameters);
 
-        checkExactMatchesNestedFilter(resultQueryBuilder, 0, 0);
+        final Query resultQuery = resultQueryBuilder.build();
+        checkExactMatchesNestedFilter(resultQuery, 0, 0);
 
         verifyNoMoreInteractions(partyTypeQueryBuilder);
     }
@@ -450,11 +463,12 @@ public class CpsCaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceT
 
         when(elasticSearchQueryBuilderCache.getQueryBuilderFromCacheBy(DATE_OF_BIRTH))
                 .thenReturn(elasticSearchQueryBuilder);
-        when(elasticSearchQueryBuilder.getQueryBuilderBy(dateOfBirth)).thenReturn(queryBuilder);
+        when(elasticSearchQueryBuilder.getQueryBuilderBy(dateOfBirth)).thenReturn(query);
 
-        final QueryBuilder resultQueryBuilder = cpsCaseQueryBuilderService.builder(queryParameters);
+        final Query.Builder resultQueryBuilder = cpsCaseQueryBuilderService.builder(queryParameters);
 
-        checkNestedFilter(resultQueryBuilder);
+        final Query resultQuery = resultQueryBuilder.build();
+        checkNestedFilter(resultQuery);
 
         verify(elasticSearchQueryBuilderCache).getQueryBuilderFromCacheBy(DATE_OF_BIRTH);
         verify(elasticSearchQueryBuilder).getQueryBuilderBy(dateOfBirth);
@@ -471,11 +485,12 @@ public class CpsCaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceT
 
         when(elasticSearchQueryBuilderCache.getQueryBuilderFromCacheBy(COURT_HOUSE))
                 .thenReturn(courtHouseQueryBuilder);
-        when(courtHouseQueryBuilder.getQueryBuilderBy(courtHouse)).thenReturn(queryBuilder);
+        when(courtHouseQueryBuilder.getQueryBuilderBy(courtHouse)).thenReturn(query);
 
-        final QueryBuilder resultQueryBuilder = cpsCaseQueryBuilderService.builder(queryParameters);
+        final Query.Builder resultQueryBuilder = cpsCaseQueryBuilderService.builder(queryParameters);
 
-        checkNestedFilter(resultQueryBuilder);
+        final Query resultQuery = resultQueryBuilder.build();
+        checkNestedFilter(resultQuery);
 
         verify(elasticSearchQueryBuilderCache).getQueryBuilderFromCacheBy(COURT_HOUSE);
         verify(courtHouseQueryBuilder).getQueryBuilderBy(courtHouse);
@@ -492,11 +507,12 @@ public class CpsCaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceT
 
         when(elasticSearchQueryBuilderCache.getQueryBuilderFromCacheBy(JURISDICTION))
                 .thenReturn(jurisdictionQueryBuilder);
-        when(jurisdictionQueryBuilder.getQueryBuilderBy(jurisdiction)).thenReturn(queryBuilder);
+        when(jurisdictionQueryBuilder.getQueryBuilderBy(jurisdiction)).thenReturn(query);
 
-        final QueryBuilder resultQueryBuilder = cpsCaseQueryBuilderService.builder(queryParameters);
+        final Query.Builder resultQueryBuilder = cpsCaseQueryBuilderService.builder(queryParameters);
 
-        checkNestedFilter(resultQueryBuilder);
+        final Query resultQuery = resultQueryBuilder.build();
+        checkNestedFilter(resultQuery);
 
         verify(elasticSearchQueryBuilderCache).getQueryBuilderFromCacheBy(JURISDICTION);
         verify(jurisdictionQueryBuilder).getQueryBuilderBy(jurisdiction);
@@ -513,11 +529,12 @@ public class CpsCaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceT
 
         when(elasticSearchQueryBuilderCache.getQueryBuilderFromCacheBy(COURT_ROOM))
                 .thenReturn(courtRoomQueryBuilder);
-        when(courtRoomQueryBuilder.getQueryBuilderBy(courtRoom)).thenReturn(queryBuilder);
+        when(courtRoomQueryBuilder.getQueryBuilderBy(courtRoom)).thenReturn(query);
 
-        final QueryBuilder resultQueryBuilder = cpsCaseQueryBuilderService.builder(queryParameters);
+        final Query.Builder resultQueryBuilder = cpsCaseQueryBuilderService.builder(queryParameters);
 
-        checkNestedFilter(resultQueryBuilder);
+        final Query resultQuery = resultQueryBuilder.build();
+        checkNestedFilter(resultQuery);
 
         verify(elasticSearchQueryBuilderCache).getQueryBuilderFromCacheBy(COURT_ROOM);
         verify(courtRoomQueryBuilder).getQueryBuilderBy(courtRoom);
@@ -536,12 +553,14 @@ public class CpsCaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceT
         when(elasticSearchQueryBuilderCache.getQueryBuilderFromCacheBy(CPS_AREA))
                 .thenReturn(cpsAreaQueryBuilder);
         when(cpsAreaQueryBuilder.getQueryBuilderBy(cpsArea))
-                .thenReturn(queryBuilder);
+                .thenReturn(query);
 
-        final QueryBuilder resultQueryBuilder = cpsCaseQueryBuilderService.builder(queryParameters);
+        final Query.Builder resultQueryBuilder = cpsCaseQueryBuilderService.builder(queryParameters);
+        final Query resultQuery = resultQueryBuilder.build();
+        final BoolQuery boolQuery = resultQuery.bool();
 
-        assertThat(resultQueryBuilder, instanceOf(BoolQueryBuilder.class));
-        assertThat(((BoolQueryBuilder) resultQueryBuilder).filter(), hasSize(1));
+        assertThat(boolQuery, notNullValue());
+        assertThat(boolQuery.filter(), hasSize(1));
 
         verify(elasticSearchQueryBuilderCache).getQueryBuilderFromCacheBy(CPS_AREA);
         verify(cpsAreaQueryBuilder).getQueryBuilderBy(cpsArea);
@@ -560,12 +579,14 @@ public class CpsCaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceT
         when(elasticSearchQueryBuilderCache.getQueryBuilderFromCacheBy(LINKED_CASE_ID))
                 .thenReturn(excludeAutomaticallyLinkedCasesQueryBuilder);
         when(excludeAutomaticallyLinkedCasesQueryBuilder.getQueryBuilderBy(excludeCaseId))
-                .thenReturn(queryBuilder);
+                .thenReturn(query);
 
-        final QueryBuilder resultQueryBuilder = cpsCaseQueryBuilderService.builder(queryParameters);
+        final Query.Builder resultQueryBuilder = cpsCaseQueryBuilderService.builder(queryParameters);
+        final Query resultQuery = resultQueryBuilder.build();
+        final BoolQuery boolQuery = resultQuery.bool();
 
-        assertThat(resultQueryBuilder, instanceOf(BoolQueryBuilder.class));
-        assertThat(((BoolQueryBuilder) resultQueryBuilder).filter(), hasSize(1));
+        assertThat(boolQuery, notNullValue());
+        assertThat(boolQuery.filter(), hasSize(1));
 
         verify(elasticSearchQueryBuilderCache).getQueryBuilderFromCacheBy(LINKED_CASE_ID);
         verify(excludeAutomaticallyLinkedCasesQueryBuilder).getQueryBuilderBy(excludeCaseId);

@@ -1,27 +1,25 @@
 package uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.builders;
 
+import static co.elastic.clients.elasticsearch._types.query_dsl.Operator.And;
+import static co.elastic.clients.elasticsearch._types.query_dsl.Operator.Or;
 import static com.google.common.collect.ImmutableList.of;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.elasticsearch.index.query.MultiMatchQueryBuilder.Type.CROSS_FIELDS;
-import static org.elasticsearch.index.query.Operator.AND;
-import static org.elasticsearch.index.query.Operator.OR;
-import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
-import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
-import static org.elasticsearch.index.query.QueryBuilders.multiMatchQuery;
-import static org.elasticsearch.index.query.QueryBuilders.nestedQuery;
+import static uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.ElasticSearchQueryBuilder.convertBuilder;
+import static uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.ElasticSearchQueryBuilder.matchQuery;
+import static uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.ElasticSearchQueryBuilder.nestedQuery;
 import static uk.gov.moj.cpp.unifiedsearch.query.common.constant.CaseSearchConstants.PARTY_NESTED_PATH;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.lucene.search.join.ScoreMode;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.MatchQueryBuilder;
-import org.elasticsearch.index.query.MultiMatchQueryBuilder;
-import org.elasticsearch.index.query.NestedQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
+import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.MatchQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.MultiMatchQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.NestedQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.TextQueryType;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 
 /**
  * The nameQueryParam passed to {@link #NameLeafQueryBuilder(String, List)} can contain any number
@@ -65,7 +63,8 @@ public class NameLeafQueryBuilder {
     private static final List<String> lastNameAndOrganisationNameAliasFields = asList(PARTY_ALIAS_LAST_NAME_FIELD, PARTY_ALIAS_ORGANISATION_NAME_FIELD);
 
     private static final String FUZZINESS_AUTO = "AUTO";
-    private final List<QueryBuilder> additionalPartyQueryBuilders;
+    public static final String F = "^2.0f";
+    private final List<Query> additionalPartyQueryBuilders;
 
     private String allNames;
     private String firstName;
@@ -81,7 +80,7 @@ public class NameLeafQueryBuilder {
      */
     private boolean inSingleNameFieldMode = true;
 
-    public NameLeafQueryBuilder(final String allNames, final List<QueryBuilder> additionalPartyQueryBuilders) {
+    public NameLeafQueryBuilder(final String allNames, final List<Query> additionalPartyQueryBuilders) {
 
         this.additionalPartyQueryBuilders = additionalPartyQueryBuilders == null ? of() : additionalPartyQueryBuilders;
 
@@ -104,7 +103,7 @@ public class NameLeafQueryBuilder {
         }
     }
 
-    public NameLeafQueryBuilder(final String partyFirstAndOrMiddleName, final String partyLastNameOrOrganisationName, final List<QueryBuilder> additionalPartyQueryBuilders) {
+    public NameLeafQueryBuilder(final String partyFirstAndOrMiddleName, final String partyLastNameOrOrganisationName, final List<Query> additionalPartyQueryBuilders) {
         this.additionalPartyQueryBuilders = additionalPartyQueryBuilders == null ? of() : additionalPartyQueryBuilders;
         inSingleNameFieldMode = false;
         firstName = EMPTY;
@@ -132,64 +131,64 @@ public class NameLeafQueryBuilder {
     }
 
 
-    public QueryBuilder nestedPartiesBuilder() {
+    public Query.Builder nestedPartiesBuilder() {
 
-        final BoolQueryBuilder booleanQueryBuilder = boolQuery();
-        booleanQueryBuilder.should(getMustMatchQueryBuilderForParties());
-        booleanQueryBuilder.should(getMustMatchWithFuzzinessQueryBuilderForParties());
+        final BoolQuery.Builder booleanQueryBuilder = new BoolQuery.Builder();
+        booleanQueryBuilder.should(getMustMatchQueryBuilderForParties(false, getMustMatchQueryBuilderForPartiesList()).build());
+        booleanQueryBuilder.should(getMustMatchQueryBuilderForParties(true, getMustMatchQueryBuilderForPartiesList()).build());
         if (!allNames.isEmpty()) {
-            booleanQueryBuilder.should(wrapWithAdditionalPartyQueryBuilders(getMultiMatchQueryBuilderForParties().operator(AND).boost(0.4F)));
-            booleanQueryBuilder.should(wrapWithAdditionalPartyQueryBuilders(getMultiMatchQueryBuilderForParties().operator(OR)));
+            booleanQueryBuilder.should(wrapWithAdditionalPartyQueryBuilders(convertBuilder(getMultiMatchQueryBuilderForParties().operator(And).boost(0.4F))).build());
+            booleanQueryBuilder.should(wrapWithAdditionalPartyQueryBuilders(convertBuilder(getMultiMatchQueryBuilderForParties().operator(Or))).build());
         }
 
         if (!inSingleNameFieldMode && !firstName.isEmpty() && !middleName.isEmpty()) {
-            booleanQueryBuilder.should(wrapWithAdditionalPartyQueryBuilders(getMultiMatchQueryBuilderForFirstAndMiddleName().operator(AND).boost(0.1F)));
-            booleanQueryBuilder.should(wrapWithAdditionalPartyQueryBuilders(getMultiMatchQueryBuilderForFirstAndMiddleName().operator(OR)));
+            booleanQueryBuilder.should(wrapWithAdditionalPartyQueryBuilders(convertBuilder(getMultiMatchQueryBuilderForFirstAndMiddleName().operator(And).boost(0.1F))).build());
+            booleanQueryBuilder.should(wrapWithAdditionalPartyQueryBuilders(convertBuilder(getMultiMatchQueryBuilderForFirstAndMiddleName().operator(Or))).build());
         }
 
-        final List<QueryBuilder> prefixQueryBuilderList = getMatchNgramQueryBuilderForPartiesList();
+        final List<Query.Builder> prefixQueryBuilderList = getMatchNgramQueryBuilderForPartiesList();
         if (enableORQuery()) {
-            prefixQueryBuilderList.forEach(queryBuilder -> booleanQueryBuilder.should(wrapWithAdditionalPartyQueryBuilders(queryBuilder)));
+            prefixQueryBuilderList.forEach(queryBuilder -> booleanQueryBuilder.should(wrapWithAdditionalPartyQueryBuilders(queryBuilder).build()));
         } else {
-            prefixQueryBuilderList.forEach(queryBuilder -> booleanQueryBuilder.must(wrapWithAdditionalPartyQueryBuilders(queryBuilder)));
+            prefixQueryBuilderList.forEach(queryBuilder -> booleanQueryBuilder.must(wrapWithAdditionalPartyQueryBuilders(queryBuilder).build()));
         }
 
-        final MatchQueryBuilder organisationMatchBuilder = matchQueryBuilder(organisationName, PARTY_ORGANISATION_NAME_FIELD);
+        final MatchQuery.Builder organisationMatchBuilder = matchQueryBuilder(organisationName, PARTY_ORGANISATION_NAME_FIELD);
         organisationMatchBuilder.fuzziness(FUZZINESS_AUTO);
         organisationMatchBuilder.boost(2.0f);
 
-        booleanQueryBuilder.should(wrapWithAdditionalPartyQueryBuilders(organisationMatchBuilder));
+        booleanQueryBuilder.should(wrapWithAdditionalPartyQueryBuilders(convertBuilder(organisationMatchBuilder)).build());
 
-        return nestedQuery(PARTY_NESTED_PATH, booleanQueryBuilder, ScoreMode.Avg);
+        return convertBuilder(nestedQuery(PARTY_NESTED_PATH, convertBuilder(booleanQueryBuilder)));
     }
 
-    public QueryBuilder nestedPartyAliasesBuilder() {
+    public Query.Builder nestedPartyAliasesBuilder() {
 
-        final BoolQueryBuilder booleanQueryBuilder = boolQuery();
+        final BoolQuery.Builder booleanQueryBuilder = new BoolQuery.Builder();
 
-        booleanQueryBuilder.should(getMustMatchQueryBuilderForPartyAliases());
-        booleanQueryBuilder.should(getMustMatchWithFuzzinessQueryBuilderForPartyAliases());
+        booleanQueryBuilder.should(getMustMatchQueryBuilderForParties(false, getMustMatchQueryBuilderForPartyAliasesList()).build());
+        booleanQueryBuilder.should(getMustMatchQueryBuilderForParties(true, getMustMatchQueryBuilderForPartyAliasesList()).build());
 
         if (!allNames.isEmpty()) {
-            booleanQueryBuilder.should(wrapWithAdditionalPartyQueryBuilders(getMultiMatchQueryBuilderForPartyAliases().operator(AND).boost(0.4F)));
-            booleanQueryBuilder.should(wrapWithAdditionalPartyQueryBuilders(getMultiMatchQueryBuilderForPartyAliases().operator(OR)));
+            booleanQueryBuilder.should(wrapWithAdditionalPartyQueryBuilders(convertBuilder(getMultiMatchQueryBuilderForPartyAliases().operator(And).boost(0.4F))).build());
+            booleanQueryBuilder.should(wrapWithAdditionalPartyQueryBuilders(convertBuilder(getMultiMatchQueryBuilderForPartyAliases().operator(Or))).build());
         }
 
-        final List<QueryBuilder> prefixQueryBuilderList = getMatchNgramQueryBuilderForPartyAliasesList();
+        final List<Query.Builder> prefixQueryBuilderList = getMatchNgramQueryBuilderForPartyAliasesList();
         if (enableORQuery()) {
-            prefixQueryBuilderList.forEach(queryBuilder -> booleanQueryBuilder.should(wrapWithAdditionalPartyQueryBuilders(queryBuilder)));
+            prefixQueryBuilderList.forEach(queryBuilder -> booleanQueryBuilder.should(wrapWithAdditionalPartyQueryBuilders(queryBuilder).build()));
         } else {
-            prefixQueryBuilderList.forEach(queryBuilder -> booleanQueryBuilder.must(wrapWithAdditionalPartyQueryBuilders(queryBuilder)));
+            prefixQueryBuilderList.forEach(queryBuilder -> booleanQueryBuilder.must(wrapWithAdditionalPartyQueryBuilders(queryBuilder).build()));
         }
 
-        final MatchQueryBuilder organisationMatchBuilder = matchQueryBuilder(organisationName, PARTY_ALIAS_ORGANISATION_NAME_FIELD);
+        final MatchQuery.Builder organisationMatchBuilder = matchQueryBuilder(organisationName, PARTY_ALIAS_ORGANISATION_NAME_FIELD);
         organisationMatchBuilder.fuzziness(FUZZINESS_AUTO);
         organisationMatchBuilder.boost(2.0f);
-        booleanQueryBuilder.should(wrapWithAdditionalPartyQueryBuilders(organisationMatchBuilder));
+        booleanQueryBuilder.should(wrapWithAdditionalPartyQueryBuilders(convertBuilder(organisationMatchBuilder)).build());
 
-        final NestedQueryBuilder partyAliasesNestedQueryBuilder = nestedQuery(PARTY_ALIAS_NESTED_PATH, booleanQueryBuilder, ScoreMode.Avg);
+        final NestedQuery.Builder partyAliasesNestedQueryBuilder = nestedQuery(PARTY_ALIAS_NESTED_PATH, convertBuilder(booleanQueryBuilder));
 
-        return nestedQuery(PARTY_NESTED_PATH, partyAliasesNestedQueryBuilder, ScoreMode.Avg);
+        return convertBuilder(nestedQuery(PARTY_NESTED_PATH, convertBuilder(partyAliasesNestedQueryBuilder)));
     }
 
     private boolean enableORQuery() {
@@ -197,73 +196,42 @@ public class NameLeafQueryBuilder {
     }
 
 
-    private QueryBuilder getMustMatchQueryBuilderForParties() {
-        final BoolQueryBuilder booleanQueryBuilder = boolQuery();
+    private Query.Builder getMustMatchQueryBuilderForParties(final boolean isFuzziness, final List<Query.Builder> mustMatchQueryBuilderList) {
+        final BoolQuery.Builder booleanQueryBuilder = new BoolQuery.Builder();
 
         this.additionalPartyQueryBuilders.forEach(booleanQueryBuilder::must);
 
-        final List<QueryBuilder> mustMatchQueryBuilderList = getMustMatchQueryBuilderForPartiesList();
-        mustMatchQueryBuilderList.forEach(booleanQueryBuilder::must);
+        if(isFuzziness){
+            mustMatchQueryBuilderList.stream()
+                    .map(q -> q.build().match())
+                    .forEach(mqb -> {
+                        MatchQuery.Builder builder = new MatchQuery.Builder();
+                        builder.field(mqb.field());
+                        builder.query(mqb.query());
+                        builder.boost(mqb.boost());
+                        builder.fuzziness(FUZZINESS_AUTO);
+                        booleanQueryBuilder.must(builder.build());
+                    });
 
-        booleanQueryBuilder.boost(3.0F);
-
-        return booleanQueryBuilder;
-    }
-
-    private QueryBuilder getMustMatchWithFuzzinessQueryBuilderForParties() {
-        final BoolQueryBuilder booleanQueryBuilder = boolQuery();
-        this.additionalPartyQueryBuilders.forEach(booleanQueryBuilder::must);
-
-        final List<QueryBuilder> mustMatchQueryBuilderList = getMustMatchQueryBuilderForPartiesList();
-
-        mustMatchQueryBuilderList.stream()
-                .map(MatchQueryBuilder.class::cast)
-                .forEach(mqb -> {
-                    mqb.fuzziness(FUZZINESS_AUTO);
-                    booleanQueryBuilder.must(mqb);
-                });
-
-        booleanQueryBuilder.boost(2.0F);
-
-        return booleanQueryBuilder;
-    }
-
-    private QueryBuilder getMustMatchQueryBuilderForPartyAliases() {
-        final BoolQueryBuilder booleanQueryBuilder = boolQuery();
-        this.additionalPartyQueryBuilders.forEach(booleanQueryBuilder::must);
-        final List<QueryBuilder> mustMatchQueryBuilderList = getMustMatchQueryBuilderForPartyAliasesList();
-        mustMatchQueryBuilderList.forEach(booleanQueryBuilder::must);
-
-        booleanQueryBuilder.boost(3.0F);
-
-        return booleanQueryBuilder;
-    }
-
-    private QueryBuilder getMustMatchWithFuzzinessQueryBuilderForPartyAliases() {
-        final BoolQueryBuilder booleanQueryBuilder = boolQuery();
-        this.additionalPartyQueryBuilders.forEach(booleanQueryBuilder::must);
-        final List<QueryBuilder> mustMatchQueryBuilderList = getMustMatchQueryBuilderForPartyAliasesList();
-
-        mustMatchQueryBuilderList.stream()
-                .map(MatchQueryBuilder.class::cast)
-                .forEach(mqb -> {
-                    mqb.fuzziness(FUZZINESS_AUTO);
-                    booleanQueryBuilder.must(mqb);
-                });
-
-
-        booleanQueryBuilder.boost(2.0F);
-
-        return booleanQueryBuilder;
+            booleanQueryBuilder.boost(2.0F);
+        } else {
+            mustMatchQueryBuilderList.forEach(b -> booleanQueryBuilder.must(b.build()));
+            booleanQueryBuilder.boost(3.0F);
+        }
+        return convertBuilder(booleanQueryBuilder);
     }
 
 
-    private MultiMatchQueryBuilder getMultiMatchQueryBuilderForParties() {
-        final List<String> fields = inSingleNameFieldMode ? allPartyNamesFields : lastNameAndOrganisationNameFields;
-        final MultiMatchQueryBuilder allNameFieldsMultiMatchQuery = crossFieldsMultiMatchQueryBuilder(allNames, fields);
+    private MultiMatchQuery.Builder getMultiMatchQueryBuilderForParties() {
+        List<String> fields = inSingleNameFieldMode ? allPartyNamesFields : lastNameAndOrganisationNameFields;
+
+        if (hasOneName){
+            fields = fields.stream().filter(v -> !v.equals(PARTY_LAST_NAME_FIELD) && !v.equals(PARTY_ORGANISATION_NAME_FIELD) ).toList();
+        }
+        final MultiMatchQuery.Builder allNameFieldsMultiMatchQuery = crossFieldsMultiMatchQueryBuilder(allNames, fields);
         if (hasOneName) {
-            allNameFieldsMultiMatchQuery.field(PARTY_LAST_NAME_FIELD, 2.0f);
-            allNameFieldsMultiMatchQuery.field(PARTY_ORGANISATION_NAME_FIELD, 2.0f);
+            allNameFieldsMultiMatchQuery.fields(PARTY_LAST_NAME_FIELD+ F);
+            allNameFieldsMultiMatchQuery.fields(PARTY_ORGANISATION_NAME_FIELD+ F);
         }
 
         allNameFieldsMultiMatchQuery.boost(0.3F);
@@ -272,10 +240,10 @@ public class NameLeafQueryBuilder {
         return allNameFieldsMultiMatchQuery;
     }
 
-    private MultiMatchQueryBuilder getMultiMatchQueryBuilderForFirstAndMiddleName() {
-        final MultiMatchQueryBuilder allNameFieldsMultiMatchQuery = crossFieldsMultiMatchQueryBuilder(partyFirstAndOrMiddleName, firstAndMiddleNameFields);
+    private MultiMatchQuery.Builder getMultiMatchQueryBuilderForFirstAndMiddleName() {
+        final MultiMatchQuery.Builder allNameFieldsMultiMatchQuery = crossFieldsMultiMatchQueryBuilder(partyFirstAndOrMiddleName, firstAndMiddleNameFields);
 
-        allNameFieldsMultiMatchQuery.field(PARTY_FIRST_NAME_FIELD, 1.10f);
+        allNameFieldsMultiMatchQuery.fields(PARTY_FIRST_NAME_FIELD+"^1.10f");
 
         allNameFieldsMultiMatchQuery.boost(0.3F);
 
@@ -283,12 +251,14 @@ public class NameLeafQueryBuilder {
         return allNameFieldsMultiMatchQuery;
     }
 
-    private MultiMatchQueryBuilder getMultiMatchQueryBuilderForPartyAliases() {
-        final List<String> fields = inSingleNameFieldMode ? allPartyAliasNamesFields : lastNameAndOrganisationNameAliasFields;
-        final MultiMatchQueryBuilder partyAliasFieldsMultiMatchQuery = crossFieldsMultiMatchQueryBuilder(allNames, fields);
+    private MultiMatchQuery.Builder getMultiMatchQueryBuilderForPartyAliases() {
+        List<String> fields = inSingleNameFieldMode ? allPartyAliasNamesFields : lastNameAndOrganisationNameAliasFields;
         if (hasOneName) {
-            partyAliasFieldsMultiMatchQuery.field(PARTY_ALIAS_LAST_NAME_FIELD, 2.0f);
-            partyAliasFieldsMultiMatchQuery.field(PARTY_ALIAS_ORGANISATION_NAME_FIELD, 2.0f);
+            fields = fields.stream().filter(v -> !PARTY_ALIAS_LAST_NAME_FIELD.equals(v) && !PARTY_ALIAS_ORGANISATION_NAME_FIELD.equals(v)).toList();
+        }
+        final MultiMatchQuery.Builder partyAliasFieldsMultiMatchQuery = crossFieldsMultiMatchQueryBuilder(allNames, fields);
+        if (hasOneName) {
+            partyAliasFieldsMultiMatchQuery.fields(asList(PARTY_ALIAS_LAST_NAME_FIELD+ F,PARTY_ALIAS_ORGANISATION_NAME_FIELD+ F));
         }
 
         partyAliasFieldsMultiMatchQuery.boost(0.3F);
@@ -296,7 +266,7 @@ public class NameLeafQueryBuilder {
         return partyAliasFieldsMultiMatchQuery;
     }
 
-    private List<QueryBuilder> getMustMatchQueryBuilderForPartiesList() {
+    private List<Query.Builder> getMustMatchQueryBuilderForPartiesList() {
 
         return getMustMatchQueryBuilderList(PARTY_FIRST_NAME_FIELD,
                 PARTY_MIDDLE_NAME_FIELD,
@@ -305,7 +275,7 @@ public class NameLeafQueryBuilder {
 
     }
 
-    private List<QueryBuilder> getMustMatchQueryBuilderForPartyAliasesList() {
+    private List<Query.Builder> getMustMatchQueryBuilderForPartyAliasesList() {
 
         return getMustMatchQueryBuilderList(PARTY_ALIAS_FIRST_NAME_FIELD,
                 PARTY_ALIAS_MIDDLE_NAME_FIELD,
@@ -314,7 +284,7 @@ public class NameLeafQueryBuilder {
 
     }
 
-    private List<QueryBuilder> getMatchNgramQueryBuilderForPartiesList() {
+    private List<Query.Builder> getMatchNgramQueryBuilderForPartiesList() {
 
         return getMatchNgramQueryBuilderList(PARTY_FIRST_NAME_NGRAM_FIELD,
                 PARTY_LAST_NAME_NGRAM_FIELD
@@ -323,112 +293,113 @@ public class NameLeafQueryBuilder {
     }
 
 
-    private List<QueryBuilder> getMatchNgramQueryBuilderForPartyAliasesList() {
+    private List<Query.Builder> getMatchNgramQueryBuilderForPartyAliasesList() {
 
         return getMatchNgramQueryBuilderList(PARTY_ALIAS_FIRST_NAME_NGRAM_FIELD,
                 PARTY_ALIAS_LAST_NAME_NGRAM_FIELD
         );
     }
 
-    private List<QueryBuilder> getMustMatchQueryBuilderList(final String firstNameField, final String middleNameField, final String lastNameField) {
+    private List<Query.Builder> getMustMatchQueryBuilderList(final String firstNameField, final String middleNameField, final String lastNameField) {
 
         if (!inSingleNameFieldMode) {
             return getMustMatchQueryBuilderListForSingleField(firstNameField, middleNameField, lastNameField);
         }
 
-        final List<QueryBuilder> queryBuilderList = new ArrayList<>();
+        final List<Query.Builder> queryBuilderList = new ArrayList<>();
 
         if (hasOneName) {
-            queryBuilderList.add(matchQueryBuilder(lastName, firstNameField));
-            queryBuilderList.add(matchQueryBuilder(lastName, lastNameField));
+            queryBuilderList.add(convertBuilder(matchQueryBuilder(lastName, firstNameField)));
+            queryBuilderList.add(convertBuilder(matchQueryBuilder(lastName, lastNameField)));
         } else if (hasTwoNames) {
-            queryBuilderList.add(matchQueryBuilder(firstName, firstNameField));
-            queryBuilderList.add(matchQueryBuilder(lastName, lastNameField));
+            queryBuilderList.add(convertBuilder(matchQueryBuilder(firstName, firstNameField)));
+            queryBuilderList.add(convertBuilder(matchQueryBuilder(lastName, lastNameField)));
         } else {
-            queryBuilderList.add(matchQueryBuilder(firstName, firstNameField));
-            queryBuilderList.add(matchQueryBuilder(middleName, middleNameField));
-            queryBuilderList.add(matchQueryBuilder(lastName, lastNameField));
+            queryBuilderList.add(convertBuilder(matchQueryBuilder(firstName, firstNameField)));
+            queryBuilderList.add(convertBuilder(matchQueryBuilder(middleName, middleNameField)));
+            queryBuilderList.add(convertBuilder(matchQueryBuilder(lastName, lastNameField)));
         }
 
         return queryBuilderList;
     }
 
-    private List<QueryBuilder> getMustMatchQueryBuilderListForSingleField(final String firstNameField, final String middleNameField, final String lastNameField) {
+    private List<Query.Builder> getMustMatchQueryBuilderListForSingleField(final String firstNameField, final String middleNameField, final String lastNameField) {
 
-        final List<QueryBuilder> queryBuilderList = new ArrayList<>();
+        final List<Query.Builder> queryBuilderList = new ArrayList<>();
 
         if (!firstName.isEmpty()) {
-            queryBuilderList.add(matchQueryBuilder(firstName, firstNameField));
+            queryBuilderList.add(convertBuilder(matchQueryBuilder(firstName, firstNameField)));
         }
 
         if (!middleName.isEmpty()) {
-            queryBuilderList.add(matchQueryBuilder(middleName, middleNameField));
+            queryBuilderList.add(convertBuilder(matchQueryBuilder(middleName, middleNameField)));
         }
 
         if (!lastName.isEmpty()) {
-            queryBuilderList.add(matchQueryBuilder(lastName, lastNameField));
+            queryBuilderList.add(convertBuilder(matchQueryBuilder(lastName, lastNameField)));
         }
 
         return queryBuilderList;
     }
 
-    private List<QueryBuilder> getMatchNgramQueryBuilderList(final String firstNameField, final String lastNameField) {
+    private List<Query.Builder> getMatchNgramQueryBuilderList(final String firstNameField, final String lastNameField) {
 
         if (!inSingleNameFieldMode) {
             return getMatchNgramQueryBuilderListForMultiFieldSearch(firstNameField, lastNameField);
         }
 
-        final List<QueryBuilder> queryBuilderList = new ArrayList<>();
+        final List<Query.Builder> queryBuilderList = new ArrayList<>();
 
         if (hasOneName) {
-            queryBuilderList.add(matchQueryBuilder(lastName, firstNameField, Optional.of(1.7f)));
-            queryBuilderList.add(matchQueryBuilder(lastName, lastNameField, Optional.of(1.5f)));
+            queryBuilderList.add(convertBuilder(matchQueryBuilder(lastName, firstNameField, Optional.of(1.7f))));
+            queryBuilderList.add(convertBuilder(matchQueryBuilder(lastName, lastNameField, Optional.of(1.5f))));
         } else {
-            queryBuilderList.add(matchQueryBuilder(firstName, firstNameField, Optional.of(1.7f)));
-            queryBuilderList.add(matchQueryBuilder(lastName, lastNameField, Optional.of(1.5f)));
+            queryBuilderList.add(convertBuilder(matchQueryBuilder(firstName, firstNameField, Optional.of(1.7f))));
+            queryBuilderList.add(convertBuilder(matchQueryBuilder(lastName, lastNameField, Optional.of(1.5f))));
         }
 
         return queryBuilderList;
     }
 
-    private List<QueryBuilder> getMatchNgramQueryBuilderListForMultiFieldSearch(final String firstNameField, final String lastNameField) {
+    private List<Query.Builder> getMatchNgramQueryBuilderListForMultiFieldSearch(final String firstNameField, final String lastNameField) {
 
-        final List<QueryBuilder> queryBuilderList = new ArrayList<>();
+        final List<Query.Builder> queryBuilderList = new ArrayList<>();
 
         if (!lastName.isEmpty()) {
-            queryBuilderList.add(matchQueryBuilder(lastName, lastNameField, Optional.of(1.7f)));
+            queryBuilderList.add(convertBuilder(matchQueryBuilder(lastName, lastNameField, Optional.of(1.7f))));
         }
 
         if (!firstName.isEmpty()) {
-            queryBuilderList.add(matchQueryBuilder(firstName, firstNameField, Optional.of(1.5f)));
+            queryBuilderList.add(convertBuilder(matchQueryBuilder(firstName, firstNameField, Optional.of(1.5f))));
         }
 
         return queryBuilderList;
     }
 
 
-    private MatchQueryBuilder matchQueryBuilder(final String query, final String field) {
+    private MatchQuery.Builder matchQueryBuilder(final String query, final String field) {
         return matchQuery(field, query);
     }
 
-    private MatchQueryBuilder matchQueryBuilder(final String query, final String field, final Optional<Float> boost) {
-        final MatchQueryBuilder builder = matchQuery(field, query);
+    private MatchQuery.Builder matchQueryBuilder(final String query, final String field, final Optional<Float> boost) {
+        final MatchQuery.Builder builder = matchQuery(field, query);
         boost.ifPresent(builder::boost);
         return builder;
     }
 
-    private MultiMatchQueryBuilder crossFieldsMultiMatchQueryBuilder(final String query, final List<String> fields) {
+    private MultiMatchQuery.Builder crossFieldsMultiMatchQueryBuilder(final String query, final List<String> fields) {
 
-        final MultiMatchQueryBuilder builder = multiMatchQuery(query, fields.toArray(new String[0]));
-        builder.type(CROSS_FIELDS);
-
+        final MultiMatchQuery.Builder builder = new MultiMatchQuery.Builder();
+        builder.query(query).fields(fields).type(TextQueryType.CrossFields);
         return builder;
     }
 
-    private QueryBuilder wrapWithAdditionalPartyQueryBuilders(final QueryBuilder queryBuilder) {
-        final BoolQueryBuilder booleanQueryBuilder = boolQuery();
+    private Query.Builder wrapWithAdditionalPartyQueryBuilders(final Query.Builder queryBuilder) {
+        final BoolQuery.Builder booleanQueryBuilder = new BoolQuery.Builder();
         this.additionalPartyQueryBuilders.forEach(booleanQueryBuilder::must);
-        booleanQueryBuilder.must(queryBuilder);
-        return booleanQueryBuilder;
+        booleanQueryBuilder.must(queryBuilder.build());
+        final Query.Builder builder = new Query.Builder();
+        builder.bool(booleanQueryBuilder.build());
+        return builder;
     }
 }
