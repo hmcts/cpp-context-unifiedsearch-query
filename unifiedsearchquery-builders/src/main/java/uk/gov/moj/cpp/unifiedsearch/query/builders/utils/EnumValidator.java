@@ -7,7 +7,8 @@ public class EnumValidator {
 
     public static  <T extends Enum<T>> boolean isValidEnum(Class<T> enumType, String key){
         try {
-            Enum.valueOf(enumType, trimToEmpty(key).toUpperCase());
+            final String value = trimToEmpty(key);
+            Enum.valueOf(enumType, value.substring(0,1).toUpperCase() + value.substring(1).toLowerCase());
             return true;
         } catch(IllegalArgumentException e) {
             return false;
