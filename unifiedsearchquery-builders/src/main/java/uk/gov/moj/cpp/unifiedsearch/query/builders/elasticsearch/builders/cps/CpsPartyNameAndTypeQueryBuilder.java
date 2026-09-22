@@ -5,12 +5,13 @@ import static java.util.Optional.ofNullable;
 import static java.util.stream.Stream.of;
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.trimToNull;
-import static org.apache.lucene.search.join.ScoreMode.Avg;
-import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
-import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
-import static org.elasticsearch.index.query.QueryBuilders.nestedQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
+
+
+import static uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.ElasticSearchQueryBuilder.convertBuilder;
+import static uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.ElasticSearchQueryBuilder.matchQuery;
+import static uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.ElasticSearchQueryBuilder.nestedQuery;
+import static uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.ElasticSearchQueryBuilder.termQuery;
+import static uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.ElasticSearchQueryBuilder.termsQuery;
 import static uk.gov.moj.cpp.unifiedsearch.query.common.constant.CaseSearchConstants.PARTY_TYPE_NESTED_PATH;
 import static uk.gov.moj.cpp.unifiedsearch.query.common.constant.CpsCaseSearchConstants.ALIAS_PARTY_TYPE;
 import static uk.gov.moj.cpp.unifiedsearch.query.common.constant.CpsCaseSearchConstants.DEFENDANT_PARTY_TYPE;
@@ -36,14 +37,14 @@ import uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.ElasticSearchQu
 import java.util.List;
 import java.util.Map;
 
+import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import org.apache.commons.lang3.StringUtils;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 
 public class CpsPartyNameAndTypeQueryBuilder implements ElasticSearchQueryBuilder {
 
     @Override
-    public QueryBuilder getQueryBuilderBy(final Object... queryParams) {
+    public Query getQueryBuilderBy(final Object... queryParams) {
         final Map<String, String> queryParameters = (Map<String, String>) queryParams[0];
 
         final String partyFirstName = trimToNull(queryParameters.get(PARTY_FIRST_NAME));
@@ -56,7 +57,7 @@ public class CpsPartyNameAndTypeQueryBuilder implements ElasticSearchQueryBuilde
             return ofNullable(partyTypes)
                     .map(types -> {
 
-                        final BoolQueryBuilder boolQueryBuilder = boolQuery();
+                        final BoolQuery.Builder boolQueryBuilder = new BoolQuery.Builder();
                         final List<String> requestedPartyTypes = asList(clean(types));
 
                         ofNullable(partyFirstName).ifPresent(firstName -> addQueryBuilderForNameSearch(boolQueryBuilder, requestedPartyTypes, firstName,
@@ -66,68 +67,67 @@ public class CpsPartyNameAndTypeQueryBuilder implements ElasticSearchQueryBuilde
                                 PARTIES_LAST_NAME_PATH, PARTIES_LAST_NAME_PATH_NGRAMMED, PARTIES_ALIASES_LAST_NAME_PATH, PARTIES_ALIASES_LAST_NAME_PATH_NGRAMMED));
 
                         ofNullable(organisationName).ifPresent(orgName ->
-                                boolQueryBuilder.must(buildNameQuery(orgName, PARTIES_ORGANISATION_NAME_PATH, PARTIES_ORGANISATION_NAME_PATH_NGRAMMED)));
+                                boolQueryBuilder.must(buildNameQuery(orgName, PARTIES_ORGANISATION_NAME_PATH, PARTIES_ORGANISATION_NAME_PATH_NGRAMMED).build()));
 
                         addQueryBuilderForTypeSearch(boolQueryBuilder, requestedPartyTypes);
 
-                        return boolQueryBuilder;
+                        return convertBuilder(boolQueryBuilder).build();
 
                     }).orElseGet(() -> {
 
-                        final BoolQueryBuilder boolQueryBuilder = boolQuery();
+                        final BoolQuery.Builder boolQueryBuilder = new BoolQuery.Builder();
 
                         ofNullable(partyFirstName).ifPresent(firstName ->
-                                boolQueryBuilder.must(buildNameQuery(firstName, PARTIES_FIRST_NAME_PATH, PARTIES_FIRST_NAME_PATH_NGRAMMED)));
+                                boolQueryBuilder.must(buildNameQuery(firstName, PARTIES_FIRST_NAME_PATH, PARTIES_FIRST_NAME_PATH_NGRAMMED).build()));
 
                         ofNullable(partyLastName).ifPresent(lastName ->
-                                boolQueryBuilder.must(buildNameQuery(lastName, PARTIES_LAST_NAME_PATH, PARTIES_LAST_NAME_PATH_NGRAMMED)));
+                                boolQueryBuilder.must(buildNameQuery(lastName, PARTIES_LAST_NAME_PATH, PARTIES_LAST_NAME_PATH_NGRAMMED).build()));
 
                         ofNullable(organisationName).ifPresent(orgName ->
-                                boolQueryBuilder.must(buildNameQuery(orgName, PARTIES_ORGANISATION_NAME_PATH, PARTIES_ORGANISATION_NAME_PATH_NGRAMMED)));
+                                boolQueryBuilder.must(buildNameQuery(orgName, PARTIES_ORGANISATION_NAME_PATH, PARTIES_ORGANISATION_NAME_PATH_NGRAMMED).build()));
 
-                        return boolQueryBuilder;
+                        return convertBuilder(boolQueryBuilder).build();
                     });
         }
 
         return null;
     }
 
-    private void addQueryBuilderForTypeSearch(final BoolQueryBuilder boolQueryBuilder, final List<String> requestedPartyTypes) {
+    private void addQueryBuilderForTypeSearch(final BoolQuery.Builder boolQueryBuilder, final List<String> requestedPartyTypes) {
         if (!isSearchForAliasNameOnly(requestedPartyTypes)) {
-            boolQueryBuilder.must(termsQuery(PARTY_TYPE_NESTED_PATH, requestedPartyTypes));
+            boolQueryBuilder.must(termsQuery(PARTY_TYPE_NESTED_PATH, requestedPartyTypes).build());
         }
     }
 
-    private void addQueryBuilderForNameSearch(final BoolQueryBuilder boolQueryBuilder, final List<String> requestedPartyTypes, final String lastName,
+    private void addQueryBuilderForNameSearch(final BoolQuery.Builder boolQueryBuilder, final List<String> requestedPartyTypes, final String lastName,
                                               final String partiesLastNamePath, final String partiesLastNamePathNgrammed, final String partiesAliasesLastNamePath,
                                               final String partiesAliasesLastNamePathNgrammed) {
         if (isSearchForDefendantAliasOrPartyName(requestedPartyTypes)) {
             boolQueryBuilder.must(buildNameOrAliasQuery(lastName, partiesLastNamePath, partiesLastNamePathNgrammed,
-                    partiesAliasesLastNamePath, partiesAliasesLastNamePathNgrammed));
+                    partiesAliasesLastNamePath, partiesAliasesLastNamePathNgrammed).build());
         } else if (isSearchForAliasNameOnly(requestedPartyTypes)) {
-            boolQueryBuilder.must(buildAliasQuery(lastName, partiesAliasesLastNamePath, partiesAliasesLastNamePathNgrammed));
+            boolQueryBuilder.must(buildAliasQuery(lastName, partiesAliasesLastNamePath, partiesAliasesLastNamePathNgrammed).build());
         } else {
-            boolQueryBuilder.must(buildNameQuery(lastName, partiesLastNamePath, partiesLastNamePathNgrammed));
+            boolQueryBuilder.must(buildNameQuery(lastName, partiesLastNamePath, partiesLastNamePathNgrammed).build());
         }
     }
 
-    private BoolQueryBuilder buildNameOrAliasQuery(final String name, final String path, final String pathNgrammed,
+    private BoolQuery.Builder buildNameOrAliasQuery(final String name, final String path, final String pathNgrammed,
                                                    final String aliasPath, final String aliasPathNgrammed) {
-            return boolQuery()
-                    .should(buildNameQuery(name, path, pathNgrammed))
-                    .should(buildAliasQuery(name, aliasPath, aliasPathNgrammed));
+            return (new BoolQuery.Builder())
+                    .should(buildNameQuery(name, path, pathNgrammed).build())
+                    .should(buildAliasQuery(name, aliasPath, aliasPathNgrammed).build());
     }
 
-    private BoolQueryBuilder buildNameQuery(final String partyName, final String partiesNamePath, final String partiesNamePathNgrammed) {
-        return boolQuery()
-                .should(matchQuery(partiesNamePath, partyName))
-                .should(matchQuery(partiesNamePathNgrammed, partyName));
+    private BoolQuery.Builder buildNameQuery(final String partyName, final String partiesNamePath, final String partiesNamePathNgrammed) {
+        return (new BoolQuery.Builder()).should(matchQuery(partiesNamePath, partyName).build())
+        .should(matchQuery(partiesNamePathNgrammed, partyName).build());
     }
 
-    private BoolQueryBuilder buildAliasQuery(final String partyName, final String partiesAliasesNamePath, final String partiesAliasesNamePathNgrammed) {
-        return boolQuery()
-                .must(nestedQuery(PARTIES_ALIASES_PATH, buildNameQuery(partyName, partiesAliasesNamePath, partiesAliasesNamePathNgrammed), Avg))
-                .must(termQuery(PARTY_TYPE_PATH, DEFENDANT_PARTY_TYPE));
+    private BoolQuery.Builder buildAliasQuery(final String partyName, final String partiesAliasesNamePath, final String partiesAliasesNamePathNgrammed) {
+        return (new BoolQuery.Builder())
+                .must(nestedQuery(PARTIES_ALIASES_PATH, convertBuilder(buildNameQuery(partyName, partiesAliasesNamePath, partiesAliasesNamePathNgrammed))).build())
+                .must(termQuery(PARTY_TYPE_PATH, DEFENDANT_PARTY_TYPE).build());
     }
 
     private boolean isSearchForAliasNameOnly(final List<String> requestedPartyTypes) {

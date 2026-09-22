@@ -1,7 +1,5 @@
 package uk.gov.moj.unifiedsearch.query.it.cps;
 
-import static org.elasticsearch.search.sort.SortOrder.ASC;
-import static org.elasticsearch.search.sort.SortOrder.DESC;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static uk.gov.moj.cpp.unifiedsearch.query.common.constant.CpsCaseSearchConstants.CPS_CASE_INDEX_NAME;
 import static uk.gov.moj.cpp.unifiedsearch.query.common.constant.CpsCaseSearchConstants.HEARING_DATE_SORT_BY;
@@ -40,7 +38,7 @@ public class SortByHearingDateQueryIT {
     public void shouldReturnCasesOrderedByHearingDateTimeDesc() throws IOException {
         final Map<String, String> parameters = new HashMap();
         parameters.putIfAbsent(ORDER_BY, HEARING_DATE_SORT_BY);
-        parameters.putIfAbsent(ORDER, DESC.toString());
+        parameters.putIfAbsent(ORDER, "DESC");
 
         final CaseSearchResponse caseSearchResponse = searchApiClient.searchCases(parameters);
 
@@ -53,7 +51,7 @@ public class SortByHearingDateQueryIT {
     public void shouldReturnCasesOrderedByHearingDateTimeAsc() throws IOException {
         final Map<String, String> parameters = new HashMap();
         parameters.putIfAbsent(ORDER_BY, HEARING_DATE_SORT_BY);
-        parameters.putIfAbsent(ORDER, ASC.toString());
+        parameters.putIfAbsent(ORDER, "ASC");
 
         final CaseSearchResponse caseSearchResponse = searchApiClient.searchCases(parameters);
 

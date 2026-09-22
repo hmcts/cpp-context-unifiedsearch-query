@@ -1,7 +1,7 @@
 package uk.gov.moj.cpp.unifiedsearch.query.common.domain;
 
 
-import org.elasticsearch.search.sort.SortOrder;
+import uk.gov.moj.cpp.unifiedsearch.query.common.constant.SortOrder;
 
 public class CpsQueryParameters {
 
