@@ -1,19 +1,19 @@
 package uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.builders;
 
 import static java.lang.String.valueOf;
-import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
 import static uk.gov.moj.cpp.unifiedsearch.query.common.constant.CaseSearchConstants.CASE_STATUS_PARAM;
+import static uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.ElasticSearchQueryBuilder.termsQuery;
 
 import uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.ElasticSearchQueryBuilder;
 
-import org.elasticsearch.index.query.QueryBuilder;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 
 public class CaseStatusQueryBuilder implements ElasticSearchQueryBuilder {
 
     @Override
-    public QueryBuilder getQueryBuilderBy(final Object... queryParams) {
+    public Query getQueryBuilderBy(final Object... queryParams) {
         final String[] caseStatuses = clean(queryParams[0]);
-        return termsQuery(CASE_STATUS_PARAM, caseStatuses);
+        return termsQuery(CASE_STATUS_PARAM, caseStatuses).build();
     }
 
     @Override

@@ -6,8 +6,8 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static uk.gov.moj.cpp.unifiedsearch.query.common.constant.DefendantQueryParameterNamesConstants.CRO_NUMBER_INDEX;
 
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.TermQueryBuilder;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import co.elastic.clients.elasticsearch._types.query_dsl.TermQuery;
 import org.junit.jupiter.api.Test;
 
 public class CroNumberQueryBuilderTest {
@@ -19,15 +19,13 @@ public class CroNumberQueryBuilderTest {
     public void shouldCreateExactMatchQueryBuilderForCroNumberNumber() {
 
         final String croNumber = "croNumber";
-        final QueryBuilder queryBuilder = croNumberSearchQueryBuilder.getQueryBuilderBy(croNumber);
+        final Query query = croNumberSearchQueryBuilder.getQueryBuilderBy(croNumber);
 
-        assertThat(queryBuilder, is(notNullValue()));
+        assertThat(query, is(notNullValue()));
+        final TermQuery termQueryBuilder = query.term();
+        assertThat(termQueryBuilder, notNullValue());
 
-        assertThat(queryBuilder, instanceOf(TermQueryBuilder.class));
-
-        final TermQueryBuilder termQueryBuilder = (TermQueryBuilder) queryBuilder;
-        assertThat(termQueryBuilder.getName(), is("term"));
-        assertThat(termQueryBuilder.fieldName(), is(CRO_NUMBER_INDEX));
-        assertThat(termQueryBuilder.value(), is(croNumber));
+        assertThat(termQueryBuilder.field(), is(CRO_NUMBER_INDEX));
+        assertThat(termQueryBuilder.value().stringValue(), is(croNumber));
     }
 }
