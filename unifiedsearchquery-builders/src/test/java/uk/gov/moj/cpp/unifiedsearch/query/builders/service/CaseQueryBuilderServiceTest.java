@@ -3,10 +3,9 @@ package uk.gov.moj.cpp.unifiedsearch.query.builders.service;
 import static com.jayway.jsonassert.impl.matcher.IsCollectionWithSize.hasSize;
 import static java.lang.Boolean.TRUE;
 import static java.util.Collections.emptyList;
-import static org.apache.lucene.search.join.ScoreMode.Avg;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeast;
@@ -40,11 +39,22 @@ import static uk.gov.moj.cpp.unifiedsearch.query.common.constant.DefendantQueryP
 import static uk.gov.moj.cpp.unifiedsearch.query.common.constant.DefendantQueryParameterNamesConstants.PNC_ID;
 import static uk.gov.moj.cpp.unifiedsearch.query.common.constant.DefendantQueryParameterNamesConstants.PROCEEDINGS_CONCLUDED;
 
+import java.util.List;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.ChildScoreMode;
+import co.elastic.clients.elasticsearch._types.query_dsl.NestedQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.ElasticSearchQueryBuilder;
 import uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.ElasticSearchQueryBuilderCache;
 import uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.builders.AddressQueryBuilder;
 import uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.builders.ApplicationStatusQueryBuilder;
-import uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.builders.ApplicationTypeQueryBuilder;
 import uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.builders.ArrestSummonsNumberSearchQueryBuilder;
 import uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.builders.BoxHearingQueryBuilder;
 import uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.builders.CourtOrderValidityDateQueryBuilder;
@@ -65,18 +75,6 @@ import uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.builders.Refere
 import uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.builders.VirtualBoxHearingQueryBuilder;
 import uk.gov.moj.cpp.unifiedsearch.query.common.domain.QueryParameters;
 import uk.gov.moj.cpp.unifiedsearch.query.common.domain.builders.QueryParametersBuilder;
-
-import java.util.List;
-
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.NestedQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 public class CaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceTest {
@@ -103,7 +101,10 @@ public class CaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceTest
     private BoxHearingQueryBuilder boxHearingQueryBuilder;
 
     @Mock
-    private QueryBuilder queryBuilder;
+    private Query.Builder queryBuilder;
+
+    @Mock
+    private Query query;
 
     @Mock
     private JurisdictionTypeQueryBuilder jurisdictionTypeQueryBuilder;
@@ -157,11 +158,12 @@ public class CaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceTest
 
         final QueryParameters queryParameters = new QueryParametersBuilder().build();
 
-        final QueryBuilder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
+        final Query.Builder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
 
-        assertThat(resultQueryBuilder, instanceOf(BoolQueryBuilder.class));
+        final Query resultQuery = resultQueryBuilder.build();
+        assertThat(resultQuery.bool(), notNullValue());
 
-        assertThat(((BoolQueryBuilder) resultQueryBuilder).must(), hasSize(0));
+        assertThat(resultQuery.bool().must(), hasSize(0));
 
         verifyNoMoreInteractions(elasticSearchQueryBuilder, elasticSearchQueryBuilderCache);
     }
@@ -176,11 +178,12 @@ public class CaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceTest
                 .withProsecutingAuthority("  ")
                 .build();
 
-        final QueryBuilder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
+        final Query.Builder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
 
-        assertThat(resultQueryBuilder, instanceOf(BoolQueryBuilder.class));
+        final Query resultQuery = resultQueryBuilder.build();
+        assertThat(resultQuery.bool(), notNullValue());
 
-        assertThat(((BoolQueryBuilder) resultQueryBuilder).must(), hasSize(0));
+        assertThat(resultQuery.bool().must(), hasSize(0));
 
         verifyNoMoreInteractions(elasticSearchQueryBuilder, elasticSearchQueryBuilderCache, partyTypeSearchQueryBuilder);
     }
@@ -194,13 +197,14 @@ public class CaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceTest
                 .build();
 
         when(elasticSearchQueryBuilderCache.getQueryBuilderFromCacheBy(NAME)).thenReturn(elasticSearchQueryBuilder);
-        when(elasticSearchQueryBuilder.getQueryBuilderBy(queryValue, emptyList())).thenReturn(queryBuilder);
+        when(elasticSearchQueryBuilder.getQueryBuilderBy(queryValue, emptyList())).thenReturn(query);
 
-        final QueryBuilder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
+        final Query.Builder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
 
-        assertThat(resultQueryBuilder, instanceOf(BoolQueryBuilder.class));
+        final Query resultQuery = resultQueryBuilder.build();
+        assertThat(resultQuery.bool(), notNullValue());
 
-        assertThat(((BoolQueryBuilder) resultQueryBuilder).must(), hasSize(1));
+        assertThat(resultQuery.bool().must(), hasSize(1));
 
         verify(elasticSearchQueryBuilderCache).getQueryBuilderFromCacheBy(NAME);
         verify(elasticSearchQueryBuilder).getQueryBuilderBy(queryValue, emptyList());
@@ -217,13 +221,14 @@ public class CaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceTest
                 .build();
 
         when(elasticSearchQueryBuilderCache.getQueryBuilderFromCacheBy(NAME)).thenReturn(elasticSearchQueryBuilder);
-        when(elasticSearchQueryBuilder.getQueryBuilderBy(queryValue, emptyList())).thenReturn(queryBuilder);
+        when(elasticSearchQueryBuilder.getQueryBuilderBy(queryValue, emptyList())).thenReturn(query);
 
-        final QueryBuilder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
+        final Query.Builder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
 
-        assertThat(resultQueryBuilder, instanceOf(BoolQueryBuilder.class));
+        final Query resultQuery = resultQueryBuilder.build();
+        assertThat(resultQuery.bool(), notNullValue());
 
-        assertThat(((BoolQueryBuilder) resultQueryBuilder).must(), hasSize(1));
+        assertThat(resultQuery.bool().must(), hasSize(1));
 
         verify(elasticSearchQueryBuilderCache).getQueryBuilderFromCacheBy(NAME);
         verify(elasticSearchQueryBuilder).getQueryBuilderBy(queryValue, emptyList());
@@ -243,14 +248,15 @@ public class CaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceTest
 
         when(elasticSearchQueryBuilderCache.getQueryBuilderFromCacheBy(NAME)).thenReturn(elasticSearchQueryBuilder);
         when(elasticSearchQueryBuilderCache.getQueryBuilderFromCacheBy(PARTY_TYPE)).thenReturn(partyTypeSearchQueryBuilder);
-        when(elasticSearchQueryBuilder.getQueryBuilderBy(eq(queryValue), anyList())).thenReturn(queryBuilder);
-        when(partyTypeSearchQueryBuilder.getQueryBuilderBy(partyTypes)).thenReturn(queryBuilder);
+        when(elasticSearchQueryBuilder.getQueryBuilderBy(eq(queryValue), anyList())).thenReturn(query);
+        when(partyTypeSearchQueryBuilder.getQueryBuilderBy(partyTypes)).thenReturn(query);
 
-        final QueryBuilder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
+        final Query.Builder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
 
-        assertThat(resultQueryBuilder, instanceOf(BoolQueryBuilder.class));
+        final Query resultQuery = resultQueryBuilder.build();
+        assertThat(resultQuery.bool(), notNullValue());
 
-        assertThat(((BoolQueryBuilder) resultQueryBuilder).must(), hasSize(1));
+        assertThat(resultQuery.bool().must(), hasSize(1));
 
         verify(elasticSearchQueryBuilderCache).getQueryBuilderFromCacheBy(NAME);
         verify(elasticSearchQueryBuilderCache).getQueryBuilderFromCacheBy(PARTY_TYPE);
@@ -267,14 +273,15 @@ public class CaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceTest
         final QueryParameters queryParameters = new QueryParametersBuilder()
                 .withCaseReference(caseReference)
                 .build();
-        final List<QueryBuilder> applicationTypeQueryBuilder = emptyList();
+        final List<Query.Builder> applicationTypeQueryBuilder = emptyList();
         when(elasticSearchQueryBuilderCache.getQueryBuilderFromCacheBy(CASE_REFERENCE)).thenReturn(elasticSearchQueryBuilder);
-        when(elasticSearchQueryBuilder.getQueryBuilderBy(caseReference, applicationTypeQueryBuilder)).thenReturn(queryBuilder);
+        when(elasticSearchQueryBuilder.getQueryBuilderBy(caseReference, applicationTypeQueryBuilder)).thenReturn(query);
 
-        final QueryBuilder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
+        final Query.Builder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
 
-        assertThat(resultQueryBuilder, instanceOf(BoolQueryBuilder.class));
-        assertThat(((BoolQueryBuilder) resultQueryBuilder).must(), hasSize(1));
+        final Query resultQuery = resultQueryBuilder.build();
+        assertThat(resultQuery.bool(), notNullValue());
+        assertThat(resultQuery.bool().must(), hasSize(1));
         verify(elasticSearchQueryBuilderCache).getQueryBuilderFromCacheBy(CASE_REFERENCE);
         verify(elasticSearchQueryBuilder).getQueryBuilderBy(caseReference, applicationTypeQueryBuilder);
 
@@ -290,11 +297,12 @@ public class CaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceTest
                 .build();
 
         when(elasticSearchQueryBuilderCache.getQueryBuilderFromCacheBy(ADDRESS)).thenReturn(elasticSearchQueryBuilder);
-        when(elasticSearchQueryBuilder.getQueryBuilderBy(address)).thenReturn(queryBuilder);
+        when(elasticSearchQueryBuilder.getQueryBuilderBy(address)).thenReturn(query);
 
-        final QueryBuilder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
+        final Query.Builder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
 
-        checkNestedFilter(resultQueryBuilder);
+        final Query resultQuery = resultQueryBuilder.build();
+        checkNestedFilter(resultQuery);
 
         verify(elasticSearchQueryBuilderCache).getQueryBuilderFromCacheBy(ADDRESS);
         verify(elasticSearchQueryBuilder).getQueryBuilderBy(address);
@@ -311,11 +319,12 @@ public class CaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceTest
                 .build();
 
         when(elasticSearchQueryBuilderCache.getQueryBuilderFromCacheBy(POST_CODE)).thenReturn(elasticSearchQueryBuilder);
-        when(elasticSearchQueryBuilder.getQueryBuilderBy(postCode)).thenReturn(queryBuilder);
+        when(elasticSearchQueryBuilder.getQueryBuilderBy(postCode)).thenReturn(query);
 
-        final QueryBuilder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
+        final Query.Builder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
 
-        checkNestedFilter(resultQueryBuilder);
+        final Query resultQuery = resultQueryBuilder.build();
+        checkNestedFilter(resultQuery);
 
         verify(elasticSearchQueryBuilderCache).getQueryBuilderFromCacheBy(POST_CODE);
         verify(elasticSearchQueryBuilder).getQueryBuilderBy(postCode);
@@ -333,11 +342,12 @@ public class CaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceTest
                 .build();
 
         when(elasticSearchQueryBuilderCache.getQueryBuilderFromCacheBy(HEARING_DATE)).thenReturn(elasticSearchQueryBuilder);
-        when(elasticSearchQueryBuilder.getQueryBuilderBy(hearingDateFrom, hearingDateTo)).thenReturn(queryBuilder);
+        when(elasticSearchQueryBuilder.getQueryBuilderBy(hearingDateFrom, hearingDateTo)).thenReturn(query);
 
-        final QueryBuilder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
+        final Query.Builder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
 
-        checkNestedFilter(resultQueryBuilder);
+        final Query resultQuery = resultQueryBuilder.build();
+        checkNestedFilter(resultQuery);
 
 
         verify(elasticSearchQueryBuilderCache).getQueryBuilderFromCacheBy(HEARING_DATE);
@@ -358,11 +368,12 @@ public class CaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceTest
 
         when(elasticSearchQueryBuilderCache.getQueryBuilderFromCacheBy(HEARING_DATE)).thenReturn(elasticSearchQueryBuilder);
 
-        when(elasticSearchQueryBuilder.getQueryBuilderBy(hearingDateFrom, hearingDateTo)).thenReturn(queryBuilder);
+        when(elasticSearchQueryBuilder.getQueryBuilderBy(hearingDateFrom, hearingDateTo)).thenReturn(query);
 
-        final QueryBuilder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
+        final Query.Builder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
 
-        checkNestedFilter(resultQueryBuilder);
+        final Query resultQuery = resultQueryBuilder.build();
+        checkNestedFilter(resultQuery);
 
         verify(elasticSearchQueryBuilderCache).getQueryBuilderFromCacheBy(HEARING_DATE);
         verify(elasticSearchQueryBuilder).getQueryBuilderBy(hearingDateFrom, hearingDateTo);
@@ -380,12 +391,13 @@ public class CaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceTest
                 .build();
 
         when(elasticSearchQueryBuilderCache.getQueryBuilderFromCacheBy(APPLICATION_TYPE)).thenReturn(elasticSearchQueryBuilder);
-        when(elasticSearchQueryBuilder.getQueryBuilderBy(applicationType)).thenReturn(queryBuilder);
+        when(elasticSearchQueryBuilder.getQueryBuilderBy(applicationType)).thenReturn(query);
 
-        final QueryBuilder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
+        final Query.Builder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
 
-        assertThat(resultQueryBuilder, instanceOf(BoolQueryBuilder.class));
-        checkNestedFilter(resultQueryBuilder);
+        final Query resultQuery = resultQueryBuilder.build();
+        assertThat(resultQuery.bool(), notNullValue());
+        checkNestedFilter(resultQuery);
         verify(elasticSearchQueryBuilderCache).getQueryBuilderFromCacheBy(APPLICATION_TYPE);
         verify(elasticSearchQueryBuilder).getQueryBuilderBy(applicationType);
 
@@ -401,11 +413,12 @@ public class CaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceTest
                 .build();
 
         when(elasticSearchQueryBuilderCache.getQueryBuilderFromCacheBy(PARTY_TYPE)).thenReturn(partyTypeSearchQueryBuilder);
-        when(partyTypeSearchQueryBuilder.getQueryBuilderBy(partyTypes)).thenReturn(queryBuilder);
+        when(partyTypeSearchQueryBuilder.getQueryBuilderBy(partyTypes)).thenReturn(query);
 
-        final QueryBuilder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
+        final Query.Builder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
 
-        checkNestedFilter(resultQueryBuilder);
+        final Query resultQuery = resultQueryBuilder.build();
+        checkNestedFilter(resultQuery);
 
         verify(elasticSearchQueryBuilderCache).getQueryBuilderFromCacheBy(PARTY_TYPE);
         verify(partyTypeSearchQueryBuilder).getQueryBuilderBy(partyTypes);
@@ -422,11 +435,12 @@ public class CaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceTest
                 .build();
 
         when(elasticSearchQueryBuilderCache.getQueryBuilderFromCacheBy(DATE_OF_BIRTH)).thenReturn(elasticSearchQueryBuilder);
-        when(elasticSearchQueryBuilder.getQueryBuilderBy(dateOfBirth)).thenReturn(queryBuilder);
+        when(elasticSearchQueryBuilder.getQueryBuilderBy(dateOfBirth)).thenReturn(query);
 
-        final QueryBuilder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
+        final Query.Builder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
 
-        checkNestedFilter(resultQueryBuilder);
+        final Query resultQuery = resultQueryBuilder.build();
+        checkNestedFilter(resultQuery);
 
         verify(elasticSearchQueryBuilderCache).getQueryBuilderFromCacheBy(DATE_OF_BIRTH);
         verify(elasticSearchQueryBuilder).getQueryBuilderBy(dateOfBirth);
@@ -442,12 +456,13 @@ public class CaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceTest
                 .build();
 
         when(elasticSearchQueryBuilderCache.getQueryBuilderFromCacheBy(PROSECUTING_AUTHORITY)).thenReturn(prosecutingAuthoritySearchQueryBuilder);
-        when(prosecutingAuthoritySearchQueryBuilder.getQueryBuilderBy(prosecutingAuthority)).thenReturn(queryBuilder);
+        when(prosecutingAuthoritySearchQueryBuilder.getQueryBuilderBy(prosecutingAuthority)).thenReturn(query);
 
-        final QueryBuilder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
+        final Query.Builder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
 
-        assertThat(resultQueryBuilder, instanceOf(BoolQueryBuilder.class));
-        assertThat(((BoolQueryBuilder) resultQueryBuilder).filter(), hasSize(1));
+        final Query resultQuery = resultQueryBuilder.build();
+        assertThat(resultQuery.bool(), notNullValue());
+        assertThat(resultQuery.bool().filter(), hasSize(1));
 
         verify(elasticSearchQueryBuilderCache).getQueryBuilderFromCacheBy(PROSECUTING_AUTHORITY);
         verify(prosecutingAuthoritySearchQueryBuilder).getQueryBuilderBy(prosecutingAuthority);
@@ -463,12 +478,13 @@ public class CaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceTest
                 .build();
 
         when(elasticSearchQueryBuilderCache.getQueryBuilderFromCacheBy(COURT_ID)).thenReturn(courtSearchQueryBuilder);
-        when(courtSearchQueryBuilder.getQueryBuilderBy(courtId)).thenReturn(queryBuilder);
+        when(courtSearchQueryBuilder.getQueryBuilderBy(courtId)).thenReturn(query);
 
-        final QueryBuilder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
+        final Query.Builder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
 
-        assertThat(resultQueryBuilder, instanceOf(BoolQueryBuilder.class));
-        checkNestedFilter(resultQueryBuilder);
+        final Query resultQuery = resultQueryBuilder.build();
+        assertThat(resultQuery.bool(), notNullValue());
+        checkNestedFilter(resultQuery);
 
         verify(elasticSearchQueryBuilderCache).getQueryBuilderFromCacheBy(COURT_ID);
         verify(courtSearchQueryBuilder).getQueryBuilderBy(courtId);
@@ -483,12 +499,13 @@ public class CaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceTest
                 .build();
 
         when(elasticSearchQueryBuilderCache.getQueryBuilderFromCacheBy(JURISDICTION_TYPE)).thenReturn(jurisdictionTypeQueryBuilder);
-        when(jurisdictionTypeQueryBuilder.getQueryBuilderBy(true, null, null)).thenReturn(queryBuilder);
+        when(jurisdictionTypeQueryBuilder.getQueryBuilderBy(true, null, null)).thenReturn(query);
 
-        final QueryBuilder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
+        final Query.Builder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
 
-        assertThat(resultQueryBuilder, instanceOf(BoolQueryBuilder.class));
-        assertThat(((BoolQueryBuilder) resultQueryBuilder).filter(), hasSize(1));
+        final Query resultQuery = resultQueryBuilder.build();
+        assertThat(resultQuery.bool(), notNullValue());
+        assertThat(resultQuery.bool().filter(), hasSize(1));
 
         verify(elasticSearchQueryBuilderCache).getQueryBuilderFromCacheBy(JURISDICTION_TYPE);
         verify(jurisdictionTypeQueryBuilder).getQueryBuilderBy(true, null, null);
@@ -504,16 +521,17 @@ public class CaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceTest
                 .build();
 
         when(elasticSearchQueryBuilderCache.getQueryBuilderFromCacheBy(IS_BOX_HEARING)).thenReturn(boxHearingQueryBuilder);
-        when(boxHearingQueryBuilder.getQueryBuilderBy(true)).thenReturn(queryBuilder);
+        when(boxHearingQueryBuilder.getQueryBuilderBy(true)).thenReturn(query);
         when(elasticSearchQueryBuilderCache.getQueryBuilderFromCacheBy(APPLICATION_STATUS)).thenReturn(applicationStatusQueryBuilder);
         APPLICATION_STATUS_LIST.stream().forEach(applicationStatus ->
-                when(applicationStatusQueryBuilder.getQueryBuilderBy(applicationStatus)).thenReturn(queryBuilder));
+                when(applicationStatusQueryBuilder.getQueryBuilderBy(applicationStatus)).thenReturn(query));
 
-        final QueryBuilder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
+        final Query.Builder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
 
-        assertThat(resultQueryBuilder, instanceOf(BoolQueryBuilder.class));
+        final Query resultQuery = resultQueryBuilder.build();
+        assertThat(resultQuery.bool(), notNullValue());
 
-        checkExactMatchesNestedFilter(resultQueryBuilder, 2, 1);
+        checkExactMatchesNestedFilter(resultQuery, 2, 1);
 
         verify(elasticSearchQueryBuilderCache).getQueryBuilderFromCacheBy(IS_BOX_HEARING);
         verify(boxHearingQueryBuilder).getQueryBuilderBy(true);
@@ -533,15 +551,16 @@ public class CaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceTest
                 .build();
 
         when(elasticSearchQueryBuilderCache.getQueryBuilderFromCacheBy(IS_BOX_HEARING)).thenReturn(boxHearingQueryBuilder);
-        when(boxHearingQueryBuilder.getQueryBuilderBy(true)).thenReturn(queryBuilder);
+        when(boxHearingQueryBuilder.getQueryBuilderBy(true)).thenReturn(query);
         when(elasticSearchQueryBuilderCache.getQueryBuilderFromCacheBy(CASE_REFERENCE)).thenReturn(referenceSearchQueryBuilder);
         when(elasticSearchQueryBuilderCache.getQueryBuilderFromCacheBy(APPLICATION_STATUS)).thenReturn(new ApplicationStatusQueryBuilder());
 
-        final QueryBuilder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
+        final Query.Builder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
 
-        assertThat(resultQueryBuilder, instanceOf(BoolQueryBuilder.class));
+        final Query resultQuery = resultQueryBuilder.build();
+        assertThat(resultQuery.bool(), notNullValue());
 
-        checkExactMatchesNestedFilter(resultQueryBuilder, 3, 1);
+        checkExactMatchesNestedFilter(resultQuery, 3, 1);
 
         verify(elasticSearchQueryBuilderCache).getQueryBuilderFromCacheBy(IS_BOX_HEARING);
         verify(boxHearingQueryBuilder).getQueryBuilderBy(true);
@@ -556,13 +575,14 @@ public class CaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceTest
                 .build();
 
         when(elasticSearchQueryBuilderCache.getQueryBuilderFromCacheBy(IS_VIRTUAL_BOX_HEARING)).thenReturn(virtualBoxHearingQueryBuilder);
-        when(virtualBoxHearingQueryBuilder.getQueryBuilderBy(true)).thenReturn(queryBuilder);
+        when(virtualBoxHearingQueryBuilder.getQueryBuilderBy(true)).thenReturn(query);
 
-        final QueryBuilder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
+        final Query.Builder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
 
-        assertThat(resultQueryBuilder, instanceOf(BoolQueryBuilder.class));
+        final Query resultQuery = resultQueryBuilder.build();
+        assertThat(resultQuery.bool(), notNullValue());
 
-        checkNestedFilter(resultQueryBuilder);
+        checkNestedFilter(resultQuery);
 
         verify(elasticSearchQueryBuilderCache).getQueryBuilderFromCacheBy(IS_VIRTUAL_BOX_HEARING);
         verify(virtualBoxHearingQueryBuilder).getQueryBuilderBy(true);
@@ -580,13 +600,14 @@ public class CaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceTest
                 .build();
 
         when(elasticSearchQueryBuilderCache.getQueryBuilderFromCacheBy(NINO)).thenReturn(elasticSearchQueryBuilder);
-        when(elasticSearchQueryBuilder.getQueryBuilderBy(queryValue)).thenReturn(queryBuilder);
+        when(elasticSearchQueryBuilder.getQueryBuilderBy(queryValue)).thenReturn(query);
 
-        final QueryBuilder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
+        final Query.Builder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
 
-        assertThat(resultQueryBuilder, instanceOf(BoolQueryBuilder.class));
+        final Query resultQuery = resultQueryBuilder.build();
+        assertThat(resultQuery.bool(), notNullValue());
 
-        checkNestedFilter(resultQueryBuilder);
+        checkNestedFilter(resultQuery);
 
         verify(elasticSearchQueryBuilderCache).getQueryBuilderFromCacheBy(NINO);
         verify(elasticSearchQueryBuilder).getQueryBuilderBy(queryValue);
@@ -604,11 +625,12 @@ public class CaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceTest
                 .build();
 
         when(elasticSearchQueryBuilderCache.getQueryBuilderFromCacheBy(ARREST_SUMMONS_NUMBER)).thenReturn(elasticSearchQueryBuilder);
-        when(elasticSearchQueryBuilder.getQueryBuilderBy(queryValue)).thenReturn(queryBuilder);
+        when(elasticSearchQueryBuilder.getQueryBuilderBy(queryValue)).thenReturn(query);
 
-        final QueryBuilder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
+        final Query.Builder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
 
-        checkNestedFilter(resultQueryBuilder);
+        final Query resultQuery = resultQueryBuilder.build();
+        checkNestedFilter(resultQuery);
 
         verify(elasticSearchQueryBuilderCache).getQueryBuilderFromCacheBy(ARREST_SUMMONS_NUMBER);
         verify(elasticSearchQueryBuilder).getQueryBuilderBy(queryValue);
@@ -624,14 +646,16 @@ public class CaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceTest
                 .withProceedingsConcluded(isProceedingsIncluded)
                 .build();
 
-        final QueryBuilder multiCriteriaQueryBuilder = QueryBuilders.boolQuery().must(queryBuilder);
+        final Query.Builder multiCriteriaQueryBuilder = new Query.Builder();
+        multiCriteriaQueryBuilder.bool(BoolQuery.of( b -> b.must(query ) ) ) ;
 
         when(elasticSearchQueryBuilderCache.getQueryBuilderFromCacheBy(PROCEEDINGS_CONCLUDED)).thenReturn(proceedingsConcludedQueryBuilder);
-        when(proceedingsConcludedQueryBuilder.getQueryBuilderBy(false)).thenReturn(multiCriteriaQueryBuilder);
+        when(proceedingsConcludedQueryBuilder.getQueryBuilderBy(false)).thenReturn(multiCriteriaQueryBuilder.build());
 
-        final QueryBuilder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
+        final Query.Builder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
 
-        checkMatchesNestedFilter(resultQueryBuilder, 1, 1, 1);
+        final Query resultQuery = resultQueryBuilder.build();
+        checkMatchesNestedFilter(resultQuery, 1, 1, 1);
 
         verify(elasticSearchQueryBuilderCache).getQueryBuilderFromCacheBy(PROCEEDINGS_CONCLUDED);
         verify(proceedingsConcludedQueryBuilder).getQueryBuilderBy(false);
@@ -647,14 +671,16 @@ public class CaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceTest
                 .withCourtOrderValidityDate(courtOrderValidityDate)
                 .build();
 
-        final QueryBuilder multiCriteriaQueryBuilder = QueryBuilders.boolQuery().must(queryBuilder);
+        final Query.Builder multiCriteriaQueryBuilder = new Query.Builder();
+        multiCriteriaQueryBuilder.bool( BoolQuery.of( b -> b.must(query)));
 
         when(elasticSearchQueryBuilderCache.getQueryBuilderFromCacheBy(COURT_ORDER_VALIDITY_DATE)).thenReturn(courtOrderValidityDateQueryBuilder);
-        when(courtOrderValidityDateQueryBuilder.getQueryBuilderBy(courtOrderValidityDate)).thenReturn(multiCriteriaQueryBuilder);
+        when(courtOrderValidityDateQueryBuilder.getQueryBuilderBy(courtOrderValidityDate)).thenReturn(multiCriteriaQueryBuilder.build());
 
-        final QueryBuilder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
+        final Query.Builder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
 
-        checkMatchesNestedFilter(resultQueryBuilder, 1, 1, 1);
+        final Query resultQuery = resultQueryBuilder.build();
+        checkMatchesNestedFilter(resultQuery, 1, 1, 1);
 
         verify(elasticSearchQueryBuilderCache).getQueryBuilderFromCacheBy(COURT_ORDER_VALIDITY_DATE);
         verify(courtOrderValidityDateQueryBuilder).getQueryBuilderBy(courtOrderValidityDate);
@@ -671,11 +697,12 @@ public class CaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceTest
                 .build();
 
         when(elasticSearchQueryBuilderCache.getQueryBuilderFromCacheBy(FIRST_NAME)).thenReturn(firstNameSearchQueryBuilder);
-        when(firstNameSearchQueryBuilder.getQueryBuilderBy(firstNameParam)).thenReturn(queryBuilder);
+        when(firstNameSearchQueryBuilder.getQueryBuilderBy(firstNameParam)).thenReturn(query);
 
-        final QueryBuilder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
+        final Query.Builder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
 
-        checkExactMatchesNestedFilter(resultQueryBuilder, 1, 1);
+        final Query resultQuery = resultQueryBuilder.build();
+        checkExactMatchesNestedFilter(resultQuery, 1, 1);
         verify(elasticSearchQueryBuilderCache).getQueryBuilderFromCacheBy(FIRST_NAME);
         verify(firstNameSearchQueryBuilder).getQueryBuilderBy(firstNameParam);
 
@@ -691,11 +718,12 @@ public class CaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceTest
                 .build();
 
         when(elasticSearchQueryBuilderCache.getQueryBuilderFromCacheBy(LAST_NAME)).thenReturn(lastNameSearchQueryBuilder);
-        when(lastNameSearchQueryBuilder.getQueryBuilderBy(lastNameParam)).thenReturn(queryBuilder);
+        when(lastNameSearchQueryBuilder.getQueryBuilderBy(lastNameParam)).thenReturn(query);
 
-        final QueryBuilder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
+        final Query.Builder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
 
-        checkExactMatchesNestedFilter(resultQueryBuilder, 1, 1);
+        final Query resultQuery = resultQueryBuilder.build();
+        checkExactMatchesNestedFilter(resultQuery, 1, 1);
 
         verify(elasticSearchQueryBuilderCache).getQueryBuilderFromCacheBy(LAST_NAME);
         verify(lastNameSearchQueryBuilder).getQueryBuilderBy(lastNameParam);
@@ -712,11 +740,12 @@ public class CaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceTest
                 .build();
 
         when(elasticSearchQueryBuilderCache.getQueryBuilderFromCacheBy(PNC_ID)).thenReturn(pncIdQueryBuilder);
-        when(pncIdQueryBuilder.getQueryBuilderBy(pncIdParam)).thenReturn(queryBuilder);
+        when(pncIdQueryBuilder.getQueryBuilderBy(pncIdParam)).thenReturn(query);
 
-        final QueryBuilder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
+        final Query.Builder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
 
-        checkExactMatchesNestedFilter(resultQueryBuilder, 1, 1);
+        final Query resultQuery = resultQueryBuilder.build();
+        checkExactMatchesNestedFilter(resultQuery, 1, 1);
         verify(elasticSearchQueryBuilderCache).getQueryBuilderFromCacheBy(PNC_ID);
         verify(pncIdQueryBuilder).getQueryBuilderBy(PNC_ID);
 
@@ -731,12 +760,13 @@ public class CaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceTest
                 .withCroNumber(croNumberParam)
                 .build();
 
-        when(croNumberSearchQueryBuilder.getQueryBuilderBy(croNumberParam)).thenReturn(queryBuilder);
+        when(croNumberSearchQueryBuilder.getQueryBuilderBy(croNumberParam)).thenReturn(query);
         when(elasticSearchQueryBuilderCache.getQueryBuilderFromCacheBy(CRO_NUMBER)).thenReturn(croNumberSearchQueryBuilder);
 
-        final QueryBuilder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
+        final Query.Builder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
 
-        checkExactMatchesNestedFilter(resultQueryBuilder, 1, 1);
+        final Query resultQuery = resultQueryBuilder.build();
+        checkExactMatchesNestedFilter(resultQuery, 1, 1);
 
         verify(elasticSearchQueryBuilderCache).getQueryBuilderFromCacheBy(CRO_NUMBER);
         verify(croNumberSearchQueryBuilder).getQueryBuilderBy(croNumberParam);
@@ -753,11 +783,12 @@ public class CaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceTest
                 .build();
 
         when(elasticSearchQueryBuilderCache.getQueryBuilderFromCacheBy(ADDRESS_LINE_1)).thenReturn(addressLine1QueryBuilder);
-        when(addressLine1QueryBuilder.getQueryBuilderBy(ADDRESS_LINE_1)).thenReturn(queryBuilder);
+        when(addressLine1QueryBuilder.getQueryBuilderBy(ADDRESS_LINE_1)).thenReturn(query);
 
-        final QueryBuilder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
+        final Query.Builder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
 
-        checkExactMatchesNestedFilter(resultQueryBuilder, 1, 1);
+        final Query resultQuery = resultQueryBuilder.build();
+        checkExactMatchesNestedFilter(resultQuery, 1, 1);
 
         verify(elasticSearchQueryBuilderCache).getQueryBuilderFromCacheBy(ADDRESS_LINE_1);
         verify(addressLine1QueryBuilder).getQueryBuilderBy(addressLine1Param);
@@ -773,13 +804,14 @@ public class CaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceTest
                 .build();
 
         when(elasticSearchQueryBuilderCache.getQueryBuilderFromCacheBy(OFFENCES_NESTED_PATH)).thenReturn(elasticSearchQueryBuilder);
-        when(elasticSearchQueryBuilder.getQueryBuilderBy(hasOffence)).thenReturn(queryBuilder);
+        when(elasticSearchQueryBuilder.getQueryBuilderBy(hasOffence)).thenReturn(query);
 
-        final QueryBuilder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
+        final Query.Builder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
 
-        assertThat(resultQueryBuilder, instanceOf(BoolQueryBuilder.class));
+        final Query resultQuery = resultQueryBuilder.build();
+        assertThat(resultQuery.bool(), notNullValue());
 
-        assertThat(((BoolQueryBuilder) resultQueryBuilder).must(), hasSize(1));
+        assertThat(resultQuery.bool().must(), hasSize(1));
 
         verify(elasticSearchQueryBuilderCache).getQueryBuilderFromCacheBy(eq(OFFENCES_NESTED_PATH));
         verify(elasticSearchQueryBuilder).getQueryBuilderBy(eq(hasOffence));
@@ -794,18 +826,21 @@ public class CaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceTest
         final QueryParameters queryParameters = new QueryParametersBuilder()
                 .withExcludeCompletedApplications(excludeCompletedApplications)
                 .build();
-        final QueryBuilder multiCriteriaQueryBuilder = QueryBuilders.boolQuery().must(queryBuilder);
+        final Query.Builder multiCriteriaQueryBuilder = new Query.Builder();
+        multiCriteriaQueryBuilder.bool(BoolQuery.of(b -> b.must(query)));
 
 
+        final Query multiCriteriaQuery = multiCriteriaQueryBuilder.build();
         when(elasticSearchQueryBuilderCache.getQueryBuilderFromCacheBy(APPLICATION_STATUS)).thenReturn(applicationStatusQueryBuilder);
         APPLICATION_STATUS_LIST.stream().forEach(applicationStatus ->
-            when(applicationStatusQueryBuilder.getQueryBuilderBy(applicationStatus)).thenReturn(multiCriteriaQueryBuilder));
+            when(applicationStatusQueryBuilder.getQueryBuilderBy(applicationStatus)).thenReturn(multiCriteriaQuery));
 
-        final QueryBuilder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
-        assertThat(resultQueryBuilder, instanceOf(BoolQueryBuilder.class));
-        final BoolQueryBuilder resultQueryBuilderAsBool = (BoolQueryBuilder) resultQueryBuilder;
+        final Query.Builder resultQueryBuilder = caseQueryBuilderService.builder(queryParameters);
+        final Query resultQuery = resultQueryBuilder.build();
+        assertThat(resultQuery.bool(), notNullValue());
+        final BoolQuery resultQueryBuilderAsBool = resultQuery.bool();
         assertThat(resultQueryBuilderAsBool.must(), hasSize(1));
-        final List<QueryBuilder> mustClause = resultQueryBuilderAsBool.must();
+        final List<Query> mustClause = resultQueryBuilderAsBool.must();
         assertThat(mustClause, hasSize(1));
 
         verify(elasticSearchQueryBuilderCache, atLeast(3)).getQueryBuilderFromCacheBy(APPLICATION_STATUS);
@@ -814,23 +849,23 @@ public class CaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceTest
         verifyNoMoreInteractions(elasticSearchQueryBuilderCache, applicationStatusQueryBuilder);
     }
 
-    protected void checkNestedFilter(final QueryBuilder resultQueryBuilder) {
-        assertThat(resultQueryBuilder, instanceOf(BoolQueryBuilder.class));
-        final BoolQueryBuilder resultQueryBuilderAsBool = (BoolQueryBuilder) resultQueryBuilder;
+    @Override
+    protected void checkNestedFilter(final Query resultQuery) {
+        assertThat(resultQuery.bool(), notNullValue());
+        final BoolQuery resultQueryBuilderAsBool = resultQuery.bool();
         assertThat(resultQueryBuilderAsBool.filter(), hasSize(0));
         assertThat(resultQueryBuilderAsBool.should(), hasSize(0));
         assertThat(resultQueryBuilderAsBool.mustNot(), hasSize(0));
-        final List<QueryBuilder> must = resultQueryBuilderAsBool.must();
+        final List<Query> must = resultQueryBuilderAsBool.must();
         assertThat(must, hasSize(1));
 
-        final QueryBuilder firstMust = resultQueryBuilderAsBool.must().get(0);
-        assertThat(firstMust, instanceOf(NestedQueryBuilder.class));
-        final NestedQueryBuilder nestedQueryBuilder = (NestedQueryBuilder) firstMust;
-        assertThat(nestedQueryBuilder.getName(), is("nested"));
-        assertThat(nestedQueryBuilder.scoreMode(), is(Avg));
-        final QueryBuilder innerQueryBuilder = nestedQueryBuilder.query();
-        assertThat(innerQueryBuilder, instanceOf(BoolQueryBuilder.class));
-        final BoolQueryBuilder innerBoolQueryBuilder = (BoolQueryBuilder) innerQueryBuilder;
+        final Query firstMust = resultQueryBuilderAsBool.must().get(0);
+        assertThat(firstMust.nested(), notNullValue());
+        final NestedQuery nestedQueryBuilder = firstMust.nested();
+        assertThat(nestedQueryBuilder.scoreMode(), is(ChildScoreMode.Avg));
+        final Query innerQueryBuilder = nestedQueryBuilder.query();
+        assertThat(innerQueryBuilder.bool(), notNullValue());
+        final BoolQuery innerBoolQueryBuilder = innerQueryBuilder.bool();
 
         assertThat(innerBoolQueryBuilder.should(), hasSize(0));
         assertThat(innerBoolQueryBuilder.filter(), hasSize(0));
@@ -838,23 +873,23 @@ public class CaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceTest
         assertThat(innerBoolQueryBuilder.must(), hasSize(1));
     }
 
-    protected void checkExactMatchesNestedFilter(final QueryBuilder resultQueryBuilder, final int mustSize, final int innerMust) {
-        assertThat(resultQueryBuilder, instanceOf(BoolQueryBuilder.class));
-        final BoolQueryBuilder resultQueryBuilderAsBool = (BoolQueryBuilder) resultQueryBuilder;
+    @Override
+    protected void checkExactMatchesNestedFilter(final Query resultQuery, final int mustSize, final int innerMust) {
+        assertThat(resultQuery.bool(), notNullValue());
+        final BoolQuery resultQueryBuilderAsBool = resultQuery.bool();
         assertThat(resultQueryBuilderAsBool.filter(), hasSize(0));
         assertThat(resultQueryBuilderAsBool.should(), hasSize(0));
         assertThat(resultQueryBuilderAsBool.mustNot(), hasSize(0));
-        final List<QueryBuilder> must = resultQueryBuilderAsBool.must();
+        final List<Query> must = resultQueryBuilderAsBool.must();
         assertThat(must, hasSize(mustSize));
 
-        final QueryBuilder firstMust = resultQueryBuilderAsBool.must().get(0);
-        assertThat(firstMust, instanceOf(QueryBuilder.class));
-        final NestedQueryBuilder nestedQueryBuilder = (NestedQueryBuilder) firstMust;
-        assertThat(nestedQueryBuilder.getName(), is("nested"));
-        assertThat(nestedQueryBuilder.scoreMode(), is(Avg));
-        final QueryBuilder innerQueryBuilder = nestedQueryBuilder.query();
-        assertThat(innerQueryBuilder, instanceOf(BoolQueryBuilder.class));
-        final BoolQueryBuilder innerBoolQueryBuilder = (BoolQueryBuilder) innerQueryBuilder;
+        final Query firstMust = resultQueryBuilderAsBool.must().get(0);
+        assertThat(firstMust.nested(), notNullValue());
+        final NestedQuery nestedQueryBuilder = firstMust.nested();
+        assertThat(nestedQueryBuilder.scoreMode(), is(ChildScoreMode.Avg));
+        final Query innerQueryBuilder = nestedQueryBuilder.query();
+        assertThat(innerQueryBuilder.bool(), notNullValue());
+        final BoolQuery innerBoolQueryBuilder = innerQueryBuilder.bool();
 
         assertThat(innerBoolQueryBuilder.should(), hasSize(0));
         assertThat(innerBoolQueryBuilder.filter(), hasSize(0));
@@ -862,28 +897,27 @@ public class CaseQueryBuilderServiceTest extends AbstractQueryBuilderServiceTest
         assertThat(innerBoolQueryBuilder.must(), hasSize(innerMust));
     }
 
-    private void checkMatchesNestedFilter(final QueryBuilder resultQueryBuilder, final int mustSize, final int shouldSize, final int innerShould) {
-        assertThat(resultQueryBuilder, instanceOf(BoolQueryBuilder.class));
-        final BoolQueryBuilder resultQueryBuilderAsBool = (BoolQueryBuilder) resultQueryBuilder;
+    private void checkMatchesNestedFilter(final Query resultQuery, final int mustSize, final int shouldSize, final int innerShould) {
+        assertThat(resultQuery.bool(), notNullValue());
+        final BoolQuery resultQueryBuilderAsBool = resultQuery.bool();
         assertThat(resultQueryBuilderAsBool.filter(), hasSize(0));
         assertThat(resultQueryBuilderAsBool.should(), hasSize(0));
         assertThat(resultQueryBuilderAsBool.mustNot(), hasSize(0));
-        final List<QueryBuilder> must = resultQueryBuilderAsBool.must();
+        final List<Query> must = resultQueryBuilderAsBool.must();
         assertThat(must, hasSize(mustSize));
 
-        final QueryBuilder firstMust = must.get(0);
-        assertThat(firstMust, instanceOf(QueryBuilder.class));
-        final BoolQueryBuilder boolQueryBuilder = (BoolQueryBuilder) firstMust;
-        final List<QueryBuilder> should = boolQueryBuilder.should();
+        final Query firstMust = must.get(0);
+        assertThat(firstMust.bool(), notNullValue());
+        final BoolQuery boolQueryBuilder = firstMust.bool();
+        final List<Query> should = boolQueryBuilder.should();
         assertThat(should, hasSize(shouldSize));
 
-        final QueryBuilder firstShould = should.get(0);
-        assertThat(firstShould, instanceOf(QueryBuilder.class));
-        final NestedQueryBuilder nestedQueryBuilder = (NestedQueryBuilder) firstShould;
-        assertThat(nestedQueryBuilder.getName(), is("nested"));
-        assertThat(nestedQueryBuilder.scoreMode(), is(Avg));
-        final QueryBuilder innerQueryBuilder = nestedQueryBuilder.query();
-        assertThat(innerQueryBuilder, instanceOf(BoolQueryBuilder.class));
+        final Query firstShould = should.get(0);
+        assertThat(firstShould.nested(), notNullValue());
+        final NestedQuery nestedQueryBuilder = firstShould.nested();
+        assertThat(nestedQueryBuilder.scoreMode(), is(ChildScoreMode.Avg));
+        final Query innerQueryBuilder = nestedQueryBuilder.query();
+        assertThat(innerQueryBuilder.bool(), notNullValue());
     }
 
 }

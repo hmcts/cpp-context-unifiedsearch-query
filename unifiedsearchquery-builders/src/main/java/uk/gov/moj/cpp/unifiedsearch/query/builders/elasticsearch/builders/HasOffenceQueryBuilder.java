@@ -2,29 +2,30 @@ package uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.builders;
 
 import static java.lang.Boolean.parseBoolean;
 import static java.lang.String.valueOf;
-import static org.apache.lucene.search.join.ScoreMode.Avg;
-import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
-import static org.elasticsearch.index.query.QueryBuilders.existsQuery;
-import static org.elasticsearch.index.query.QueryBuilders.nestedQuery;
 import static uk.gov.moj.cpp.unifiedsearch.query.common.constant.CaseSearchConstants.OFFENCES_NESTED_PATH;
+import static uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.ElasticSearchQueryBuilder.convertBuilder;
+import static uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.ElasticSearchQueryBuilder.nestedQuery;
 
 import uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.ElasticSearchQueryBuilder;
 
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
+import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.ExistsQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 
 public class HasOffenceQueryBuilder implements ElasticSearchQueryBuilder {
 
     @Override
-    public QueryBuilder getQueryBuilderBy(final Object... queryParams) {
+    public Query getQueryBuilderBy(final Object... queryParams) {
         final boolean hasOffence = parseBoolean(valueOf(queryParams[0]));
-        final BoolQueryBuilder offencesInnerBoolWrapper = boolQuery();
-
+        final BoolQuery.Builder offencesInnerBoolWrapper =new BoolQuery.Builder();
+        final ExistsQuery.Builder existsQueryBuilder = new ExistsQuery.Builder();
         if (hasOffence) {
-            offencesInnerBoolWrapper.must(existsQuery(OFFENCES_NESTED_PATH));
+            offencesInnerBoolWrapper.must(existsQueryBuilder.field(OFFENCES_NESTED_PATH).build());
         } else {
-            offencesInnerBoolWrapper.mustNot(existsQuery(OFFENCES_NESTED_PATH));
+            offencesInnerBoolWrapper.mustNot(existsQueryBuilder.field(OFFENCES_NESTED_PATH).build());
         }
-        return nestedQuery(OFFENCES_NESTED_PATH, offencesInnerBoolWrapper, Avg);
+        final Query.Builder queryBuilder = new Query.Builder();
+        queryBuilder.bool(offencesInnerBoolWrapper.build());
+        return convertBuilder(nestedQuery(OFFENCES_NESTED_PATH,  queryBuilder)).build();
     }
 }

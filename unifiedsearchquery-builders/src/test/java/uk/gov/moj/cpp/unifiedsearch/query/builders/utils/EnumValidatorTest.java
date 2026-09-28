@@ -3,7 +3,7 @@ package uk.gov.moj.cpp.unifiedsearch.query.builders.utils;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import org.elasticsearch.search.sort.SortOrder;
+import co.elastic.clients.elasticsearch._types.SortOrder;
 import org.junit.jupiter.api.Test;
 
 public class EnumValidatorTest {

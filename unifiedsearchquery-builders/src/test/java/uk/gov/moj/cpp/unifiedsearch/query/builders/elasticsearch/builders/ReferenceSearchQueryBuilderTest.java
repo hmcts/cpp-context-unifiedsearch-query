@@ -3,17 +3,18 @@ package uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.builders;
 import static com.google.common.collect.ImmutableList.of;
 import static com.jayway.jsonassert.impl.matcher.IsCollectionWithSize.hasSize;
 import static java.util.Collections.emptyList;
-import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import org.apache.lucene.search.join.ScoreMode;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.NestedQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.TermQueryBuilder;
 import org.junit.jupiter.api.Test;
+
+import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.ChildScoreMode;
+import co.elastic.clients.elasticsearch._types.query_dsl.NestedQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import co.elastic.clients.elasticsearch._types.query_dsl.TermQuery;
+import co.elastic.clients.elasticsearch.core.search.ScoreMode;
 
 public class ReferenceSearchQueryBuilderTest {
 
@@ -24,91 +25,86 @@ public class ReferenceSearchQueryBuilderTest {
     @Test
     public void shouldReturnValidQueryBuilderReference() {
         final String caseReference = "TFF123";
-        final QueryBuilder actualQueryBuilder = referenceSearchQueryBuilder.getQueryBuilderBy(caseReference, emptyList());
+        final Query actualQuery = referenceSearchQueryBuilder.getQueryBuilderBy(caseReference, emptyList());
 
-        assertThat(actualQueryBuilder, is(notNullValue()));
-        assertThat(actualQueryBuilder, instanceOf((BoolQueryBuilder.class)));
+        assertThat(actualQuery, is(notNullValue()));
+        final BoolQuery actualBoolQueryBuilder = actualQuery.bool();
+        assertThat(actualBoolQueryBuilder, notNullValue());
 
-        final BoolQueryBuilder actualBoolQueryBuilder = (BoolQueryBuilder) actualQueryBuilder;
-        assertThat(actualBoolQueryBuilder.getName(), is("bool"));
+
         assertThat(actualBoolQueryBuilder.must(), hasSize(0));
         assertThat(actualBoolQueryBuilder.should(), hasSize(2));
 
         assertThat(actualBoolQueryBuilder.filter(), hasSize(0));
 
-        final QueryBuilder firstShould = actualBoolQueryBuilder.should().get(0);
+        final Query firstShould = actualBoolQueryBuilder.should().get(0);
 
-        assertThat(firstShould, instanceOf(TermQueryBuilder.class));
+        assertThat(firstShould.term(), notNullValue());
 
-        final TermQueryBuilder firstTermShould = (TermQueryBuilder) firstShould;
-        assertThat(firstTermShould.getName(), is("term"));
-        assertThat(firstTermShould.fieldName(), is("caseReference"));
-        assertThat(firstTermShould.value(), is(caseReference));
+        final TermQuery firstTermShould = firstShould.term();
+        assertThat(firstTermShould.field(), is("caseReference"));
+        assertThat(firstTermShould.value().stringValue(), is(caseReference));
 
-        final QueryBuilder secondShould = actualBoolQueryBuilder.should().get(1);
-        assertThat(secondShould, instanceOf(NestedQueryBuilder.class));
-        final NestedQueryBuilder actualNestedQueryBuilder = (NestedQueryBuilder) secondShould;
-        assertThat(actualNestedQueryBuilder.scoreMode(), is(ScoreMode.Avg));
+        final Query secondShould = actualBoolQueryBuilder.should().get(1);
+        assertThat(secondShould.nested(), notNullValue());
+        final NestedQuery actualNestedQueryBuilder = secondShould.nested();
+        assertThat(actualNestedQueryBuilder.scoreMode().name(), is(ScoreMode.Avg.name()));
 
-        final BoolQueryBuilder innedBoolQueryBuilder = (BoolQueryBuilder) actualNestedQueryBuilder.query();
+        final BoolQuery innedBoolQueryBuilder = actualNestedQueryBuilder.query().bool();
         assertThat(innedBoolQueryBuilder.mustNot(), hasSize(0));
         assertThat(innedBoolQueryBuilder.should(), hasSize(0));
         assertThat(innedBoolQueryBuilder.must(), hasSize(1));
-        final QueryBuilder firstMust = innedBoolQueryBuilder.must().get(0);
-        assertThat(firstMust, instanceOf(TermQueryBuilder.class));
-        final TermQueryBuilder actualNestedTermQueryBuilder = (TermQueryBuilder) firstMust;
-        assertThat(actualNestedTermQueryBuilder.getName(), is("term"));
-        assertThat(actualNestedTermQueryBuilder.fieldName(), is("applications.applicationReference"));
-        assertThat(actualNestedTermQueryBuilder.value(), is(caseReference));
+        final Query firstMust = innedBoolQueryBuilder.must().get(0);
+        assertThat(firstMust.term(), notNullValue());
+        final TermQuery actualNestedTermQueryBuilder = firstMust.term();
+        assertThat(actualNestedTermQueryBuilder.field(), is("applications.applicationReference"));
+        assertThat(actualNestedTermQueryBuilder.value().stringValue(), is(caseReference));
 
     }
 
     @Test
     public void shouldReturnValidQueryBuilderReferenceWithApplicationType() {
         final String caseReference = "TFF123";
-        final QueryBuilder applicationTypeQueryBuilder = new ApplicationTypeQueryBuilder().getQueryBuilderBy("Some Application Type");
+        final Query applicationTypeQuery = new ApplicationTypeQueryBuilder().getQueryBuilderBy("Some Application Type");
 
-        final QueryBuilder actualQueryBuilder = referenceSearchQueryBuilder.getQueryBuilderBy(caseReference, of(applicationTypeQueryBuilder));
+        final Query actualQuery = referenceSearchQueryBuilder.getQueryBuilderBy(caseReference, of(applicationTypeQuery));
 
-        assertThat(actualQueryBuilder, is(notNullValue()));
-        assertThat(actualQueryBuilder, instanceOf((BoolQueryBuilder.class)));
+        assertThat(actualQuery, is(notNullValue()));
+        assertThat(actualQuery.bool(), notNullValue());
 
-        final BoolQueryBuilder actualBoolQueryBuilder = (BoolQueryBuilder) actualQueryBuilder;
-        assertThat(actualBoolQueryBuilder.getName(), is("bool"));
+        final BoolQuery actualBoolQueryBuilder = actualQuery.bool();
         assertThat(actualBoolQueryBuilder.must(), hasSize(0));
         assertThat(actualBoolQueryBuilder.should(), hasSize(2));
 
         assertThat(actualBoolQueryBuilder.filter(), hasSize(0));
 
-        final QueryBuilder firstShould = actualBoolQueryBuilder.should().get(0);
+        final Query firstShould = actualBoolQueryBuilder.should().get(0);
 
-        assertThat(firstShould, instanceOf(TermQueryBuilder.class));
+        assertThat(firstShould.term(), notNullValue());
 
-        final TermQueryBuilder firstTermShould = (TermQueryBuilder) firstShould;
-        assertThat(firstTermShould.getName(), is("term"));
-        assertThat(firstTermShould.fieldName(), is("caseReference"));
-        assertThat(firstTermShould.value(), is(caseReference));
+        final TermQuery firstTermShould = firstShould.term();
+        assertThat(firstTermShould.field(), is("caseReference"));
+        assertThat(firstTermShould.value().stringValue(), is(caseReference));
 
-        final QueryBuilder secondShould = actualBoolQueryBuilder.should().get(1);
-        assertThat(secondShould, instanceOf(NestedQueryBuilder.class));
-        final NestedQueryBuilder actualNestedQueryBuilder = (NestedQueryBuilder) secondShould;
-        assertThat(actualNestedQueryBuilder.scoreMode(), is(ScoreMode.Avg));
+        final Query secondShould = actualBoolQueryBuilder.should().get(1);
+        assertThat(secondShould.nested(), notNullValue());
+        final NestedQuery actualNestedQueryBuilder = secondShould.nested();
+        assertThat(actualNestedQueryBuilder.scoreMode(), is(ChildScoreMode.Avg));
 
-        final BoolQueryBuilder innedBoolQueryBuilder = (BoolQueryBuilder) actualNestedQueryBuilder.query();
+        final BoolQuery innedBoolQueryBuilder = actualNestedQueryBuilder.query().bool();
         assertThat(innedBoolQueryBuilder.mustNot(), hasSize(0));
         assertThat(innedBoolQueryBuilder.should(), hasSize(0));
         assertThat(innedBoolQueryBuilder.must(), hasSize(2));
 
-        final QueryBuilder firstMust = innedBoolQueryBuilder.must().get(0);
-        assertThat(firstMust, instanceOf(TermQueryBuilder.class));
-        final TermQueryBuilder actualNestedTermQueryBuilder = (TermQueryBuilder) firstMust;
-        assertThat(actualNestedTermQueryBuilder.getName(), is("term"));
-        assertThat(actualNestedTermQueryBuilder.fieldName(), is("applications.applicationReference"));
-        assertThat(actualNestedTermQueryBuilder.value(), is(caseReference));
+        final Query firstMust = innedBoolQueryBuilder.must().get(0);
+        assertThat(firstMust.term(), notNullValue());
+        final TermQuery actualNestedTermQueryBuilder = firstMust.term();
+        assertThat(actualNestedTermQueryBuilder.field(), is("applications.applicationReference"));
+        assertThat(actualNestedTermQueryBuilder.value().stringValue(), is(caseReference));
 
-        final QueryBuilder secondMust = innedBoolQueryBuilder.must().get(1);
+        final Query secondMust = innedBoolQueryBuilder.must().get(1);
 
-        assertThat(secondMust, is(applicationTypeQueryBuilder));
+        assertThat(secondMust, is(applicationTypeQuery));
 
     }
 }

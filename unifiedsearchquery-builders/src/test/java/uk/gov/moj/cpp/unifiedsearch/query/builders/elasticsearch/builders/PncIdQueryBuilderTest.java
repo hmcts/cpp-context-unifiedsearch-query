@@ -1,19 +1,21 @@
 package uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.builders;
 
-import static org.hamcrest.CoreMatchers.hasItem;
+import static com.jayway.jsonassert.impl.matcher.IsCollectionWithSize.hasSize;
 import static org.hamcrest.CoreMatchers.hasItems;
-import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static uk.gov.moj.cpp.unifiedsearch.query.common.constant.DefendantQueryParameterNamesConstants.PNC_ID_INDEX;
 
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.TermQueryBuilder;
-import org.elasticsearch.index.query.TermsQueryBuilder;
+import co.elastic.clients.elasticsearch._types.FieldValue;
+import co.elastic.clients.elasticsearch._types.query_dsl.TermsQuery;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import co.elastic.clients.elasticsearch._types.query_dsl.TermQuery;
+
+import java.util.List;
 
 public class PncIdQueryBuilderTest {
     private final PncIdQueryBuilder pncIdQueryBuilder = new PncIdQueryBuilder();
@@ -26,17 +28,15 @@ public class PncIdQueryBuilderTest {
             "21234567T", "2012345678T", "211234567TQ", "171234567I", "171234567O", "171234567S",
             "2011234567T", "201712345678T", "201234567TQ", "20171234567I", "20171234567O", "20171234567S",
     })
-    public void shouldQueryExactMatchForUnrecognisedPncId(final String pncId) {
-        final QueryBuilder queryBuilder = pncIdQueryBuilder.getQueryBuilderBy(pncId);
+    public void shouldQueryExactMatchForUnrecognisedPncId(final String inputPncId) {
+        final Query actualQuery = pncIdQueryBuilder.getQueryBuilderBy(inputPncId);
+        assertThat(actualQuery, is(notNullValue()));
 
-        assertThat(queryBuilder, is(notNullValue()));
+        final TermQuery actualTermQuery = actualQuery.term();
+        assertThat(actualTermQuery, notNullValue());
 
-        assertThat(queryBuilder, instanceOf(TermQueryBuilder.class));
-
-        final TermQueryBuilder termQueryBuilder = (TermQueryBuilder) queryBuilder;
-        assertThat(termQueryBuilder.getName(), is("term"));
-        assertThat(termQueryBuilder.fieldName(), is(PNC_ID_INDEX));
-        assertThat(termQueryBuilder.value(), is(pncId));
+        assertThat(actualTermQuery.field(), is(PNC_ID_INDEX));
+        assertThat(actualTermQuery.value().stringValue(), is(inputPncId));
     }
 
     @ParameterizedTest
@@ -59,17 +59,17 @@ public class PncIdQueryBuilderTest {
     })
     public void shouldQueryVariantsForRecognisedPncId(final String inputPncId,
                                                       final String expectedTermsRaw) {
-        final QueryBuilder queryBuilder = pncIdQueryBuilder.getQueryBuilderBy(inputPncId);
+        final Query actualQuery = pncIdQueryBuilder.getQueryBuilderBy(inputPncId);
+        assertThat(actualQuery, is(notNullValue()));
 
-        assertThat(queryBuilder, is(notNullValue()));
+        final TermsQuery actualTermsQuery = actualQuery.terms();
+        assertThat(actualTermsQuery, is(notNullValue()));
 
-        assertThat(queryBuilder, instanceOf(TermsQueryBuilder.class));
+        assertThat(actualTermsQuery.field(), is(PNC_ID_INDEX));
+        final List<String> queryValues = actualTermsQuery.terms().value().stream().map(FieldValue::stringValue).toList();
 
         final var expectedTerms = expectedTermsRaw.split(" ");
-
-        final TermsQueryBuilder termQueryBuilder = (TermsQueryBuilder) queryBuilder;
-        assertThat(termQueryBuilder.getName(), is("terms"));
-        assertThat(termQueryBuilder.fieldName(), is(PNC_ID_INDEX));
-        assertThat(termQueryBuilder.values(), hasItems(expectedTerms));
+        assertThat(queryValues, hasSize(expectedTerms.length));
+        assertThat(queryValues, hasItems(expectedTerms));
     }
 }

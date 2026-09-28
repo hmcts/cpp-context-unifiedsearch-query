@@ -1,18 +1,18 @@
 package uk.gov.moj.cpp.unifiedsearch.query.builders.elasticsearch.builders;
 
 import static java.util.UUID.randomUUID;
-import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static uk.gov.moj.cpp.unifiedsearch.query.common.constant.CaseSearchConstants.HEARING_ID_PATH;
 
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.TermQueryBuilder;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import co.elastic.clients.elasticsearch._types.query_dsl.TermQuery;
 
 @ExtendWith(MockitoExtension.class)
 public class HearingIdQueryBuilderTest {
@@ -24,15 +24,14 @@ public class HearingIdQueryBuilderTest {
     public void shouldCreateQueryBuilder() {
 
         final String hearingIdFilterBy = randomUUID().toString();
-        final QueryBuilder queryBuilder = hearingIdQueryBuilder.getQueryBuilderBy(hearingIdFilterBy);
+        final Query query = hearingIdQueryBuilder.getQueryBuilderBy(hearingIdFilterBy);
 
-        assertThat(queryBuilder, is(notNullValue()));
-        assertThat(queryBuilder, instanceOf(TermQueryBuilder.class));
+        assertThat(query, is(notNullValue()));
+        final TermQuery termQueryBuilder = query.term();
+        assertThat(termQueryBuilder, notNullValue());
 
-        final TermQueryBuilder termQueryBuilder = (TermQueryBuilder) queryBuilder;
-        assertThat(termQueryBuilder.getName(), is("term"));
-        assertThat(termQueryBuilder.fieldName(), is(HEARING_ID_PATH));
-        assertThat(termQueryBuilder.value(), is(hearingIdFilterBy));
+        assertThat(termQueryBuilder.field(), is(HEARING_ID_PATH));
+        assertThat(termQueryBuilder.value().stringValue(), is(hearingIdFilterBy));
 
     }
 
