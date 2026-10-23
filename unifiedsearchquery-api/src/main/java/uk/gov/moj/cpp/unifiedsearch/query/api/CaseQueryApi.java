@@ -12,6 +12,7 @@ import uk.gov.moj.cpp.unifiedsearch.query.api.response.SearchResponseEnvelopeGen
 import uk.gov.moj.cpp.unifiedsearch.query.api.service.CaseSearchService;
 import uk.gov.moj.cpp.unifiedsearch.query.api.service.UsersGroupsService;
 import uk.gov.moj.cpp.unifiedsearch.query.api.util.ApplicationTypeFilter;
+import uk.gov.moj.cpp.unifiedsearch.query.api.util.DeletedApplicationFilter;
 import uk.gov.moj.cpp.unifiedsearch.query.api.util.LAAResultFilter;
 import uk.gov.moj.cpp.unifiedsearch.query.common.domain.Permission;
 import uk.gov.moj.cpp.unifiedsearch.query.common.domain.QueryParameters;
@@ -35,6 +36,9 @@ public class CaseQueryApi {
     @Inject
     private ApplicationTypeFilter applicationTypeFilter;
 
+    @Inject
+    private DeletedApplicationFilter deletedApplicationFilter;
+
     @Handles(RESPONSE_NAME)
     public JsonEnvelope searchCaseIndex(final Envelope<QueryParameters> envelope) {
 
@@ -44,7 +48,7 @@ public class CaseQueryApi {
 
         validateQueryParameters(queryParameters);
 
-        final JsonObject queryResult = caseQueryService.searchCases(queryParameters);
+        final JsonObject queryResult = deletedApplicationFilter.filter(caseQueryService.searchCases(queryParameters));
 
         final JsonObject filteredResponse = applicationTypeFilter.filter(queryMetadata, queryResult);
 
