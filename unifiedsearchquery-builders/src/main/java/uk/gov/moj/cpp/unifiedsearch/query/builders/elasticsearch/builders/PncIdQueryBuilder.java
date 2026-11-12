@@ -18,7 +18,7 @@ import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 public class PncIdQueryBuilder implements ElasticSearchQueryBuilder {
 
     private static final Pattern PNC_ID_PATTERN = Pattern.compile(
-            "^(\\d{2}(\\d{2})?)[/',.\\-_]?(\\d{7}[A-HJ-NP-RT-Z])$",
+            "^(\\d{2}|\\d{4})[/',.\\-_]?(\\d{1,7}[A-HJ-NP-RT-Z])$",
             Pattern.CASE_INSENSITIVE);
 
     private static final String[] YEAR_DELIMITERS = { "", "/", "'", "-", "_", "." };
@@ -38,10 +38,14 @@ public class PncIdQueryBuilder implements ElasticSearchQueryBuilder {
                     ? new String[] { currentCentury + matcher.group(1), previousCentury + matcher.group(1) }
                     : new String[] { matcher.group(1) };
 
+            // Ensure that serial number is padded with leading zeros if needed.
+            final String serialAndCheck = String.format("%8s", matcher.group(2))
+                    .replace(' ', '0');
+
             // Handle a recognised PNC ID by searching for variants.
             final var terms = Arrays.stream(yearVariations)
                     .flatMap(year -> Arrays.stream(YEAR_DELIMITERS)
-                        .map(delimiter -> year + delimiter + matcher.group(3)))
+                        .map(delimiter -> year + delimiter + serialAndCheck))
                     .collect(Collectors.toList());
             return termsQuery(PNC_ID_INDEX, terms).build();
         }
