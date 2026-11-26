@@ -18,6 +18,7 @@ import uk.gov.justice.services.messaging.JsonEnvelope;
 import uk.gov.moj.cpp.unifiedsearch.query.api.response.SearchResponseEnvelopeGenerator;
 import uk.gov.moj.cpp.unifiedsearch.query.api.service.CaseSearchService;
 import uk.gov.moj.cpp.unifiedsearch.query.api.util.ApplicationTypeFilter;
+import uk.gov.moj.cpp.unifiedsearch.query.api.util.DeletedApplicationFilter;
 import uk.gov.moj.cpp.unifiedsearch.query.common.domain.QueryParameters;
 import uk.gov.moj.cpp.unifiedsearch.query.common.domain.builders.QueryParametersBuilder;
 
@@ -42,6 +43,9 @@ public class CaseQueryApiTest {
     @Mock
     private ApplicationTypeFilter applicationTypeFilter;
 
+    @Mock
+    private DeletedApplicationFilter deletedApplicationFilter;
+
     @InjectMocks
     private CaseQueryApi caseQueryApi;
 
@@ -55,6 +59,7 @@ public class CaseQueryApiTest {
         final JsonObject queryResult = mock(JsonObject.class);
 
         when(caseQueryService.searchCases(queryParameters)).thenReturn(queryResult);
+        when(deletedApplicationFilter.filter(queryResult)).thenReturn(queryResult);
         when(searchResponseEnvelopeGenerator.createFrom("unifiedsearch.query.cases", queryEnvelope.metadata(), queryResult)).thenReturn(responseEnvelope);
         when(applicationTypeFilter.filter(any(), any())).thenReturn(queryResult);
 
@@ -89,6 +94,7 @@ public class CaseQueryApiTest {
         final JsonObject filteredQueryResult = mock(JsonObject.class);
 
         when(caseQueryService.searchCases(queryParameters)).thenReturn(queryResult);
+        when(deletedApplicationFilter.filter(queryResult)).thenReturn(queryResult);
         when(searchResponseEnvelopeGenerator.createFrom("unifiedsearch.query.cases", queryEnvelope.metadata(), filteredQueryResult)).thenReturn(responseEnvelope);
         when(applicationTypeFilter.filter(any(), any())).thenReturn(filteredQueryResult);
 
